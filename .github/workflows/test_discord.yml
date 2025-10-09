@@ -29,8 +29,8 @@ jobs:
   notify_success:
     name: Success Notification
     runs-on: ubuntu-latest
-    needs: simulate_success # Czekaj na 'simulate_success'
-    if: success() && always() # Wysłane, jeśli 'simulate_success' ZAKOŃCZYŁ SIĘ SUKCESEM
+    needs: simulate_success
+    if: success() 
     uses: ./.github/workflows/discord_notifier.yml
     with:
       status: success 
@@ -45,8 +45,8 @@ jobs:
   notify_failure:
     name: Failure Notification
     runs-on: ubuntu-latest
-    needs: simulate_failure # Czekaj na 'simulate_failure'
-    if: failure() && always() # Wysłane, jeśli 'simulate_failure' ZAKOŃCZYŁ SIĘ BŁĘDEM
+    needs: simulate_failure
+    if: failure() 
     uses: ./.github/workflows/discord_notifier.yml
     with:
       status: failure
