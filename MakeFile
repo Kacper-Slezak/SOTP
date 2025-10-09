@@ -1,0 +1,72 @@
+# Makefile dla projektu SOTP
+# Używa głównie Docker Compose, aby zapewnić spójność między systemami.
+
+# Definicje plików docker-compose dla różnych środowisk
+DC_DEV = docker-compose -f infrastructure/docker/docker-compose.dev.yml
+DC_PROD = docker-compose -f infrastructure/docker/docker-compose.prod.yml
+
+# Domyślna komenda, która uruchomi się po wpisaniu 'make'
+.DEFAULT_GOAL := help
+
+# Deklaracja komend, które nie są plikami
+.PHONY: help setup dev down logs test build deploy backup restore
+
+help:
+	@echo "Dostępne komendy dla projektu SOTP:"
+	@echo ""
+	@echo "  make help          -> Wyświetla tę pomoc."
+	@echo "  make setup         -> Buduje obrazy Docker, potrzebne do startu (uruchom raz na początku)."
+	@echo "  make dev           -> Uruchamia środowisko deweloperskie w tle."
+	@echo "  make down          -> Zatrzymuje i usuwa kontenery deweloperskie."
+	@echo "  make logs          -> Wyświetla logi wszystkich uruchomionych usług."
+	@echo "  make test          -> Uruchamia testy backendu w dedykowanym kontenerze."
+	@echo "  make build         -> Buduje produkcyjne obrazy Docker."
+	[cite_start]@echo "  make deploy        -> Symuluje wdrożenie na produkcję (placeholder)." [cite: 1]
+	[cite_start]@echo "  make backup        -> Uruchamia skrypt do backupu bazy danych (placeholder)." [cite: 1]
+	[cite_start]@echo "  make restore       -> Uruchamia skrypt do odtworzenia bazy z backupu (placeholder)." [cite: 1]
+	@echo ""
+
+# Buduje obrazy deweloperskie, --no-cache zapewnia świeżą instalację zależności
+setup:
+	@echo "🛠️  Budowanie obrazów deweloperskich..."
+	$(DC_DEV) build --no-cache
+
+# Uruchamia środowisko deweloperskie w tle (-d)
+dev:
+	@echo "🚀  Uruchamianie środowiska deweloperskiego..."
+	$(DC_DEV) up -d
+
+# Zatrzymuje i usuwa kontenery, sieci oraz wolumeny
+down:
+	@echo "✋  Zatrzymywanie środowiska deweloperskiego..."
+	$(DC_DEV) down
+
+# Wyświetla i śledzi (-f) logi wszystkich kontenerów
+logs:
+	@echo "📜  Wyświetlanie logów..."
+	$(DC_DEV) logs -f
+
+# Uruchamia testy backendu w nowym, tymczasowym kontenerze (--rm)
+test:
+	@echo "🧪  Uruchamianie testów backendu..."
+	$(DC_DEV) run --rm backend pytest
+
+# Buduje obrazy produkcyjne
+build:
+	@echo "📦  Budowanie obrazów produkcyjnych..."
+	$(DC_PROD) build
+
+# Placeholder dla komendy wdrożenia
+deploy:
+	@echo "🚢  Symulacja wdrożenia na produkcję..."
+	$(DC_PROD) up -d
+
+# Placeholder dla komendy backupu
+backup:
+	@echo "💾  Uruchamianie backupu..."
+	@echo "Tutaj zostanie wywołany skrypt 'scripts/backup.sh'"
+
+# Placeholder dla komendy odtwarzania
+restore:
+	@echo "🔄  Odtwarzanie z backupu..."
+	@echo "Tutaj zostanie wywołany skrypt 'scripts/restore.sh'"
