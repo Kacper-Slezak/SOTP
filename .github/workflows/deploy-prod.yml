@@ -8,11 +8,9 @@ on:
       - 'v*' # Uruchom na każdy tag zaczynający się od 'v', np. v1.0.0
 
 jobs:
-  # Zadanie 1: Symulacja wdrożenia
   deploy:
     name: 🚀 Deploy to Production
     runs-on: ubuntu-latest
-    # Dodanie środowiska "production" wymusza manualną akceptację (jeśli tak skonfigurowano w ustawieniach)
     environment:
       name: production
       url: https://sotp.example.com # Zmień na swój URL
@@ -27,20 +25,16 @@ jobs:
           sleep 15
           echo "Deployment command completed successfully!"
 
-  # Zadanie 2: Wysłanie powiadomienia o statusie wdrożenia
   notify:
     name: 📢 Notify on Status
-    runs-on: ubuntu-latest
+    # runs-on: ubuntu-latest  <-- TĘ LINIĘ NALEŻY USUNĄĆ
     needs: deploy
-    # Uruchom zawsze, aby dostać powiadomienie zarówno o sukcesie, jak i o porażce
     if: always()
     uses: ./.github/workflows/discord_notifier.yml
     with:
-      # Dynamiczne przekazanie statusu ('success' lub 'failure') z poprzedniego zadania
       status: ${{ needs.deploy.result }}
       environment: Production
       commit_sha: ${{ github.sha }}
       actor: ${{ github.actor }}
     secrets:
-      # Przekazanie sekretu z URL webhooka
       webhook_url: ${{ secrets.DISCORD_WEBHOOK_URL }}

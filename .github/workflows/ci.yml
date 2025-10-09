@@ -9,7 +9,6 @@ on:
       - develop
 
 jobs:
-  # To zadanie będzie w przyszłości uruchamiać testy, linting itp.
   build_and_test:
     name: Build & Test
     runs-on: ubuntu-latest
@@ -19,14 +18,11 @@ jobs:
       - name: Simulate build and tests
         run: echo "Building and testing in progress..."
 
-  # To zadanie wysyła powiadomienie na Discord po udanym commicie do głównej gałęzi
   notify_on_push:
     name: Notify Commit on Discord
-    runs-on: ubuntu-latest
-    # Uruchom to zadanie dopiero po pomyślnym zakończeniu `build_and_test`
+    # runs-on: ubuntu-latest  <-- TĘ LINIĘ NALEŻY USUNĄĆ
     needs: build_and_test
     if: success()
-    # Wywołanie naszego reużywalnego workflow
     uses: ./.github/workflows/discord_notifier.yml
     with:
       status: success
@@ -34,5 +30,4 @@ jobs:
       commit_sha: ${{ github.sha }}
       actor: ${{ github.actor }}
     secrets:
-      # Przekazanie sekretu z URL webhooka
       webhook_url: ${{ secrets.DISCORD_WEBHOOK_URL }}
