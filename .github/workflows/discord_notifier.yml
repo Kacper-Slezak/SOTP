@@ -26,29 +26,57 @@ jobs:
             echo "TITLE=Deployment SUKCES" >> $GITHUB_OUTPUT
             echo "COLOR=3066993" >> $GITHUB_OUTPUT # Zielony
             echo "DESCRIPTION=Pomyślnie wdrożono (SIMULACJA) na **${{ inputs.environment }}**." >> $GITHUB_OUTPUT
+            echo "EMOJI=✅" >> $GITHUB_OUTPUT
           else
             echo "TITLE=Deployment BŁĄD" >> $GITHUB_OUTPUT
             echo "COLOR=15158332" >> $GITHUB_OUTPUT # Czerwony
             echo "DESCRIPTION=Wdrożenie (SIMULACJA) na **${{ inputs.environment }}** ZAWIODŁO! 🚨 Wymagana interwencja **@DevOps**." >> $GITHUB_OUTPUT
+            echo "EMOJI=❌" >> $GITHUB_OUTPUT
           fi
 
-      # Krok 2: Użycie stabilnej i popularnej akcji do wysłania powiadomienia
+      # Krok 2: Wysłanie powiadomienia za pomocą curl (bez zewnętrznych zależności)
       - name: Send Discord Webhook
-        uses: crazy-max/ghaction-discord@v4
-        with:
-          # Przekazanie URL webhooka z sekretów
-          webhook_url: ${{ secrets.webhook_url }}
-          # Stworzenie rozbudowanej wiadomości "embed"
-          embeds: |
-            [
-              {
-                "title": "${{ steps.vars.outputs.TITLE }}",
-                "description": "${{ steps.vars.outputs.DESCRIPTION }}",
-                "color": ${{ steps.vars.outputs.COLOR }},
-                "fields": [
-                  { "name": "Środowisko", "value": "${{ inputs.environment }}", "inline": true },
-                  { "name": "Commit ID", "value": "[${{ inputs.commit_sha }}](${{ github.server_url }}/${{ github.repository }}/commit/${{ inputs.commit_sha }})", "inline": true },
-                  { "name": "Wykonawca", "value": "${{ inputs.actor }}", "inline": true }
-                ]
-              }
-            ]
+        run: |
+          curl -H "Content-Type: application/json" \
+               -d '{
+                 "embeds": [
+                   {
+                     "title": "${{ steps.vars.outputs.EMOJI }} ${{ steps.vars.outputs.TITLE }}",
+                     "description": "${{ steps.vars.outputs.DESCRIPTION }}",
+                     "color": ${{ steps.vars.outputs.COLOR }},
+                     "fields": [
+                       {
+                         "name": "Środowisko",
+                         "value": "${{ inputs.environment }}",
+                         "inline": true
+                       },
+                       {
+                         "name": "Commit",
+                         "value": "[`${{ inputs.commit_sha }}`](${{ github.server_url }}/${{ github.repository }}/commit/${{ inputs.commit_sha }})",
+                         "inline": true
+                       },
+                       {
+                         "name": "Wykonawca",
+                         "value": "${{ inputs.actor }}",
+                         "inline": true
+                       },
+                       {
+                         "name": "Repository",
+                         "value": "[${{ github.repository }}](${{ github.server_url }}/${{ github.repository }})",
+                         "inline": false
+                       },
+                       {
+                         "name": "Workflow Run",
+                         "value": "[Zobacz szczegóły](${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }})",
+                         "inline": false
+                       }
+                     ],
+                     "timestamp": "'"$(date -u +%Y-%m-%dT%H:%M:%S.000Z)"'",
+                     "footer": {
+                       "text": "GitHub Actions",
+                       "icon_url": "https://github.githubassets.com/images/modules/logos_page/GitHub-Mark.png"
+                     }
+                   }
+                 ]
+               }' \
+               "${{ secrets.webhook_url }}"
