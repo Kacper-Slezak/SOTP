@@ -114,7 +114,7 @@ perf(db): add index to users table for faster email lookups
 
 ### Bad Commit Messages
 
-```
+```d
 updated stuff
 ```
 

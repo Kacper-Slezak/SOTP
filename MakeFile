@@ -1,72 +1,53 @@
-# Makefile dla projektu SOTP
-# Używa głównie Docker Compose, aby zapewnić spójność między systemami.
+# Makefile dla projektu SOTP - Wersja Hybrydowa (VENV + Docker)
 
-# Definicje plików docker-compose dla różnych środowisk
-DC_DEV = docker-compose -f infrastructure/docker/docker-compose.dev.yml
-DC_PROD = docker-compose -f infrastructure/docker/docker-compose.prod.yml
-
-# Domyślna komenda, która uruchomi się po wpisaniu 'make'
-.DEFAULT_GOAL := help
-
-# Deklaracja komend, które nie są plikami
-.PHONY: help setup dev down logs test build deploy backup restore
+.PHONY: help setup dev-backend dev-frontend test build push deploy
 
 help:
-	@echo "Dostępne komendy dla projektu SOTP:"
+	@echo "Dostępne komendy dla projektu SOTP (tryb hybrydowy):"
 	@echo ""
-	@echo "  make help          -> Wyświetla tę pomoc."
-	@echo "  make setup         -> Buduje obrazy Docker, potrzebne do startu (uruchom raz na początku)."
-	@echo "  make dev           -> Uruchamia środowisko deweloperskie w tle."
-	@echo "  make down          -> Zatrzymuje i usuwa kontenery deweloperskie."
-	@echo "  make logs          -> Wyświetla logi wszystkich uruchomionych usług."
-	@echo "  make test          -> Uruchamia testy backendu w dedykowanym kontenerze."
+	@echo "--- Development (Lokalnie z VENV) ---"
+	@echo "  make setup         -> Instaluje zależności w lokalnych środowiskach (venv/npm)."
+	@echo "  make dev-backend   -> Uruchamia serwer backendu FastAPI lokalnie."
+	@echo "  make dev-frontend  -> Uruchamia serwer frontendu Next.js lokalnie."
+	@echo "  make test          -> Uruchamia testy backendu lokalnie."
+	@echo ""
+	@echo "--- Deployment (z Dockerem) ---"
 	@echo "  make build         -> Buduje produkcyjne obrazy Docker."
-	[cite_start]@echo "  make deploy        -> Symuluje wdrożenie na produkcję (placeholder)." [cite: 1]
-	[cite_start]@echo "  make backup        -> Uruchamia skrypt do backupu bazy danych (placeholder)." [cite: 1]
-	[cite_start]@echo "  make restore       -> Uruchamia skrypt do odtworzenia bazy z backupu (placeholder)." [cite: 1]
+	@echo "  make push          -> Wysyła zbudowane obrazy do repozytorium (np. Docker Hub)."
+	@echo "  make deploy        -> Symuluje wdrożenie aplikacji na serwerze."
 	@echo ""
 
-# Buduje obrazy deweloperskie, --no-cache zapewnia świeżą instalację zależności
+# === Sekcja Development (VENV) ===
 setup:
-	@echo "🛠️  Budowanie obrazów deweloperskich..."
-	$(DC_DEV) build --no-cache
+	@echo "🛠️  Instalowanie zależności backendu w venv..."
+	(cd backend && python -m venv venv && . venv/Scripts/activate && pip install -r requirements.txt)
+	@echo "🛠️  Instalowanie zależności frontendu z npm..."
+	(cd frontend && npm install)
+	@echo "✅ Setup zakończony. Pamiętaj, aby aktywować venv dla backendu."
 
-# Uruchamia środowisko deweloperskie w tle (-d)
-dev:
-	@echo "🚀  Uruchamianie środowiska deweloperskiego..."
-	$(DC_DEV) up -d
+dev-backend:
+	@echo "🚀  Uruchamianie serwera backendu na http://localhost:8000"
+	@echo "Upewnij się, że venv jest aktywne ('source backend/venv/Scripts/activate')"
+	(cd backend && uvicorn app.main:app --reload)
 
-# Zatrzymuje i usuwa kontenery, sieci oraz wolumeny
-down:
-	@echo "✋  Zatrzymywanie środowiska deweloperskiego..."
-	$(DC_DEV) down
+dev-frontend:
+	@echo "🎨  Uruchamianie serwera frontendu na http://localhost:3000"
+	(cd frontend && npm run dev)
 
-# Wyświetla i śledzi (-f) logi wszystkich kontenerów
-logs:
-	@echo "📜  Wyświetlanie logów..."
-	$(DC_DEV) logs -f
-
-# Uruchamia testy backendu w nowym, tymczasowym kontenerze (--rm)
 test:
 	@echo "🧪  Uruchamianie testów backendu..."
-	$(DC_DEV) run --rm backend pytest
+	@echo "Upewnij się, że venv jest aktywne ('source backend/venv/Scripts/activate')"
+	(cd backend && pytest)
 
-# Buduje obrazy produkcyjne
+# === Sekcja Deployment (Docker) ===
 build:
-	@echo "📦  Budowanie obrazów produkcyjnych..."
-	$(DC_PROD) build
+	@echo "📦  Budowanie produkcyjnych obrazów Docker..."
+	docker-compose -f infrastructure/docker/docker-compose.prod.yml build
 
-# Placeholder dla komendy wdrożenia
+push:
+	@echo "⏫  Wysyłanie obrazów do repozytorium..."
+	docker-compose -f infrastructure/docker/docker-compose.prod.yml push
+
 deploy:
-	@echo "🚢  Symulacja wdrożenia na produkcję..."
-	$(DC_PROD) up -d
-
-# Placeholder dla komendy backupu
-backup:
-	@echo "💾  Uruchamianie backupu..."
-	@echo "Tutaj zostanie wywołany skrypt 'scripts/backup.sh'"
-
-# Placeholder dla komendy odtwarzania
-restore:
-	@echo "🔄  Odtwarzanie z backupu..."
-	@echo "Tutaj zostanie wywołany skrypt 'scripts/restore.sh'"
+	@echo "🚢  Wdrażanie aplikacji na serwerze..."
+	@echo "Ta komenda na serwerze produkcyjnym uruchomiłaby: docker-compose -f infrastructure/docker/docker-compose.prod.yml up -d"
