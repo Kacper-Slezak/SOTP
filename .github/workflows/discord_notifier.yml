@@ -1,7 +1,8 @@
-# .github/workflows/discord_notifier.yml - Logika Powiadamiania
+# .github/workflows/discord_notifier.yml - Logika Powiadamiania (Finalna Wersja)
 name: Reusable Discord Notifier
 on:
   workflow_call:
+    # ... (Inputs i Secrets są poprawne)
     inputs:
       status: { required: true, type: string }
       environment: { required: true, type: string }
@@ -18,17 +19,19 @@ jobs:
       - name: Prepare Variables and Message
         id: vars 
         run: |
+          # PRZYWRACAMY EMOJI I OPTYMALIZUJEMY TYTUŁY
           if [ "${{ inputs.status }}" == "success" ]; then
-            echo "TITLE=Deployment SUKCES " >> $GITHUB_OUTPUT
+            echo "TITLE=Deployment SUKCES ✅" >> $GITHUB_OUTPUT
             echo "COLOR=3066993" >> $GITHUB_OUTPUT # Zielony
             echo "DESCRIPTION=Pomyślnie wdrożono (SIMULACJA) na **${{ inputs.environment }}**." >> $GITHUB_OUTPUT
           else
-            echo "TITLE=Deployment BŁĄD " >> $GITHUB_OUTPUT
+            echo "TITLE=Deployment BŁĄD ❌" >> $GITHUB_OUTPUT
             echo "COLOR=15158332" >> $GITHUB_OUTPUT # Czerwony
-            echo "DESCRIPTION=Wdrożenie (SIMULACJA) na **${{ inputs.environment }}** ZAWIODŁO! " >> $GITHUB_OUTPUT
+            echo "DESCRIPTION=Wdrożenie (SIMULACJA) na **${{ inputs.environment }}** ZAWIODŁO! 🚨 Wymagana interwencja **@DevOps**." >> $GITHUB_OUTPUT
           fi
           
       - name: Send Discord Webhook
+        # ... (Reszta kroku Send Discord Webhook jest poprawna)
         if: always() 
         uses: rjstone/discord-webhook-action@v1.0.0
         with:
