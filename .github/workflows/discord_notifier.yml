@@ -1,0 +1,51 @@
+# .github/workflows/discord_notifier.yml - Logika Powiadamiania
+name: Reusable Discord Notifier
+on:
+  workflow_call:
+    inputs:
+      status: { required: true, type: string }
+      environment: { required: true, type: string }
+      commit_sha: { required: true, type: string }
+      actor: { required: true, type: string }
+    secrets:
+      webhook_id: { required: true }
+      webhook_token: { required: true }
+jobs:
+  send_notification:
+    name: Send Discord Notification
+    runs-on: ubuntu-latest
+    steps:
+      - name: Prepare Variables and Message
+        id: vars 
+        run: |
+          if [ "${{ inputs.status }}" == "success" ]; then
+            echo "TITLE=Deployment SUKCES " >> $GITHUB_OUTPUT
+            echo "COLOR=3066993" >> $GITHUB_OUTPUT # Zielony
+            echo "DESCRIPTION=Pomyślnie wdrożono (SIMULACJA) na **${{ inputs.environment }}**." >> $GITHUB_OUTPUT
+          else
+            echo "TITLE=Deployment BŁĄD " >> $GITHUB_OUTPUT
+            echo "COLOR=15158332" >> $GITHUB_OUTPUT # Czerwony
+            echo "DESCRIPTION=Wdrożenie (SIMULACJA) na **${{ inputs.environment }}** ZAWIODŁO! " >> $GITHUB_OUTPUT
+          fi
+          
+      - name: Send Discord Webhook
+        if: always() 
+        uses: rjstone/discord-webhook-action@v1.0.0
+        with:
+          webhook_id: ${{ secrets.webhook_id }}
+          webhook_token: ${{ secrets.webhook_token }}
+          content: "Status Deploymentu: **${{ inputs.status }}** na **${{ inputs.environment }}**!"
+          color: ${{ steps.vars.outputs.COLOR }}
+          embed: |
+            [
+              {
+                "title": "${{ steps.vars.outputs.TITLE }}",
+                "description": "${{ steps.vars.outputs.DESCRIPTION }}",
+                "color": ${{ steps.vars.outputs.COLOR }},
+                "fields": [
+                  { "name": "Środowisko", "value": "${{ inputs.environment }}", "inline": true },
+                  { "name": "Commit ID", "value": "[${{ inputs.commit_sha }}](${{ github.server_url }}/${{ github.repository }}/commit/${{ inputs.commit_sha }})", "inline": true },
+                  { "name": "Wykonawca", "value": "${{ inputs.actor }}", "inline": true }
+                ]
+              }
+            ]

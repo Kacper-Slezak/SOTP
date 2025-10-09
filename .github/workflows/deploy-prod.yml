@@ -1,0 +1,55 @@
+name:  CD - Production Deployment (Minimal Setup)
+
+on:
+  push:
+    tags:
+      - 'v*' # Uruchom na nowy tag, np. v1.0.0
+
+jobs:
+  # ZADANIE 1: Symulacja Wdrożenia (MINIMALNA WERSJA)
+  deploy_to_prod:
+    name: Deploy Core Services
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+        
+      - name: SIMULATING Deployment via SSH
+        run: |
+          echo "Connecting to SOTP server..."
+          sleep 10
+          echo "Deployment command completed successfully!"
+          # W pełnej wersji byłoby tu np. appleboy/ssh-action@v1
+
+  # ZADANIE 2: Powiadomienie o sukcesie (WYWOŁANIE NOTIFIERA)
+  notify_success:
+    name:  Success Notification
+    runs-on: ubuntu-latest
+    needs: deploy_to_prod # Wymaga ukończenia symulacji deploymentu
+    if: success() && always() # Wysłane, jeśli 'deploy_to_prod' zakończył się SUKCESEM
+    uses: ./.github/workflows/discord_notifier.yml 
+    with:
+      status: success 
+      environment: Production
+      commit_sha: ${{ github.sha }}
+      actor: ${{ github.actor }}
+    secrets:
+      webhook_id: ${{ secrets.DEPLOY_WEBHOOK_ID }}
+      webhook_token: ${{ secrets.DEPLOY_WEBHOOK_TOKEN }}
+      
+  # ZADANIE 3: Powiadomienie o błędzie (WYWOŁANIE NOTIFIERA)
+  notify_failure:
+    name: Failure Notification
+    runs-on: ubuntu-latest
+    needs: deploy_to_prod 
+    if: failure() && always() # Wysłane, jeśli 'deploy_to_prod' zakończył się BŁĘDEM
+    uses: ./.github/workflows/discord_notifier.yml
+    with:
+      status: failure
+      environment: Production
+      commit_sha: ${{ github.sha }}
+      actor: ${{ github.actor }}
+    secrets:
+      webhook_id: ${{ secrets.DEPLOY_WEBHOOK_ID }}
+      webhook_token: ${{ secrets.DEPLOY_WEBHOOK_TOKEN }}
