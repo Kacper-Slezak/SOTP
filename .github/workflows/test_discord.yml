@@ -32,7 +32,7 @@ jobs:
   notify_success:
     name: Success Notification
     needs: simulate_success
-    runs-on: ubuntu-latest
+    # runs-on: ubuntu-latest  <-- TĘ LINIĘ NALEŻY USUNĄĆ
     if: success()
     uses: ./.github/workflows/discord_notifier.yml
     with:
@@ -47,7 +47,7 @@ jobs:
   notify_failure:
     name: Failure Notification
     needs: simulate_failure
-    runs-on: ubuntu-latest
+    # runs-on: ubuntu-latest  <-- TĘ LINIĘ NALEŻY USUNĄĆ
     if: failure()
     uses: ./.github/workflows/discord_notifier.yml
     with:
