@@ -27,16 +27,16 @@ The header is the most important part of the commit message and has a specific f
 
 This describes the kind of change that the commit contains. The allowed types are:
 
-  * **feat**: A new feature for the user.
-  * **fix**: A bug fix for the user.
-  * **docs**: Changes to documentation only.
-  * **style**: Changes that do not affect the meaning of the code (white-space, formatting, missing semi-colons, etc).
-  * **refactor**: A code change that neither fixes a bug nor adds a feature.
-  * **perf**: A code change that improves performance.
-  * **test**: Adding missing tests or correcting existing tests.
-  * **build**: Changes that affect the build system or external dependencies (e.g., `package.json`, `Dockerfile`).
-  * **ci**: Changes to our CI/CD configuration files and scripts (e.g., GitHub Actions workflows).
-  * **chore**: Other changes that don't modify source code or test files (e.g., updating `.gitignore`).
+* **feat**: A new feature for the user.
+* **fix**: A bug fix for the user.
+* **docs**: Changes to documentation only.
+* **style**: Changes that do not affect the meaning of the code (white-space, formatting, missing semi-colons, etc).
+* **refactor**: A code change that neither fixes a bug nor adds a feature.
+* **perf**: A code change that improves performance.
+* **test**: Adding missing tests or correcting existing tests.
+* **build**: Changes that affect the build system or external dependencies (e.g., `package.json`, `Dockerfile`).
+* **ci**: Changes to our CI/CD configuration files and scripts (e.g., GitHub Actions workflows).
+* **chore**: Other changes that don't modify source code or test files (e.g., updating `.gitignore`).
 
 #### **`<scope>` (Optional)**
 
@@ -48,9 +48,9 @@ Examples: `api`, `frontend`, `auth`, `collectors`, `db`
 
 The subject contains a short, concise description of the change.
 
-  * Use the imperative, present tense: "add" not "added" or "adds".
-  * Don't capitalize the first letter.
-  * Do not end the subject line with a period.
+* Use the imperative, present tense: "add" not "added" or "adds".
+* Don't capitalize the first letter.
+* Do not end the subject line with a period.
 
 -----
 
@@ -58,8 +58,8 @@ The subject contains a short, concise description of the change.
 
 The body is used to provide more detailed information about the commit. Use it to explain the "what" and "why" of the change, not the "how".
 
-  * Separate the body from the subject with a blank line.
-  * Use multiple paragraphs if needed.
+* Separate the body from the subject with a blank line.
+* Use multiple paragraphs if needed.
 
 -----
 
@@ -67,8 +67,8 @@ The body is used to provide more detailed information about the commit. Use it t
 
 The footer is used to reference issues from your issue tracker (like GitHub Issues) or to note breaking changes.
 
-  * **Breaking Changes**: Start with `BREAKING CHANGE:` followed by a detailed description of the change, the justification, and migration notes.
-  * **Referencing Issues**: Use keywords like `Closes`, `Fixes`, or `Resolves` followed by the issue number. For example: `Closes #123`.
+* **Breaking Changes**: Start with `BREAKING CHANGE:` followed by a detailed description of the change, the justification, and migration notes.
+* **Referencing Issues**: Use keywords like `Closes`, `Fixes`, or `Resolves` followed by the issue number. For example: `Closes #123`.
 
 -----
 
@@ -118,7 +118,7 @@ perf(db): add index to users table for faster email lookups
 updated stuff
 ```
 
-*(Too vague, wrong format)*
+Too vague, wrong format.
 
 ```
 fix: Fixed a bug
@@ -130,4 +130,4 @@ fix: Fixed a bug
 feat: add login functionality and also fix the header styling
 ```
 
-*(A single commit should address a single concern)*
+A single commit should address a single concern.
