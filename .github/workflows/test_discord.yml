@@ -1,15 +1,18 @@
-# .github/workflows/test_discord.yml - POPRAWIONA WERSJA
+# .github/workflows/test_discord.yml - Workflow do testowania notifiera
 
 name: Discord Notifier Test (Manual/Tag)
 
 on:
+  # Pozwala na ręczne uruchomienie z zakładki "Actions" na GitHubie
+  workflow_dispatch:
+
+  # Uruchamia się po wypchnięciu taga, który zaczyna się od "test-"
   push:
     tags:
-      - 'test-*' # Uruchom na tag, np. test-success-1
-  workflow_dispatch: # Opcjonalnie: Uruchomienie ręczne z UI GitHub Actions
+      - 'test-*'
 
 jobs:
-  # Zadanie A: Symulacja Sukcesu
+  # Zadanie A: Symulacja sukcesu
   simulate_success:
     name: Simulating Successful Deployment
     runs-on: ubuntu-latest
@@ -17,7 +20,7 @@ jobs:
       - name: Run a successful command
         run: echo "Deployment process OK!"
 
-  # Zadanie B: Symulacja Porażki
+  # Zadanie B: Symulacja porażki
   simulate_failure:
     name: Simulating Failed Deployment
     runs-on: ubuntu-latest
@@ -28,8 +31,8 @@ jobs:
   # Wywołanie Notifiera dla SUKCESU
   notify_success:
     name: Success Notification
-    # runs-on: ubuntu-latest  <-- USUNIĘTE
     needs: simulate_success
+    runs-on: ubuntu-latest
     if: success()
     uses: ./.github/workflows/discord_notifier.yml
     with:
@@ -38,14 +41,13 @@ jobs:
       commit_sha: ${{ github.sha }}
       actor: ${{ github.actor }}
     secrets:
-      webhook_id: ${{ secrets.DEPLOY_WEBHOOK_ID }}
-      webhook_token: ${{ secrets.DEPLOY_WEBHOOK_TOKEN }}
+      webhook_url: ${{ secrets.DISCORD_WEBHOOK_URL }}
 
   # Wywołanie Notifiera dla BŁĘDU
   notify_failure:
     name: Failure Notification
-    # runs-on: ubuntu-latest  <-- USUNIĘTE
     needs: simulate_failure
+    runs-on: ubuntu-latest
     if: failure()
     uses: ./.github/workflows/discord_notifier.yml
     with:
@@ -54,5 +56,4 @@ jobs:
       commit_sha: ${{ github.sha }}
       actor: ${{ github.actor }}
     secrets:
-      webhook_id: ${{ secrets.DEPLOY_WEBHOOK_ID }}
-      webhook_token: ${{ secrets.DEPLOY_WEBHOOK_TOKEN }}
+      webhook_url: ${{ secrets.DISCORD_WEBHOOK_URL }}

@@ -1,45 +1,45 @@
-# .github/workflows/discord_notifier.yml - Logika Powiadamiania (Finalna Wersja)
+# .github/workflows/discord_notifier.yml - Reużywalny workflow do wysyłania powiadomień
+
 name: Reusable Discord Notifier
 on:
   workflow_call:
-    # ... (Inputs i Secrets są poprawne)
+    # Definiujemy, jakie dane wejściowe (inputs) i sekrety (secrets) są wymagane
     inputs:
       status: { required: true, type: string }
       environment: { required: true, type: string }
       commit_sha: { required: true, type: string }
       actor: { required: true, type: string }
     secrets:
-      webhook_id: { required: true }
-      webhook_token: { required: true }
+      # Wymagamy jednego sekretu z całym adresem URL webhooka
+      webhook_url: { required: true }
+
 jobs:
   send_notification:
     name: Send Discord Notification
     runs-on: ubuntu-latest
     steps:
+      # Krok 1: Przygotowanie dynamicznych zmiennych (kolor, tytuł) w zależności od statusu
       - name: Prepare Variables and Message
-        id: vars 
+        id: vars
         run: |
-          # PRZYWRACAMY EMOJI I OPTYMALIZUJEMY TYTUŁY
           if [ "${{ inputs.status }}" == "success" ]; then
-            echo "TITLE=Deployment SUKCES ✅" >> $GITHUB_OUTPUT
+            echo "TITLE=Deployment SUKCES" >> $GITHUB_OUTPUT
             echo "COLOR=3066993" >> $GITHUB_OUTPUT # Zielony
             echo "DESCRIPTION=Pomyślnie wdrożono (SIMULACJA) na **${{ inputs.environment }}**." >> $GITHUB_OUTPUT
           else
-            echo "TITLE=Deployment BŁĄD ❌" >> $GITHUB_OUTPUT
+            echo "TITLE=Deployment BŁĄD" >> $GITHUB_OUTPUT
             echo "COLOR=15158332" >> $GITHUB_OUTPUT # Czerwony
             echo "DESCRIPTION=Wdrożenie (SIMULACJA) na **${{ inputs.environment }}** ZAWIODŁO! 🚨 Wymagana interwencja **@DevOps**." >> $GITHUB_OUTPUT
           fi
-          
+
+      # Krok 2: Użycie stabilnej i popularnej akcji do wysłania powiadomienia
       - name: Send Discord Webhook
-        # ... (Reszta kroku Send Discord Webhook jest poprawna)
-        if: always() 
-        uses: rjstone/discord-webhook-action@v1.0.0
+        uses: crazy-max/ghaction-discord@v4
         with:
-          webhook_id: ${{ secrets.webhook_id }}
-          webhook_token: ${{ secrets.webhook_token }}
-          content: "Status Deploymentu: **${{ inputs.status }}** na **${{ inputs.environment }}**!"
-          color: ${{ steps.vars.outputs.COLOR }}
-          embed: |
+          # Przekazanie URL webhooka z sekretów
+          webhook_url: ${{ secrets.webhook_url }}
+          # Stworzenie rozbudowanej wiadomości "embed"
+          embeds: |
             [
               {
                 "title": "${{ steps.vars.outputs.TITLE }}",

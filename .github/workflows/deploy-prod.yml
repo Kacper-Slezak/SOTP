@@ -1,55 +1,46 @@
-name:  CD - Production Deployment (Minimal Setup)
+# .github/workflows/deploy-prod.yml - Workflow wdrożenia na produkcję
+
+name: CD - Production Deployment
 
 on:
   push:
     tags:
-      - 'v*' # Uruchom na nowy tag, np. v1.0.0
+      - 'v*' # Uruchom na każdy tag zaczynający się od 'v', np. v1.0.0
 
 jobs:
-  # ZADANIE 1: Symulacja Wdrożenia (MINIMALNA WERSJA)
-  deploy_to_prod:
-    name: Deploy Core Services
+  # Zadanie 1: Symulacja wdrożenia
+  deploy:
+    name: 🚀 Deploy to Production
     runs-on: ubuntu-latest
-    
+    # Dodanie środowiska "production" wymusza manualną akceptację (jeśli tak skonfigurowano w ustawieniach)
+    environment:
+      name: production
+      url: https://sotp.example.com # Zmień na swój URL
     steps:
       - name: Checkout Code
         uses: actions/checkout@v4
-        
+
       - name: SIMULATING Deployment via SSH
         run: |
-          echo "Connecting to SOTP server..."
-          sleep 10
+          echo "Connecting to SOTP production server..."
+          echo "Deploying version ${{ github.ref_name }}..."
+          sleep 15
           echo "Deployment command completed successfully!"
-          # W pełnej wersji byłoby tu np. appleboy/ssh-action@v1
 
-  # ZADANIE 2: Powiadomienie o sukcesie (WYWOŁANIE NOTIFIERA)
-  notify_success:
-    name:  Success Notification
+  # Zadanie 2: Wysłanie powiadomienia o statusie wdrożenia
+  notify:
+    name: 📢 Notify on Status
     runs-on: ubuntu-latest
-    needs: deploy_to_prod
-    if: success() # <--- TYLKO TO JEST POTRZEBNE
-    uses: ./.github/workflows/discord_notifier.yml 
-    with:
-      status: success 
-      environment: Production
-      commit_sha: ${{ github.sha }}
-      actor: ${{ github.actor }}
-    secrets:
-      webhook_id: ${{ secrets.DEPLOY_WEBHOOK_ID }}
-      webhook_token: ${{ secrets.DEPLOY_WEBHOOK_TOKEN }}
-      
-  # ZADANIE 3: Powiadomienie o błędzie (WYWOŁANIE NOTIFIERA)
-  notify_failure:
-    name: Failure Notification
-    runs-on: ubuntu-latest
-    needs: deploy_to_prod 
-    if: failure() # <--- TYLKO TO JEST POTRZEBNE
+    needs: deploy
+    # Uruchom zawsze, aby dostać powiadomienie zarówno o sukcesie, jak i o porażce
+    if: always()
     uses: ./.github/workflows/discord_notifier.yml
     with:
-      status: failure
+      # Dynamiczne przekazanie statusu ('success' lub 'failure') z poprzedniego zadania
+      status: ${{ needs.deploy.result }}
       environment: Production
       commit_sha: ${{ github.sha }}
       actor: ${{ github.actor }}
     secrets:
-      webhook_id: ${{ secrets.DEPLOY_WEBHOOK_ID }}
-      webhook_token: ${{ secrets.DEPLOY_WEBHOOK_TOKEN }}
+      # Przekazanie sekretu z URL webhooka
+      webhook_url: ${{ secrets.DISCORD_WEBHOOK_URL }}
