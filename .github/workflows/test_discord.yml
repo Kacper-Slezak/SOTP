@@ -1,6 +1,6 @@
-# .github/workflows/test_discord.yml - Testowy Workflow
+# .github/workflows/test_discord.yml - POPRAWIONA WERSJA
 
-name:  Discord Notifier Test (Manual/Tag)
+name: Discord Notifier Test (Manual/Tag)
 
 on:
   push:
@@ -28,25 +28,25 @@ jobs:
   # Wywołanie Notifiera dla SUKCESU
   notify_success:
     name: Success Notification
-    runs-on: ubuntu-latest
+    # runs-on: ubuntu-latest  <-- USUNIĘTE
     needs: simulate_success
-    if: success() 
+    if: success()
     uses: ./.github/workflows/discord_notifier.yml
     with:
-      status: success 
+      status: success
       environment: TEST-SUCCESS
       commit_sha: ${{ github.sha }}
       actor: ${{ github.actor }}
     secrets:
       webhook_id: ${{ secrets.DEPLOY_WEBHOOK_ID }}
       webhook_token: ${{ secrets.DEPLOY_WEBHOOK_TOKEN }}
-      
+
   # Wywołanie Notifiera dla BŁĘDU
   notify_failure:
     name: Failure Notification
-    runs-on: ubuntu-latest
+    # runs-on: ubuntu-latest  <-- USUNIĘTE
     needs: simulate_failure
-    if: failure() 
+    if: failure()
     uses: ./.github/workflows/discord_notifier.yml
     with:
       status: failure
