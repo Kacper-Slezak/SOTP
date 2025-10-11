@@ -1,6 +1,3 @@
-Of course. Here is a comprehensive `README.md` file for the SOTP project, written in English. It's based on the architecture, requirements, and setup procedures found in your project's documentation.
-
------
 
 # SOTP - System Observability & Telemetry Platform
 
@@ -69,7 +66,7 @@ You need the following software installed on your machine:
 1.  **Clone the repository:**
 
     ```sh
-    git clone https://your-repository-url/sotp.git
+    git clone https://github.com/Kacper-Slezak/SOTP.git
     cd sotp
     ```
 
