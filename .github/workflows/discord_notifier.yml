@@ -1,82 +1,196 @@
-# .github/workflows/discord_notifier.yml - Reużywalny workflow do wysyłania powiadomień
+# .github/workflows/discord_notifier.yml - Reusable Discord Notifier
 
-name: Reusable Discord Notifier
+name:  Reusable Discord Notifier
+
 on:
   workflow_call:
-    # Definiujemy, jakie dane wejściowe (inputs) i sekrety (secrets) są wymagane
+    # ===================================================================
+    # INPUTS - Dane wejściowe wymagane przez workflow
+    # ===================================================================
     inputs:
-      status: { required: true, type: string }
-      environment: { required: true, type: string }
-      commit_sha: { required: true, type: string }
-      actor: { required: true, type: string }
+      status:
+        description: 'Deployment status (success/failure)'
+        required: true
+        type: string
+        
+      environment:
+        description: 'Target environment (Production/Staging/Test)'
+        required: true
+        type: string
+        
+      commit_sha:
+        description: 'Git commit SHA'
+        required: true
+        type: string
+        
+      actor:
+        description: 'GitHub username who triggered the action'
+        required: true
+        type: string
+        
+      # Opcjonalne dodatkowe informacje
+      deployment_url:
+        description: 'URL deployed application (optional)'
+        required: false
+        type: string
+        default: ''
+        
+      version:
+        description: 'Application version/tag (optional)'
+        required: false
+        type: string
+        default: ''
+        
+    # ===================================================================
+    # SECRETS - Wrażliwe dane
+    # ===================================================================
     secrets:
-      # Wymagamy jednego sekretu z całym adresem URL webhooka
-      webhook_url: { required: true }
+      webhook_url:
+        description: 'Discord webhook URL'
+        required: true
 
 jobs:
+  # ===================================================================
+  # WYSYŁANIE POWIADOMIENIA
+  # ===================================================================
   send_notification:
     name: Send Discord Notification
     runs-on: ubuntu-latest
+    timeout-minutes: 2
+    
     steps:
-      # Krok 1: Przygotowanie dynamicznych zmiennych (kolor, tytuł) w zależności od statusu
+      # =================================================================
+      # KROK 1: Przygotowanie zmiennych
+      # =================================================================
       - name: Prepare Variables and Message
         id: vars
         run: |
+          # Skrócony commit SHA (pierwsze 7 znaków)
+          SHORT_SHA="${{ inputs.commit_sha }}"
+          SHORT_SHA="${SHORT_SHA:0:7}"
+          echo "SHORT_SHA=$SHORT_SHA" >> $GITHUB_OUTPUT
+          
+          # Przygotowanie informacji zależnie od statusu
           if [ "${{ inputs.status }}" == "success" ]; then
-            echo "TITLE=Deployment SUKCES" >> $GITHUB_OUTPUT
-            echo "COLOR=3066993" >> $GITHUB_OUTPUT # Zielony
-            echo "DESCRIPTION=Pomyślnie wdrożono (SIMULACJA) na **${{ inputs.environment }}**." >> $GITHUB_OUTPUT
+            echo "TITLE= Deployment SUCCESS" >> $GITHUB_OUTPUT
+            echo "COLOR=3066993" >> $GITHUB_OUTPUT  # Zielony (#2ecc71)
             echo "EMOJI=✅" >> $GITHUB_OUTPUT
+            echo "DESCRIPTION=Deployment do **${{ inputs.environment }}** zakończone **sukcesem**! 🎉" >> $GITHUB_OUTPUT
+            echo "THUMBNAIL=https://raw.githubusercontent.com/github/explore/main/topics/github-actions/github-actions.png" >> $GITHUB_OUTPUT
           else
-            echo "TITLE=Deployment BŁĄD" >> $GITHUB_OUTPUT
-            echo "COLOR=15158332" >> $GITHUB_OUTPUT # Czerwony
-            echo "DESCRIPTION=Wdrożenie (SIMULACJA) na **${{ inputs.environment }}** ZAWIODŁO! 🚨 Wymagana interwencja **@DevOps**." >> $GITHUB_OUTPUT
+            echo "TITLE= Deployment FAILURE" >> $GITHUB_OUTPUT
+            echo "COLOR=15158332" >> $GITHUB_OUTPUT  # Czerwony (#e74c3c)
             echo "EMOJI=❌" >> $GITHUB_OUTPUT
+            echo "DESCRIPTION= Deployment do **${{ inputs.environment }}** **ZAWIÓDŁ**! Wymagana natychmiastowa interwencja." >> $GITHUB_OUTPUT
+            echo "THUMBNAIL=https://raw.githubusercontent.com/github/explore/main/topics/github-actions/github-actions.png" >> $GITHUB_OUTPUT
           fi
+          
+          # Timestamp w formacie ISO 8601
+          TIMESTAMP=$(date -u +%Y-%m-%dT%H:%M:%S.000Z)
+          echo "TIMESTAMP=$TIMESTAMP" >> $GITHUB_OUTPUT
+          
+          # Workflow name
+          WORKFLOW_NAME="${{ github.workflow }}"
+          echo "WORKFLOW_NAME=$WORKFLOW_NAME" >> $GITHUB_OUTPUT
 
-      # Krok 2: Wysłanie powiadomienia za pomocą curl (bez zewnętrznych zależności)
+      # =================================================================
+      # KROK 2: Wysłanie webhooka do Discord
+      # =================================================================
       - name: Send Discord Webhook
         run: |
-          curl -H "Content-Type: application/json" \
-               -d '{
-                 "embeds": [
-                   {
-                     "title": "${{ steps.vars.outputs.EMOJI }} ${{ steps.vars.outputs.TITLE }}",
-                     "description": "${{ steps.vars.outputs.DESCRIPTION }}",
-                     "color": ${{ steps.vars.outputs.COLOR }},
-                     "fields": [
-                       {
-                         "name": "Środowisko",
-                         "value": "${{ inputs.environment }}",
-                         "inline": true
-                       },
-                       {
-                         "name": "Commit",
-                         "value": "[`${{ inputs.commit_sha }}`](${{ github.server_url }}/${{ github.repository }}/commit/${{ inputs.commit_sha }})",
-                         "inline": true
-                       },
-                       {
-                         "name": "Wykonawca",
-                         "value": "${{ inputs.actor }}",
-                         "inline": true
-                       },
-                       {
-                         "name": "Repository",
-                         "value": "[${{ github.repository }}](${{ github.server_url }}/${{ github.repository }})",
-                         "inline": false
-                       },
-                       {
-                         "name": "Workflow Run",
-                         "value": "[Zobacz szczegóły](${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }})",
-                         "inline": false
-                       }
-                     ],
-                     "timestamp": "'"$(date -u +%Y-%m-%dT%H:%M:%S.000Z)"'",
-                     "footer": {
-                       "text": "GitHub Actions",
-                       "icon_url": "https://github.githubassets.com/images/modules/logos_page/GitHub-Mark.png"
-                     }
-                   }
-                 ]
-               }' \
-               "${{ secrets.webhook_url }}"
+          # Przygotowanie JSON payload
+          cat << 'EOF' > payload.json
+          {
+            "username": "GitHub Actions Bot",
+            "avatar_url": "https://github.githubassets.com/images/modules/logos_page/GitHub-Mark.png",
+            "embeds": [
+              {
+                "title": "${{ steps.vars.outputs.EMOJI }} ${{ steps.vars.outputs.TITLE }}",
+                "description": "${{ steps.vars.outputs.DESCRIPTION }}",
+                "color": ${{ steps.vars.outputs.COLOR }},
+                "thumbnail": {
+                  "url": "${{ steps.vars.outputs.THUMBNAIL }}"
+                },
+                "fields": [
+                  {
+                    "name": "Environment",
+                    "value": "**${{ inputs.environment }}**",
+                    "inline": true
+                  },
+                  {
+                    "name": "Triggered By",
+                    "value": "**${{ inputs.actor }}**",
+                    "inline": true
+                  },
+                  {
+                    "name": "Workflow",
+                    "value": "**${{ steps.vars.outputs.WORKFLOW_NAME }}**",
+                    "inline": true
+                  },
+                  {
+                    "name": "Commit",
+                    "value": "[`${{ steps.vars.outputs.SHORT_SHA }}`](${{ github.server_url }}/${{ github.repository }}/commit/${{ inputs.commit_sha }})",
+                    "inline": true
+                  },
+                  {
+                    "name": "Repository",
+                    "value": "[${{ github.repository }}](${{ github.server_url }}/${{ github.repository }})",
+                    "inline": true
+                  },
+                  {
+                    "name": "Workflow Run",
+                    "value": "[View Details](${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }})",
+                    "inline": true
+                  }
+          EOF
+          
+          # Dodaj opcjonalne pola jeśli istnieją
+          if [ -n "${{ inputs.version }}" ]; then
+            cat << 'EOF' >> payload.json
+                  ,
+                  {
+                    "name": "Version",
+                    "value": "**${{ inputs.version }}**",
+                    "inline": true
+                  }
+          EOF
+          fi
+          
+          if [ -n "${{ inputs.deployment_url }}" ]; then
+            cat << 'EOF' >> payload.json
+                  ,
+                  {
+                    "name": "Application URL",
+                    "value": "[${{ inputs.deployment_url }}](${{ inputs.deployment_url }})",
+                    "inline": false
+                  }
+          EOF
+          fi
+          
+          # Zamknij JSON
+          cat << 'EOF' >> payload.json
+                ],
+                "timestamp": "${{ steps.vars.outputs.TIMESTAMP }}",
+                "footer": {
+                  "text": "SOTP CI/CD Pipeline",
+                  "icon_url": "https://github.githubassets.com/images/modules/logos_page/GitHub-Mark.png"
+                }
+              }
+            ]
+          }
+          EOF
+          
+          # Wyślij webhook
+          HTTP_STATUS=$(curl -s -o response.txt -w "%{http_code}" \
+            -H "Content-Type: application/json" \
+            -d @payload.json \
+            "${{ secrets.webhook_url }}")
+          
+          # Sprawdź status
+          if [ "$HTTP_STATUS" -ge 200 ] && [ "$HTTP_STATUS" -lt 300 ]; then
+            echo "Discord notification sent successfully! (Status: $HTTP_STATUS)"
+          else
+            echo "Discord notification failed with status: $HTTP_STATUS"
+            cat response.txt
+            exit 1
+          fi
