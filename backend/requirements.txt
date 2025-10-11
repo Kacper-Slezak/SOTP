@@ -18,3 +18,9 @@ icmplib==3.0.4
 pysnmp==4.4.12
 netmiko==4.3.0
 celery[redis]==5.3.4
+
+# Development & Testing
+pytest==7.4.0
+pytest-cov==4.1.0
+pytest-asyncio==0.22.0
+httpx==0.24.1

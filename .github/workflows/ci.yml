@@ -167,20 +167,16 @@ jobs:
           cache: 'pip'
           cache-dependency-path: backend/requirements.txt
 
-      - name: Install backend dependencies and Pytest
-        run: |
-          pip install -r backend/requirements.txt
-          # THIS IS THE FIX: Explicitly install pytest and the coverage tool
-          pip install pytest pytest-cov
+      - name: Install backend dependencies
+        run: pip install -r backend/requirements.txt # Już nie potrzeba osobnej instalacji pytest
 
       - name: Run backend tests
         id: pytest_check
-        continue-on-error: true # Prevents workflow failure if no tests are found
+        continue-on-error: true
         run: |
           export PYTHONPATH=$(pwd)/backend
-          # Run pytest and capture its specific exit code to the 'exit_code' output
           pytest backend/tests/
-          echo "exit_code=$?" >> $GITHUB_OUTPUT
+          echo "exit_code=$?" >> $GITHUB_OUTPUT 
 
       # --- FRONTEND TESTS ---
       - name: Set up Node.js
