@@ -1,40 +1,179 @@
-# .github/workflows/deploy-prod.yml - Workflow wdrożenia na produkcję
+# .github/workflows/deploy-prod.yml - Build & Package Release
+# 
+# ⚠️ UWAGA: Ten workflow NIE deployuje na serwer (jeszcze nie mamy infrastruktury)
+# Cel: Zbudować i opublikować obraz Docker dla przyszłego użycia
+#
+# Uruchamia się TYLKO gdy utworzysz tag: git tag v1.0.0 && git push origin v1.0.0
 
-name: CD - Production Deployment
+name: 📦 Build Release
 
 on:
   push:
     tags:
-      - 'v*' # Uruchom na każdy tag zaczynający się od 'v', np. v1.0.0
+      - 'v*' # v1.0.0, v1.1.0, itp.
+
+permissions:
+  contents: read
+  packages: write  # Potrzebne do pushowania do GitHub Container Registry
+
+env:
+  REGISTRY: ghcr.io
+  IMAGE_NAME: ${{ github.repository }}
 
 jobs:
-  deploy:
-    name: 🚀 Deploy to Production
+  # ===================================================================
+  # JOB 1: BUILD & PUBLISH - Zbuduj i wypchnij obraz Docker
+  # ===================================================================
+  build_and_publish:
+    name: 🐳 Build & Publish Docker Image
     runs-on: ubuntu-latest
-    environment:
-      name: production
-      url: https://sotp.example.com # Zmień na swój URL
+    timeout-minutes: 20
+    
     steps:
-      - name: Checkout Code
+      - name: 📥 Checkout Code
         uses: actions/checkout@v4
-
-      - name: SIMULATING Deployment via SSH
+        
+      - name: 🏷️ Extract Version from Tag
+        id: version
         run: |
-          echo "Connecting to SOTP production server..."
-          echo "Deploying version ${{ github.ref_name }}..."
-          sleep 15
-          echo "Deployment command completed successfully!"
+          # Z taga v1.2.0 wyciągamy 1.2.0
+          VERSION=${GITHUB_REF#refs/tags/v}
+          echo "VERSION=$VERSION" >> $GITHUB_OUTPUT
+          echo "📦 Building version: $VERSION"
+          
+      - name: 🔧 Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+        
+      - name: 🔐 Log in to GitHub Container Registry
+        uses: docker/login-action@v3
+        with:
+          registry: ${{ env.REGISTRY }}
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+          
+      - name: 🐳 Build and Push Docker Image
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          push: true  # Pushuj do GitHub Container Registry
+          tags: |
+            ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:latest
+            ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ steps.version.outputs.VERSION }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+          labels: |
+            org.opencontainers.image.title=SOTP
+            org.opencontainers.image.version=${{ steps.version.outputs.VERSION }}
+            org.opencontainers.image.created=${{ github.event.head_commit.timestamp }}
+            org.opencontainers.image.revision=${{ github.sha }}
+            
+      - name: ✅ Build Summary
+        run: |
+          echo "==================================="
+          echo "🎉 Docker Image Published!"
+          echo "==================================="
+          echo "📦 Version: ${{ steps.version.outputs.VERSION }}"
+          echo "🏷️ Tag: ${{ github.ref_name }}"
+          echo "🐳 Image: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}"
+          echo ""
+          echo "Available tags:"
+          echo "  - latest"
+          echo "  - ${{ steps.version.outputs.VERSION }}"
+          echo ""
+          echo "🔗 View at: https://github.com/${{ github.repository }}/pkgs/container/${{ github.event.repository.name }}"
+          echo "==================================="
 
+  # ===================================================================
+  # JOB 2: CREATE RELEASE NOTES - Stwórz release notes na GitHubie
+  # ===================================================================
+  create_release:
+    name: 📝 Create GitHub Release
+    runs-on: ubuntu-latest
+    needs: build_and_publish
+    timeout-minutes: 5
+    
+    steps:
+      - name: 📥 Checkout Code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0  # Pobierz całą historię (dla changelog)
+          
+      - name: 🏷️ Extract Version
+        id: version
+        run: |
+          VERSION=${GITHUB_REF#refs/tags/v}
+          echo "VERSION=$VERSION" >> $GITHUB_OUTPUT
+          
+      - name: 📝 Generate Changelog
+        id: changelog
+        run: |
+          # Znajdź poprzedni tag
+          PREVIOUS_TAG=$(git describe --tags --abbrev=0 HEAD^ 2>/dev/null || echo "")
+          
+          if [ -z "$PREVIOUS_TAG" ]; then
+            echo "First release - no previous tag found"
+            CHANGELOG="🎉 Initial release of SOTP v${{ steps.version.outputs.VERSION }}"
+          else
+            echo "Generating changelog from $PREVIOUS_TAG to ${{ github.ref_name }}"
+            
+            # Generuj changelog z commitów
+            CHANGELOG=$(git log ${PREVIOUS_TAG}..HEAD --pretty=format:"- %s (%h)" --no-merges)
+            
+            # Dodaj header
+            CHANGELOG="## Changes since ${PREVIOUS_TAG}"$'\n\n'"${CHANGELOG}"
+          fi
+          
+          # Zapisz do pliku (GitHub Actions ma problem z multi-line w GITHUB_OUTPUT)
+          echo "$CHANGELOG" > changelog.txt
+          
+      - name: 🚀 Create GitHub Release
+        uses: softprops/action-gh-release@v1
+        with:
+          tag_name: ${{ github.ref_name }}
+          name: Release ${{ steps.version.outputs.VERSION }}
+          body_path: changelog.txt
+          draft: false
+          prerelease: false
+          generate_release_notes: true  # GitHub automatycznie doda release notes
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+  # ===================================================================
+  # JOB 3: NOTIFY - Powiadomienie na Discord
+  # ===================================================================
   notify:
-    name: 📢 Notify on Status
-    # runs-on: ubuntu-latest  <-- TĘ LINIĘ NALEŻY USUNĄĆ
-    needs: deploy
+    name: 📢 Notify Release Status
+    needs: [build_and_publish, create_release]
     if: always()
     uses: ./.github/workflows/discord_notifier.yml
     with:
-      status: ${{ needs.deploy.result }}
-      environment: Production
+      status: ${{ needs.build_and_publish.result == 'success' && needs.create_release.result == 'success' && 'success' || 'failure' }}
+      environment: Release Build
       commit_sha: ${{ github.sha }}
       actor: ${{ github.actor }}
+      version: ${{ github.ref_name }}
+      deployment_url: https://github.com/${{ github.repository }}/releases/tag/${{ github.ref_name }}
     secrets:
       webhook_url: ${{ secrets.DISCORD_WEBHOOK_URL }}
+
+# ===================================================================
+# 📚 JAK TEGO UŻYWAĆ?
+# ===================================================================
+#
+# 1. Zakończ pracę nad wersją 1.0.0
+# 2. Utwórz tag:
+#    git tag v1.0.0 -m "Release version 1.0.0"
+#    git push origin v1.0.0
+#
+# 3. Workflow automatycznie:
+#    ✅ Zbuduje obraz Docker
+#    ✅ Wypchnął do GitHub Container Registry
+#    ✅ Utworzy Release na GitHubie
+#    ✅ Wyśle powiadomienie na Discord
+#
+# 4. W przyszłości gdy będziesz miał serwer produkcyjny:
+#    - Dodaj job "deploy" z SSH deployment
+#    - Dodaj smoke tests
+#    - Będzie gotowy do użycia!
+#
+# ===================================================================
