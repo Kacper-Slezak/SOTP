@@ -10,7 +10,7 @@ All work is tracked through GitHub Issues and managed on our Project board. The 
 
 1.  **Find a Task:** Go to the Project board and look for an issue in the "To Do" column.
 2.  **Assign it to Yourself:** Open the issue and in the "Assignees" panel on the right, assign it to yourself.
-3.  **Automatic Move:** This action is our signal that work has begun. **The issue will automatically move to the "In Progress" column on our board.**
+3.  **Move:** This action is our signal that work has begun. **The issue should be move to the "In Progress" column on our board.**
 
 ### Step 2: Development
 
