@@ -97,7 +97,7 @@ jobs:
           # --cov=. = code coverage dla całego projektu
           # --cov-report=xml = raport w XML (dla SonarCloud później)
           # --cov-report=term = raport w terminalu
-          pytest -v --cov=. --cov-report=xml --cov-report=term
+          pytest -v backend/tests --cov=backend --cov-report=xml --cov-report=term
           
       # --- Frontend Tests ---
       - name:  Set up Node.js
@@ -113,12 +113,12 @@ jobs:
       - name:  Run frontend tests
         run: npm test --prefix frontend
           
-      - name:  Upload coverage to Codecov (optional)
+      - name:  Upload coverage to Codecov
         if: matrix.python-version == '3.12'  # Tylko raz, nie dla każdej wersji
         uses: codecov/codecov-action@v4
         with:
           file: ./coverage.xml
-          fail_ci_if_error: false  # Nie failuj CI jeśli Codecov ma problem
+          fail_ci_if_error: true  # Failuj CI jeśli Codecov ma problem
 
   # ===================================================================
   # JOB 3: BUILD - Zbudowanie Docker image

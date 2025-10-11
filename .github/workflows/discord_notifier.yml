@@ -1,6 +1,6 @@
 # .github/workflows/discord_notifier.yml - Reusable Discord Notifier
 
-name:  Reusable Discord Notifier
+name: Reusable Discord Notifier
 
 on:
   workflow_call:
@@ -72,13 +72,13 @@ jobs:
           
           # Przygotowanie informacji zależnie od statusu
           if [ "${{ inputs.status }}" == "success" ]; then
-            echo "TITLE= Deployment SUCCESS" >> $GITHUB_OUTPUT
+            echo "TITLE=Deployment SUCCESS" >> $GITHUB_OUTPUT
             echo "COLOR=3066993" >> $GITHUB_OUTPUT  # Zielony (#2ecc71)
             echo "EMOJI=✅" >> $GITHUB_OUTPUT
             echo "DESCRIPTION=Deployment do **${{ inputs.environment }}** zakończone **sukcesem**! 🎉" >> $GITHUB_OUTPUT
             echo "THUMBNAIL=https://raw.githubusercontent.com/github/explore/main/topics/github-actions/github-actions.png" >> $GITHUB_OUTPUT
           else
-            echo "TITLE= Deployment FAILURE" >> $GITHUB_OUTPUT
+            echo "TITLE=Deployment FAILURE" >> $GITHUB_OUTPUT
             echo "COLOR=15158332" >> $GITHUB_OUTPUT  # Czerwony (#e74c3c)
             echo "EMOJI=❌" >> $GITHUB_OUTPUT
             echo "DESCRIPTION= Deployment do **${{ inputs.environment }}** **ZAWIÓDŁ**! Wymagana natychmiastowa interwencja." >> $GITHUB_OUTPUT
