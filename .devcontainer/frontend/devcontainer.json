@@ -1,0 +1,41 @@
+{
+    "name": "SOTP Frontend Dev",
+
+    // Wciąż używamy tego samego pliku docker-compose
+    "dockerComposeFile": [
+        "../../infrastructure/docker/docker-compose.dev.yml"
+    ],
+
+    // Podłączamy się do usługi 'frontend'
+    "service": "frontend",
+
+    // Folder z kodem wewnątrz kontenera frontendu
+    "workspaceFolder": "/app",
+
+    // NOWA SEKCJA: Automatycznie instaluje Gita wewnątrz kontenera
+    "features": {
+        "ghcr.io/devcontainers/features/git:1": {}
+    },
+
+    // Personalizacja środowiska dla dewelopera frontendu
+    "customizations": {
+        "vscode": {
+            // Ustawienia specyficzne dla frontendu
+            "settings": {
+                "editor.formatOnSave": true,
+                "eslint.validate": ["javascript", "javascriptreact", "typescript", "typescriptreact"]
+            },
+            // Lista rozszerzeń idealnych do pracy z React/Next.js
+            "extensions": [
+                "dbaeumer.vscode-eslint",
+                "esbenp.prettier-vscode",
+                "ms-azuretools.vscode-docker",
+                "dsznajder.es7-react-js-snippets",
+                "bradlc.vscode-tailwindcss"
+            ]
+        }
+    },
+
+    // Komenda do wykonania po stworzeniu kontenera, aby zainstalować zależności
+    "postCreateCommand": "npm install"
+}

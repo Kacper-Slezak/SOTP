@@ -1,53 +1,83 @@
-# Makefile dla projektu SOTP - Wersja Hybrydowa (VENV + Docker)
+# Makefile dla projektu SOTP - Wersja Docker-First
+# Użyj `make` lub `make help` aby wyświetlić dostępne komendy.
 
-.PHONY: help setup dev-backend dev-frontend test build push deploy
+# Zmienne
+DOCKER_COMPOSE_DEV = docker-compose -f infrastructure/docker/docker-compose.dev.yml
+DOCKER_COMPOSE_PROD = docker-compose -f infrastructure/docker/docker-compose.prod.yml
+
+.PHONY: help dev up down logs shell-backend shell-frontend test setup build push deploy clean
 
 help:
-	@echo "Dostępne komendy dla projektu SOTP (tryb hybrydowy):"
+	@echo "Dostępne komendy dla projektu SOTP (tryb Docker-First):"
 	@echo ""
-	@echo "--- Development (Lokalnie z VENV) ---"
-	@echo "  make setup         -> Instaluje zależności w lokalnych środowiskach (venv/npm)."
-	@echo "  make dev-backend   -> Uruchamia serwer backendu FastAPI lokalnie."
-	@echo "  make dev-frontend  -> Uruchamia serwer frontendu Next.js lokalnie."
-	@echo "  make test          -> Uruchamia testy backendu lokalnie."
+	@echo "--- Główne (Docker Dev) ---"
+	@echo "  make dev           -> Uruchamia pełne środowisko deweloperskie w tle (alias dla 'up')."
+	@echo "  make up            -> Buduje i uruchamia kontenery deweloperskie w tle."
+	@echo "  make down          -> Zatrzymuje i usuwa kontenery deweloperskie."
+	@echo "  make logs          -> Wyświetla logi ze wszystkich działających kontenerów."
+	@echo "  make shell-backend -> Otwiera powłokę (bash) w kontenerze backendu."
+	@echo "  make shell-frontend-> Otwiera powłokę (sh) w kontenerze frontendu."
+	@echo "  make test          -> Uruchamia testy backendu (pytest) wewnątrz kontenera."
 	@echo ""
-	@echo "--- Deployment (z Dockerem) ---"
+	@echo "--- Produkcja i Wdrożenie ---"
 	@echo "  make build         -> Buduje produkcyjne obrazy Docker."
 	@echo "  make push          -> Wysyła zbudowane obrazy do repozytorium (np. Docker Hub)."
 	@echo "  make deploy        -> Symuluje wdrożenie aplikacji na serwerze."
 	@echo ""
+	@echo "--- Narzędzia i Utrzymanie ---"
+	@echo "  make clean         -> Zatrzymuje kontenery i usuwa wszystkie dane (wolumeny)."
+	@echo "  make setup         -> (Lokalnie) Instaluje zależności w lokalnym venv/npm."
+	@echo ""
 
-# === Sekcja Development (VENV) ===
-setup:
-	@echo "🛠️  Instalowanie zależności backendu w venv..."
-	(cd backend && python -m venv venv && . venv/Scripts/activate && pip install -r requirements.txt)
-	@echo "🛠️  Instalowanie zależności frontendu z npm..."
-	(cd frontend && npm install)
-	@echo "✅ Setup zakończony. Pamiętaj, aby aktywować venv dla backendu."
+# === Sekcja Główna (Docker Dev) ===
+dev: up
 
-dev-backend:
-	@echo "🚀  Uruchamianie serwera backendu na http://localhost:8000"
-	@echo "Upewnij się, że venv jest aktywne ('source backend/venv/Scripts/activate')"
-	(cd backend && uvicorn app.main:app --reload)
+up:
+	@echo "🚀  Uruchamianie pełnego środowiska deweloperskiego Docker..."
+	$(DOCKER_COMPOSE_DEV) up --build -d
 
-dev-frontend:
-	@echo "🎨  Uruchamianie serwera frontendu na http://localhost:3000"
-	(cd frontend && npm run dev)
+down:
+	@echo "🛑  Zatzymywanie środowiska deweloperskiego Docker..."
+	$(DOCKER_COMPOSE_DEV) down
+
+logs:
+	@echo "📜  Wyświetlanie logów dla wszystkich usług... (Naciśnij Ctrl+C aby zakończyć)"
+	$(DOCKER_COMPOSE_DEV) logs -f
+
+shell-backend:
+	@echo "💻  Otwieranie powłoki w kontenerze backendu..."
+	$(DOCKER_COMPOSE_DEV) exec backend bash
+
+shell-frontend:
+	@echo "💻  Otwieranie powłoki w kontenerze frontendu..."
+	$(DOCKER_COMPOSE_DEV) exec frontend sh
 
 test:
-	@echo "🧪  Uruchamianie testów backendu..."
-	@echo "Upewnij się, że venv jest aktywne ('source backend/venv/Scripts/activate')"
-	(cd backend && pytest)
+	@echo "🧪  Uruchamianie testów backendu w kontenerze Docker..."
+	$(DOCKER_COMPOSE_DEV) exec backend pytest
 
-# === Sekcja Deployment (Docker) ===
+# === Sekcja Produkcja i Wdrożenie ===
 build:
 	@echo "📦  Budowanie produkcyjnych obrazów Docker..."
-	docker-compose -f infrastructure/docker/docker-compose.prod.yml build
+	$(DOCKER_COMPOSE_PROD) build
 
 push:
 	@echo "⏫  Wysyłanie obrazów do repozytorium..."
-	docker-compose -f infrastructure/docker/docker-compose.prod.yml push
+	$(DOCKER_COMPOSE_PROD) push
 
 deploy:
 	@echo "🚢  Wdrażanie aplikacji na serwerze..."
 	@echo "Ta komenda na serwerze produkcyjnym uruchomiłaby: docker-compose -f infrastructure/docker/docker-compose.prod.yml up -d"
+
+# === Sekcja Narzędzia i Utrzymanie ===
+clean:
+	@echo "🔥  Zatrzymywanie kontenerów i usuwanie wszystkich danych (wolumenów)..."
+	$(DOCKER_COMPOSE_DEV) down -v
+
+# === Sekcja Development (Lokalnie z VENV - opcjonalnie) ===
+setup:
+	@echo "🛠️  (Lokalnie) Instalowanie zależności backendu w venv..."
+	(cd backend && python -m venv venv && . venv/bin/activate && pip install -r requirements.txt)
+	@echo "🛠️  (Lokalnie) Instalowanie zależności frontendu z npm..."
+	(cd frontend && npm install)
+	@echo "✅ Setup lokalny zakończony. Pamiętaj, aby aktywować venv dla backendu."

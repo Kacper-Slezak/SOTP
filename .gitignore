@@ -7,7 +7,8 @@ backend/venv/
 backend/env/
 backend/__pycache__/
 backend/*.egg-info/
-
+./__pycache__/
+*.pyc
 # Zależności frontendu (Node.js/Next.js)
 frontend/node_modules/
 frontend/.pnp
