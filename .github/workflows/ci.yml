@@ -13,11 +13,8 @@ on:
       - develop
 
 jobs:
-  # ===================================================================
-  # JOB 1: LINT - This job is OK and remains unchanged.
-  # ===================================================================
   lint:
-    name:  Linting
+    name: Linting
     runs-on: ubuntu-latest
     steps:
       - name: Checkout code
@@ -33,14 +30,12 @@ jobs:
       - name: Check import sorting (isort)
         run: isort --check-only --diff .
 
-  # ===================================================================
-  # JOB 2: TEST - This job contains the crucial fixes.
-  # ===================================================================
   test:
     name: Run Tests
     runs-on: ubuntu-latest
     needs: lint
-    
+    outputs:
+      pytest-exit-code: ${{ steps.pytest.outputs.exit_code }}
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
@@ -54,14 +49,17 @@ jobs:
           cache-dependency-path: backend/requirements.txt
 
       - name: Install backend dependencies
-        run: pip install -r backend/requirements.txt
+        run: |
+          pip install -r backend/requirements.txt
+          pip install pytest pytest-cov  # Ensure pytest is installed
 
       - name: Run backend tests
-        # POPRAWKA: Ustawiamy PYTHONPATH, aby pytest "widział" kod aplikacji
-        # i ignorujemy błąd "exit code 5", jeśli nie ma jeszcze żadnych testów.
+        id: pytest
+        continue-on-error: true # Allow workflow to continue if no tests are found
         run: |
           export PYTHONPATH=$(pwd)/backend
-          pytest backend/tests/ --cov=backend/app --cov-report=xml --cov-report=term || if [ $? -eq 5 ]; then echo "No tests found, but that's okay for now."; else exit 1; fi
+          pytest backend/tests/ --cov=backend/app
+          echo "exit_code=$?" >> $GITHUB_OUTPUT
 
       # --- FRONTEND TESTS ---
       - name: Set up Node.js
@@ -75,23 +73,18 @@ jobs:
         run: npm ci --prefix frontend
 
       - name: Run frontend quality checks
-        # Zamiast `npm test`, które nie jest zdefiniowane, uruchamiamy `lint`,
-        # co jest wartościowym testem jakości kodu.
         run: npm run lint --prefix frontend
 
-  # ===================================================================
-  # JOB 3: BUILD - Build Docker images (fixed paths)
-  # ===================================================================
   build:
     name: Build Docker Images
     runs-on: ubuntu-latest
     needs: test
+    if: needs.test.outputs.pytest-exit-code == 0 # Run build only if tests passed
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
-
       - name: Build Backend Image
         uses: docker/build-push-action@v5
         with:
@@ -99,7 +92,6 @@ jobs:
           file: ./backend/Dockerfile
           push: false
           tags: sotp-backend:ci-${{ github.sha }}
-
       - name: Build Frontend Image
         uses: docker/build-push-action@v5
         with:
@@ -108,12 +100,10 @@ jobs:
           push: false
           tags: sotp-frontend:ci-${{ github.sha }}
 
-  # ===================================================================
-  # JOB 4: NOTIFY - Powiadomienie na Discord (bez zmian, jest OK)
-  # ===================================================================
-  notify_on_push:
-    name: Discord Notification
-    needs: [lint, test, build]
+  # --- NOTIFICATION JOBS ---
+  notify_on_success:
+    name: Discord Notification (Success)
+    needs: [test, build]
     if: success() && github.event_name == 'push'
     uses: ./.github/workflows/discord_notifier.yml
     with:
@@ -125,12 +115,25 @@ jobs:
       webhook_url: ${{ secrets.DISCORD_WEBHOOK_URL }}
 
   notify_on_failure:
-    name: Failure Notification
+    name: Discord Notification (Failure)
     needs: [lint, test, build]
     if: failure() && github.event_name == 'push'
     uses: ./.github/workflows/discord_notifier.yml
     with:
       status: failure
+      environment: ${{ github.ref_name }}
+      commit_sha: ${{ github.sha }}
+      actor: ${{ github.actor }}
+    secrets:
+      webhook_url: ${{ secrets.DISCORD_WEBHOOK_URL }}
+
+  notify_no_tests_warning:
+    name: Discord Notification (No Tests Found)
+    needs: test
+    if: always() && needs.test.outputs.pytest-exit-code == 5 && github.event_name == 'push'
+    uses: ./.github/workflows/discord_notifier.yml
+    with:
+      status: warning # New status for the notifier
       environment: ${{ github.ref_name }}
       commit_sha: ${{ github.sha }}
       actor: ${{ github.actor }}
