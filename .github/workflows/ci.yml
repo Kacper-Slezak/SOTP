@@ -71,9 +71,7 @@ jobs:
           cache: 'npm'
           cache-dependency-path: frontend/package-lock.json
       - name: Install frontend dependencies
-        run: |
-          npm ci --prefix frontend
-          npm install --save-dev --prefix frontend @types/node @types/react-dom
+        run: npm ci --prefix frontend
       - name: Run frontend quality checks
         run: echo "Frontend linting temporarily disabled due to TypeScript types issue"
         # TODO: Re-enable after fixing @types/node installation
