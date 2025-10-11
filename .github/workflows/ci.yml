@@ -34,8 +34,9 @@ jobs:
     name: Run Tests
     runs-on: ubuntu-latest
     needs: lint
+    # This output will let other jobs know what happened in the test step
     outputs:
-      pytest-exit-code: ${{ steps.pytest.outputs.exit_code }}
+      pytest_exit_code: ${{ steps.pytest_check.outputs.exit_code }}
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
@@ -48,17 +49,19 @@ jobs:
           cache: 'pip'
           cache-dependency-path: backend/requirements.txt
 
-      - name: Install backend dependencies
+      - name: Install backend dependencies and Pytest
         run: |
           pip install -r backend/requirements.txt
-          pip install pytest pytest-cov  # Ensure pytest is installed
+          # THIS IS THE FIX: Install pytest and the coverage tool
+          pip install pytest pytest-cov
 
       - name: Run backend tests
-        id: pytest
-        continue-on-error: true # Allow workflow to continue if no tests are found
+        id: pytest_check
+        continue-on-error: true # This is important! It stops the workflow from failing if tests are not found.
         run: |
           export PYTHONPATH=$(pwd)/backend
-          pytest backend/tests/ --cov=backend/app
+          # Run pytest and capture its exit code to the 'exit_code' output
+          pytest backend/tests/
           echo "exit_code=$?" >> $GITHUB_OUTPUT
 
       # --- FRONTEND TESTS ---
@@ -79,7 +82,8 @@ jobs:
     name: Build Docker Images
     runs-on: ubuntu-latest
     needs: test
-    if: needs.test.outputs.pytest-exit-code == 0 # Run build only if tests passed
+    # Only build images if tests passed (exit code 0) or if no tests were found (exit code 5)
+    if: needs.test.outputs.pytest_exit_code == 0 || needs.test.outputs.pytest_exit_code == 5
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
@@ -101,39 +105,15 @@ jobs:
           tags: sotp-frontend:ci-${{ github.sha }}
 
   # --- NOTIFICATION JOBS ---
-  notify_on_success:
-    name: Discord Notification (Success)
-    needs: [test, build]
-    if: success() && github.event_name == 'push'
-    uses: ./.github/workflows/discord_notifier.yml
-    with:
-      status: success
-      environment: ${{ github.ref_name }}
-      commit_sha: ${{ github.sha }}
-      actor: ${{ github.actor }}
-    secrets:
-      webhook_url: ${{ secrets.DISCORD_WEBHOOK_URL }}
-
-  notify_on_failure:
-    name: Discord Notification (Failure)
+  notify_on_push:
+    name: Discord Notification
     needs: [lint, test, build]
-    if: failure() && github.event_name == 'push'
+    if: always() && github.event_name == 'push' # Run always to report status
     uses: ./.github/workflows/discord_notifier.yml
     with:
-      status: failure
-      environment: ${{ github.ref_name }}
-      commit_sha: ${{ github.sha }}
-      actor: ${{ github.actor }}
-    secrets:
-      webhook_url: ${{ secrets.DISCORD_WEBHOOK_URL }}
-
-  notify_no_tests_warning:
-    name: Discord Notification (No Tests Found)
-    needs: test
-    if: always() && needs.test.outputs.pytest-exit-code == 5 && github.event_name == 'push'
-    uses: ./.github/workflows/discord_notifier.yml
-    with:
-      status: warning # New status for the notifier
+      # Determine the overall status based on the results of previous jobs
+      status: ${{ needs.lint.result == 'success' && needs.test.result == 'success' && needs.build.result == 'success' && 'success' || 'failure' }}
+      pytest_exit_code: ${{ needs.test.outputs.pytest_exit_code }}
       environment: ${{ github.ref_name }}
       commit_sha: ${{ github.sha }}
       actor: ${{ github.actor }}

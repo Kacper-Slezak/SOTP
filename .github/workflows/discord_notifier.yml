@@ -1,10 +1,11 @@
-# .github/workflows/discord_notifier.yml - Reusable workflow for sending notifications
+# .github/workflows/discord_notifier.yml - Reusable notifier with support for warnings
 
 name: Reusable Discord Notifier
 on:
   workflow_call:
     inputs:
       status: { required: true, type: string }
+      pytest_exit_code: { required: false, type: string } # New input for test status
       environment: { required: true, type: string }
       commit_sha: { required: true, type: string }
       actor: { required: true, type: string }
@@ -19,16 +20,19 @@ jobs:
       - name: Prepare Variables and Message
         id: vars
         run: |
-          if [ "${{ inputs.status }}" == "success" ]; then
+          # Case 1: Pytest exit code is 5 (no tests found) -> This is a WARNING
+          if [ "${{ inputs.pytest_exit_code }}" == "5" ]; then
+            echo "TITLE=CI Pipeline OSTRZEŻENIE" >> $GITHUB_OUTPUT
+            echo "COLOR=16705372" >> $GITHUB_OUTPUT # Yellow
+            echo "DESCRIPTION=Pipeline CI dla **${{ inputs.environment }}** zakończony, ale **nie znaleziono żadnych testów backendu**. Należy je dodać." >> $GITHUB_OUTPUT
+            echo "EMOJI=⚠️" >> $GITHUB_OUTPUT
+          # Case 2: The overall job status is 'success'
+          elif [ "${{ inputs.status }}" == "success" ]; then
             echo "TITLE=CI Pipeline SUKCES" >> $GITHUB_OUTPUT
             echo "COLOR=3066993" >> $GITHUB_OUTPUT # Green
             echo "DESCRIPTION=Wszystkie kroki CI (Lint, Test, Build) dla **${{ inputs.environment }}** zakończyły się pomyślnie." >> $GITHUB_OUTPUT
             echo "EMOJI=✅" >> $GITHUB_OUTPUT
-          elif [ "${{ inputs.status }}" == "warning" ]; then
-            echo "TITLE=CI Pipeline OSTRZEŻENIE" >> $GITHUB_OUTPUT
-            echo "COLOR=16705372" >> $GITHUB_OUTPUT # Yellow
-            echo "DESCRIPTION=CI dla **${{ inputs.environment }}** zakończone, ale **nie znaleziono żadnych testów backendu** do uruchomienia. Rozważ ich dodanie." >> $GITHUB_OUTPUT
-            echo "EMOJI=⚠️" >> $GITHUB_OUTPUT
+          # Case 3: Any other case is a FAILURE
           else
             echo "TITLE=CI Pipeline BŁĄD" >> $GITHUB_OUTPUT
             echo "COLOR=15158332" >> $GITHUB_OUTPUT # Red
