@@ -1,32 +1,161 @@
 # .github/workflows/ci.yml - Główny workflow CI (Lint, Test, Build)
 
-name: CI - Project Integration
+name: CI - Continuous Integration
 
 on:
   push:
     branches:
       - main
       - develop
+  pull_request:
+    branches:
+      - main
+      - develop
+
+# ZMIENNE GLOBALNE dla wszystkich jobs
+env:
+  PYTHON_VERSION: '3.12'  # Jedna wersja dla całego projektu
 
 jobs:
-  build_and_test:
-    name: Build & Test
+  # ===================================================================
+  # JOB 1: LINT - Sprawdzenie stylu kodu
+  # ===================================================================
+  lint:
+    name:  Code Linting
     runs-on: ubuntu-latest
+    timeout-minutes: 5  # Jeśli lint trwa dłużej niż 5min = problem!
+    
     steps:
-      - name: Checkout code
+      - name:  Checkout code
         uses: actions/checkout@v4
-      - name: Simulate build and tests
-        run: echo "Building and testing in progress..."
+        
+      - name:  Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+          cache: 'pip'  # Cache dependencies dla szybszego działania
+          
+      - name:  Install linting tools
+        run: |
+          pip install --upgrade pip
+          pip install flake8 black isort
 
+      - name:  Check code formatting (Black)
+        run: |
+          # Black sprawdza czy kod jest sformatowany
+          black --check --diff .
+
+      - name:  Check import sorting (isort)
+        run: |
+          # isort sprawdza czy importy są posortowane
+          isort --check-only --diff .
+
+      - name:  Lint with flake8
+        run: |
+          # flake8 sprawdza błędy stylistyczne
+          # --max-line-length=88 (zgodne z Black)
+          # --exclude=venv,migrations (pomijamy)
+          flake8 . --count --select=E9,F63,F7,F82 --show-source --statistics
+          flake8 . --count --max-line-length=88 --statistics
+
+  # ===================================================================
+  # JOB 2: TEST - Uruchomienie testów
+  # ===================================================================
+  test:
+    name:  Run Tests
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    needs: lint  # Czeka aż lint się skończy
+    
+    # Strategia: testujemy na różnych wersjach Pythona
+    strategy:
+      matrix:
+        python-version: ['3.12', '3.13']
+      fail-fast: false  # Nie przerywaj jeśli jedna wersja failuje
+    
+    steps:
+      - name:  Checkout code
+        uses: actions/checkout@v4
+
+      - name:  Setup Python ${{ matrix.python-version }}
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python-version }}
+          cache: 'pip'
+          
+      - name:  Install dependencies
+        run: |
+          pip install --upgrade pip
+          # Zakładam, że masz requirements.txt lub pyproject.toml
+          if [ -f requirements.txt ]; then pip install -r requirements.txt; fi
+          if [ -f requirements-dev.txt ]; then pip install -r requirements-dev.txt; fi
+          pip install pytest pytest-cov pytest-asyncio
+          
+      - name:  Run pytest
+        run: |
+          # -v = verbose (pokazuj szczegóły)
+          # --cov=. = code coverage dla całego projektu
+          # --cov-report=xml = raport w XML (dla SonarCloud później)
+          # --cov-report=term = raport w terminalu
+          pytest -v --cov=. --cov-report=xml --cov-report=term
+          
+      - name:  Upload coverage to Codecov (optional)
+        if: matrix.python-version == '3.12'  # Tylko raz, nie dla każdej wersji
+        uses: codecov/codecov-action@v4
+        with:
+          file: ./coverage.xml
+          fail_ci_if_error: false  # Nie failuj CI jeśli Codecov ma problem
+
+  # ===================================================================
+  # JOB 3: BUILD - Zbudowanie Docker image
+  # ===================================================================
+  build:
+    name:  Build Docker Image
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    needs: test  # Czeka aż testy przejdą
+    
+    steps:
+      - name:  Checkout code
+        uses: actions/checkout@v4
+        
+      - name:  Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name:  Build Docker image
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          push: false  # NIE pushuj do registry (to tylko test build)
+          tags: sotp:ci-${{ github.sha }}
+          cache-from: type=gha  # GitHub Actions cache
+          cache-to: type=gha,mode=max
+
+  # ===================================================================
+  # JOB 4: NOTIFY - Powiadomienie na Discord
+  # ===================================================================
   notify_on_push:
-    name: Notify Commit on Discord
-    # runs-on: ubuntu-latest  <-- TĘ LINIĘ NALEŻY USUNĄĆ
-    needs: build_and_test
-    if: success()
+    name:  Discord Notification
+    needs: [lint, test, build]  # Czeka na wszystkie poprzednie
+    if: success() && github.event_name == 'push'  # Tylko dla push (nie PR)
     uses: ./.github/workflows/discord_notifier.yml
     with:
       status: success
-      environment: Commit to Main
+      environment: ${{ github.ref_name }}  # main / develop
+      commit_sha: ${{ github.sha }}
+      actor: ${{ github.actor }}
+    secrets:
+      webhook_url: ${{ secrets.DISCORD_WEBHOOK_URL }}
+
+  # Osobne powiadomienie w przypadku błędu
+  notify_on_failure:
+    name:  Failure Notification
+    needs: [lint, test, build]
+    if: failure() && github.event_name == 'push'
+    uses: ./.github/workflows/discord_notifier.yml
+    with:
+      status: failure
+      environment: ${{ github.ref_name }}
       commit_sha: ${{ github.sha }}
       actor: ${{ github.actor }}
     secrets:
