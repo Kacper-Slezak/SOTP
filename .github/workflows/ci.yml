@@ -99,6 +99,20 @@ jobs:
           # --cov-report=term = raport w terminalu
           pytest -v --cov=. --cov-report=xml --cov-report=term
           
+      # --- Frontend Tests ---
+      - name:  Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+          cache-dependency-path: frontend/package-lock.json
+
+      - name:  Install frontend dependencies
+        run: npm ci --prefix frontend
+
+      - name:  Run frontend tests
+        run: npm test --prefix frontend
+          
       - name:  Upload coverage to Codecov (optional)
         if: matrix.python-version == '3.12'  # Tylko raz, nie dla każdej wersji
         uses: codecov/codecov-action@v4
