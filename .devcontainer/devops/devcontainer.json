@@ -1,0 +1,30 @@
+{
+    "name": "SOTP DevOps (Full Workspace)",
+
+    // Ładujemy plik bazowy ORAZ nasz nowy plik z nadpisaniem
+    "dockerComposeFile": [
+        "../../infrastructure/docker/docker-compose.dev.yml",
+        "../../infrastructure/docker/docker-compose.devops.override.yml"
+    ],
+
+    // Wciąż łączymy się z usługą 'backend' po narzędzia
+    "service": "backend",
+
+    // Folder, który otworzy VS Code, to teraz korzeń całego projektu
+    "workspaceFolder": "/workspace",
+
+    // Upewniamy się, że Git jest dostępny
+    "features": {
+        "ghcr.io/devcontainers/features/git:1": {}
+    },
+
+    // Możemy też dodać podstawowe rozszerzenia dla wygody
+    "customizations": {
+        "vscode": {
+            "extensions": [
+                "ms-python.python",
+                "ms-azuretools.vscode-docker"
+            ]
+        }
+    }
+}
