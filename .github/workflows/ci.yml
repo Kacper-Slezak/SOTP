@@ -75,9 +75,7 @@ jobs:
           npm ci --prefix frontend
           npm install --save-dev --prefix frontend @types/node @types/react-dom
       - name: Run frontend quality checks
-        run: echo "Frontend linting temporarily disabled due to TypeScript types issue"
-        # TODO: Re-enable after fixing @types/node installation
-        # run: npm run lint --prefix frontend
+        run: npm run lint --prefix frontend
 
   build:
     name: Build Docker Images
