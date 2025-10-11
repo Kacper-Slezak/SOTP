@@ -5,7 +5,7 @@ on:
   workflow_call:
     inputs:
       status: { required: true, type: string }
-      pytest_exit_code: { required: false, type: string } # New input for test status
+      pytest_exit_code: { required: false, type: string } # Receives the specific pytest exit code
       environment: { required: true, type: string }
       commit_sha: { required: true, type: string }
       actor: { required: true, type: string }
@@ -20,19 +20,19 @@ jobs:
       - name: Prepare Variables and Message
         id: vars
         run: |
-          # Case 1: Pytest exit code is 5 (no tests found) -> This is a WARNING
+          # 1. Check for the "no tests found" warning first
           if [ "${{ inputs.pytest_exit_code }}" == "5" ]; then
             echo "TITLE=CI Pipeline OSTRZEŻENIE" >> $GITHUB_OUTPUT
             echo "COLOR=16705372" >> $GITHUB_OUTPUT # Yellow
             echo "DESCRIPTION=Pipeline CI dla **${{ inputs.environment }}** zakończony, ale **nie znaleziono żadnych testów backendu**. Należy je dodać." >> $GITHUB_OUTPUT
             echo "EMOJI=⚠️" >> $GITHUB_OUTPUT
-          # Case 2: The overall job status is 'success'
+          # 2. Check for overall success
           elif [ "${{ inputs.status }}" == "success" ]; then
             echo "TITLE=CI Pipeline SUKCES" >> $GITHUB_OUTPUT
             echo "COLOR=3066993" >> $GITHUB_OUTPUT # Green
             echo "DESCRIPTION=Wszystkie kroki CI (Lint, Test, Build) dla **${{ inputs.environment }}** zakończyły się pomyślnie." >> $GITHUB_OUTPUT
             echo "EMOJI=✅" >> $GITHUB_OUTPUT
-          # Case 3: Any other case is a FAILURE
+          # 3. If it's not a warning and not a success, it's a failure
           else
             echo "TITLE=CI Pipeline BŁĄD" >> $GITHUB_OUTPUT
             echo "COLOR=15158332" >> $GITHUB_OUTPUT # Red
@@ -50,37 +50,14 @@ jobs:
                      "description": "${{ steps.vars.outputs.DESCRIPTION }}",
                      "color": ${{ steps.vars.outputs.COLOR }},
                      "fields": [
-                       {
-                         "name": "Środowisko",
-                         "value": "${{ inputs.environment }}",
-                         "inline": true
-                       },
-                       {
-                         "name": "Commit",
-                         "value": "[`${{ inputs.commit_sha }}`](${{ github.server_url }}/${{ github.repository }}/commit/${{ inputs.commit_sha }})",
-                         "inline": true
-                       },
-                       {
-                         "name": "Wykonawca",
-                         "value": "${{ inputs.actor }}",
-                         "inline": true
-                       },
-                       {
-                         "name": "Repository",
-                         "value": "[${{ github.repository }}](${{ github.server_url }}/${{ github.repository }})",
-                         "inline": false
-                       },
-                       {
-                         "name": "Workflow Run",
-                         "value": "[Zobacz szczegóły](${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }})",
-                         "inline": false
-                       }
+                       { "name": "Środowisko", "value": "${{ inputs.environment }}", "inline": true },
+                       { "name": "Commit", "value": "[`${{ inputs.commit_sha }}`](${{ github.server_url }}/${{ github.repository }}/commit/${{ inputs.commit_sha }})", "inline": true },
+                       { "name": "Wykonawca", "value": "${{ inputs.actor }}", "inline": true },
+                       { "name": "Repository", "value": "[${{ github.repository }}](${{ github.server_url }}/${{ github.repository }})", "inline": false },
+                       { "name": "Workflow Run", "value": "[Zobacz szczegóły](${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }})", "inline": false }
                      ],
                      "timestamp": "'"$(date -u +%Y-%m-%dT%H:%M:%S.000Z)"'",
-                     "footer": {
-                       "text": "GitHub Actions",
-                       "icon_url": "https://github.githubassets.com/images/modules/logos_page/GitHub-Mark.png"
-                     }
+                     "footer": { "text": "GitHub Actions", "icon_url": "https://github.githubassets.com/images/modules/logos_page/GitHub-Mark.png" }
                    }
                  ]
                }' \

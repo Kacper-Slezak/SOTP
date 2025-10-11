@@ -34,7 +34,7 @@ jobs:
     name: Run Tests
     runs-on: ubuntu-latest
     needs: lint
-    # This output will let other jobs know what happened in the test step
+    # This output will let other jobs know the result of the test run
     outputs:
       pytest_exit_code: ${{ steps.pytest_check.outputs.exit_code }}
     steps:
@@ -52,15 +52,15 @@ jobs:
       - name: Install backend dependencies and Pytest
         run: |
           pip install -r backend/requirements.txt
-          # THIS IS THE FIX: Install pytest and the coverage tool
+          # THIS IS THE FIX: Explicitly install pytest and the coverage tool
           pip install pytest pytest-cov
 
       - name: Run backend tests
         id: pytest_check
-        continue-on-error: true # This is important! It stops the workflow from failing if tests are not found.
+        continue-on-error: true # Prevents workflow failure if no tests are found
         run: |
           export PYTHONPATH=$(pwd)/backend
-          # Run pytest and capture its exit code to the 'exit_code' output
+          # Run pytest and capture its specific exit code to the 'exit_code' output
           pytest backend/tests/
           echo "exit_code=$?" >> $GITHUB_OUTPUT
 
@@ -71,10 +71,8 @@ jobs:
           node-version: '20'
           cache: 'npm'
           cache-dependency-path: frontend/package-lock.json
-
       - name: Install frontend dependencies
         run: npm ci --prefix frontend
-
       - name: Run frontend quality checks
         run: npm run lint --prefix frontend
 
@@ -82,7 +80,7 @@ jobs:
     name: Build Docker Images
     runs-on: ubuntu-latest
     needs: test
-    # Only build images if tests passed (exit code 0) or if no tests were found (exit code 5)
+    # Only build if tests passed (code 0) or no tests were found (code 5)
     if: needs.test.outputs.pytest_exit_code == 0 || needs.test.outputs.pytest_exit_code == 5
     steps:
       - name: Checkout code
@@ -104,15 +102,133 @@ jobs:
           push: false
           tags: sotp-frontend:ci-${{ github.sha }}
 
-  # --- NOTIFICATION JOBS ---
+  # --- NOTIFICATION JOB ---
   notify_on_push:
     name: Discord Notification
     needs: [lint, test, build]
-    if: always() && github.event_name == 'push' # Run always to report status
+    if: always() && github.event_name == 'push' # Always run to report the final status
     uses: ./.github/workflows/discord_notifier.yml
     with:
-      # Determine the overall status based on the results of previous jobs
-      status: ${{ needs.lint.result == 'success' && needs.test.result == 'success' && needs.build.result == 'success' && 'success' || 'failure' }}
+      # Pass the overall result of the previous jobs
+      status: ${{ needs.build.result || needs.test.result || needs.lint.result }}
+      pytest_exit_code: ${{ needs.test.outputs.pytest_exit_code }}
+      environment: ${{ github.ref_name }}
+      commit_sha: ${{ github.sha }}
+      actor: ${{ github.actor }}
+    secrets:
+      webhook_url: ${{ secrets.DISCORD_WEBHOOK_URL }}# .github/workflows/ci.yml - Final, working CI workflow
+
+name: CI - Continuous Integration
+
+on:
+  push:
+    branches:
+      - main
+      - develop
+  pull_request:
+    branches:
+      - main
+      - develop
+
+jobs:
+  lint:
+    name: Linting
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - name: Install linting tools
+        run: pip install black isort flake8
+      - name: Check code formatting (Black)
+        run: black --check --diff .
+      - name: Check import sorting (isort)
+        run: isort --check-only --diff .
+
+  test:
+    name: Run Tests
+    runs-on: ubuntu-latest
+    needs: lint
+    # This output will let other jobs know the result of the test run
+    outputs:
+      pytest_exit_code: ${{ steps.pytest_check.outputs.exit_code }}
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      # --- BACKEND TESTS ---
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+          cache: 'pip'
+          cache-dependency-path: backend/requirements.txt
+
+      - name: Install backend dependencies and Pytest
+        run: |
+          pip install -r backend/requirements.txt
+          # THIS IS THE FIX: Explicitly install pytest and the coverage tool
+          pip install pytest pytest-cov
+
+      - name: Run backend tests
+        id: pytest_check
+        continue-on-error: true # Prevents workflow failure if no tests are found
+        run: |
+          export PYTHONPATH=$(pwd)/backend
+          # Run pytest and capture its specific exit code to the 'exit_code' output
+          pytest backend/tests/
+          echo "exit_code=$?" >> $GITHUB_OUTPUT
+
+      # --- FRONTEND TESTS ---
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+          cache-dependency-path: frontend/package-lock.json
+      - name: Install frontend dependencies
+        run: npm ci --prefix frontend
+      - name: Run frontend quality checks
+        run: npm run lint --prefix frontend
+
+  build:
+    name: Build Docker Images
+    runs-on: ubuntu-latest
+    needs: test
+    # Only build if tests passed (code 0) or no tests were found (code 5)
+    if: needs.test.outputs.pytest_exit_code == 0 || needs.test.outputs.pytest_exit_code == 5
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+      - name: Build Backend Image
+        uses: docker/build-push-action@v5
+        with:
+          context: ./backend
+          file: ./backend/Dockerfile
+          push: false
+          tags: sotp-backend:ci-${{ github.sha }}
+      - name: Build Frontend Image
+        uses: docker/build-push-action@v5
+        with:
+          context: ./frontend
+          file: ./frontend/Dockerfile
+          push: false
+          tags: sotp-frontend:ci-${{ github.sha }}
+
+  # --- NOTIFICATION JOB ---
+  notify_on_push:
+    name: Discord Notification
+    needs: [lint, test, build]
+    if: always() && github.event_name == 'push' # Always run to report the final status
+    uses: ./.github/workflows/discord_notifier.yml
+    with:
+      # Pass the overall result of the previous jobs
+      status: ${{ needs.build.result || needs.test.result || needs.lint.result }}
       pytest_exit_code: ${{ needs.test.outputs.pytest_exit_code }}
       environment: ${{ github.ref_name }}
       commit_sha: ${{ github.sha }}
