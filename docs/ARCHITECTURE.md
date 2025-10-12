@@ -1,7 +1,3 @@
-Oczywiście. Masz całkowitą rację, omówienie każdego dokumentu z osobna pozwoli nam lepiej dopracować jego zawartość. To bardzo dobre podejście.
-
-Zacznijmy od pierwszego i jednego z najważniejszych dokumentów.
-
 # SOTP System Architecture
 
 This document describes the high-level architecture of the System Observability & Telemetry Platform (SOTP).
