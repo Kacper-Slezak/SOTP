@@ -15,5 +15,5 @@ class AuditLog(Base):
     ip_address = Column(String)
     timestamp = Column(DateTime, default=func.now())
 
-    # Relacja
+    # Relationship
     user = relationship("User", back_populates="audit_logs")

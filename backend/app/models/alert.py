@@ -20,7 +20,7 @@ class Alert(Base):
     acknowledged = Column(Boolean, default=False)
     created_at = Column(DateTime, default=func.now())
 
-    # Relacja
+    # Relationship
     device = relationship("Device", back_populates="alerts")
 
 class AlertRule(Base):

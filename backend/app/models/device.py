@@ -23,9 +23,9 @@ class Device(Base):
     created_by_id = Column(Integer, ForeignKey("users.id"))
     created_at = Column(DateTime, default=func.now())
     updated_at = Column(DateTime, default=func.now(), onupdate=func.now())
-    deleted_at = Column(DateTime, nullable=True) # Dla soft delete
+    deleted_at = Column(DateTime, nullable=True) # For soft delete
 
-    # Relacje
+    # Relationships
     credentials = relationship("Credential", backref="device", cascade="all, delete-orphan")
     created_by = relationship("User", back_populates="devices")
     alerts = relationship("Alert", back_populates="device", cascade="all, delete-orphan")
@@ -41,7 +41,7 @@ class Credential(Base):
     credential_type = Column(String, nullable=False)  # e.g., "snmp", "ssh", "api"
     vault_path = Column(String, nullable=False, unique=True)  # Path in the vault where credentials are stored
 
-    # Relacja
+   # Relationship
     device = relationship("Device", back_populates="credentials")
 
 
