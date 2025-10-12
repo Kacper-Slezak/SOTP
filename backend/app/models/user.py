@@ -1,4 +1,13 @@
-from sqlalchemy import Column, Integer, String, Boolean as Bool, DateTime, func, Enum as SqlEnum
+from sqlalchemy import (
+    Column,
+    Integer,
+    String,
+    DateTime,
+    func,
+    ForeignKey,
+    Boolean,
+    Enum as SQLEnum,
+)
 from sqlalchemy.orm import relationship
 from .base import Base
 import enum
@@ -10,8 +19,10 @@ class UserRole(enum.Enum):
     AUDITOR = "auditor"
     READONLY = "readonly"
 
+
 class User(Base):
     __tablename__ = "users"
+
 
     id = Column(Integer, primary_key=True, index=True)
     email = Column(String, unique=True, index=True, nullable=False)
@@ -25,5 +36,3 @@ class User(Base):
     devices = relationship("Device", backref="created_by")
     audit_logs = relationship("AuditLog", back_populates="user")
     
-
-

@@ -1,4 +1,13 @@
-from sqlalchemy import Column, ForeignKey, Integer, String, Boolean as Bool, JSON, func, DateTime
+from sqlalchemy import (
+    Column,
+    Integer,
+    String,
+    DateTime,
+    func,
+    ForeignKey,
+    JSON,
+    Boolean as Bool,
+)
 from sqlalchemy.orm import relationship
 from .base import Base
 
@@ -23,12 +32,16 @@ class Device(Base):
     created_by_id = Column(Integer, ForeignKey("users.id"))
     created_at = Column(DateTime, default=func.now())
     updated_at = Column(DateTime, default=func.now(), onupdate=func.now())
-    deleted_at = Column(DateTime, nullable=True) # For soft delete
+    deleted_at = Column(DateTime, nullable=True)  # For soft delete
 
     # Relationships
-    credentials = relationship("Credential", backref="device", cascade="all, delete-orphan")
+    credentials = relationship(
+        "Credential", backref="device", cascade="all, delete-orphan"
+        )
     created_by = relationship("User", back_populates="devices")
-    alerts = relationship("Alert", back_populates="device", cascade="all, delete-orphan")
+    alerts = relationship(
+        "Alert", back_populates="device", cascade="all, delete-orphan"
+        )
 
 
 
@@ -39,9 +52,11 @@ class Credential(Base):
     id = Column(Integer, primary_key=True, index=True)
     device_id = Column(Integer, ForeignKey("devices.id"), nullable=False)
     credential_type = Column(String, nullable=False)  # e.g., "snmp", "ssh", "api"
-    vault_path = Column(String, nullable=False, unique=True)  # Path in the vault where credentials are stored
+    vault_path = Column(
+        String, nullable=False, unique=True
+        )  # Path in the vault where credentials are stored
 
-   # Relationship
+    # Relationship
     device = relationship("Device", back_populates="credentials")
 
 
