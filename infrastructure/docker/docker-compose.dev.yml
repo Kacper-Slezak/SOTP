@@ -1,4 +1,4 @@
-# Plik docker-compose dla środowiska deweloperskiego (POPRAWIONA WERSJA 2.0)
+# infrastructure/docker/docker-compose.dev.yml 
 
 version: '3.8'
 
@@ -43,12 +43,8 @@ services:
   # Baza danych dla inwentarza
   postgres:
     image: postgres:15-alpine
-    env_file: # <-- DODANE
-      - ../../.env # <-- DODANE
-    environment:
-      POSTGRES_USER: ${POSTGRES_USER}
-      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
-      POSTGRES_DB: ${POSTGRES_DB}
+    env_file: # <-- Ta sekcja wczyta wszystkie zmienne, w tym POSTGRES_USER, _PASSWORD, _DB
+      - ../../.env
     ports:
       - "${POSTGRES_PORT}:5432"
     volumes:
@@ -64,12 +60,8 @@ services:
   # Baza danych dla metryk
   timescaledb:
     image: timescale/timescaledb:latest-pg15
-    env_file: # <-- DODANE
-      - ../../.env # <-- DODANE
-    environment:
-      POSTGRES_USER: ${TIMESCALEDB_USER}
-      POSTGRES_PASSWORD: ${TIMESCALEDB_PASSWORD}
-      POSTGRES_DB: ${TIMESCALEDB_DB}
+    env_file: # <-- Ta sekcja wczyta wszystkie zmienne, w tym TIMESCALEDB_USER, _PASSWORD, _DB
+      - ../../.env
     ports:
       - "${TIMESCALEDB_PORT}:5432"
     volumes:
@@ -141,8 +133,8 @@ services:
       VAULT_DEV_LISTEN_ADDRESS: "0.0.0.0:8200"
     cap_add:
       - IPC_LOCK
-    env_file: # <-- DODANE
-      - ../../.env # <-- DODANE
+    env_file:
+      - ../../.env
     networks:
       - sotp_network
     healthcheck:
