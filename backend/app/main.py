@@ -1,7 +1,22 @@
+import anyio
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
+from sqlalchemy.orm import Session
+from sqlalchemy import text
+from app.utils.databases import create_postgres, create_timescaledb, create_redis
 
-app = FastAPI()
+async def lifespan(app: FastAPI):
+    app.state.postgres = create_postgres()
+    app.state.timescaledb = create_timescaledb()
+    app.state.redis = create_redis()
+
+    yield
+    app.state.postgres.dispose()
+    app.state.timescaledb.dispose()
+    await app.state.redis.close()
+
+
+app = FastAPI(lifespan=lifespan)
 
 origins = [
     "http://localhost",
@@ -20,4 +35,15 @@ app.add_middleware(
 
 @app.get("/health")
 async def main():
-    return {"status": "ok"}
+    def _pg():
+        with app.state.postgres.connect() as c:
+            return c.execute(text("SELECT 1")).scalar_one()
+
+    def _ts():
+        with app.state.timescaledb.connect() as c:
+            return c.execute(text("SELECT 1")).scalar_one()
+
+    pg_ok = await anyio.to_thread.run_sync(_pg)
+    ts_ok = await anyio.to_thread.run_sync(_ts)
+    redis_ok = await app.state.redis.ping()
+    return {"status": "ok", "postgres": pg_ok, "timescaledb": ts_ok, "redis": redis_ok}
