@@ -1,4 +1,4 @@
-# Plik docker-compose dla środowiska deweloperskiego (POPRAWIONA WERSJA)
+# Plik docker-compose dla środowiska deweloperskiego (POPRAWIONA WERSJA 2.0)
 
 version: '3.8'
 
@@ -43,6 +43,8 @@ services:
   # Baza danych dla inwentarza
   postgres:
     image: postgres:15-alpine
+    env_file: # <-- DODANE
+      - ../../.env # <-- DODANE
     environment:
       POSTGRES_USER: ${POSTGRES_USER}
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
@@ -62,6 +64,8 @@ services:
   # Baza danych dla metryk
   timescaledb:
     image: timescale/timescaledb:latest-pg15
+    env_file: # <-- DODANE
+      - ../../.env # <-- DODANE
     environment:
       POSTGRES_USER: ${TIMESCALEDB_USER}
       POSTGRES_PASSWORD: ${TIMESCALEDB_PASSWORD}
@@ -137,6 +141,8 @@ services:
       VAULT_DEV_LISTEN_ADDRESS: "0.0.0.0:8200"
     cap_add:
       - IPC_LOCK
+    env_file: # <-- DODANE
+      - ../../.env # <-- DODANE
     networks:
       - sotp_network
     healthcheck:
