@@ -10,7 +10,7 @@
     "service": "backend",
 
     // Ścieżka do folderu z kodem WEWNĄTRZ kontenera
-    "workspaceFolder": "/app",
+    "workspaceFolder": "/workspace/backend",
 
     // NOWA SEKCJA: Automatycznie instaluje Gita wewnątrz kontenera
     "features": {

@@ -10,7 +10,7 @@
     "service": "frontend",
 
     // Folder z kodem wewnątrz kontenera frontendu
-    "workspaceFolder": "/app",
+    "workspaceFolder": "/workspace/frontend",
 
     // NOWA SEKCJA: Automatycznie instaluje Gita wewnątrz kontenera
     "features": {

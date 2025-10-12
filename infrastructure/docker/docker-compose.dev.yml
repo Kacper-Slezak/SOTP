@@ -11,7 +11,7 @@ services:
     ports:
       - "8000:8000"
     volumes:
-      - ../../backend:/app
+      - ../..:/workspace
     env_file:
       - ../../.env
     depends_on:
@@ -28,9 +28,9 @@ services:
     ports:
       - "3000:3000"
     volumes:
-      - ../../frontend:/app
-      - /app/node_modules
-      - /app/.next
+      - ../..:/workspace
+      - /workspace/src/frontend/node_modules
+      - /workspace/src/frontend/.next
     networks:
       - sotp_network
 
