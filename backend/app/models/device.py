@@ -37,14 +37,11 @@ class Device(Base):
     # Relationships
     credentials = relationship(
         "Credential", backref="device", cascade="all, delete-orphan"
-        )
+    )
     created_by = relationship("User", back_populates="devices")
     alerts = relationship(
         "Alert", back_populates="device", cascade="all, delete-orphan"
-        )
-
-
-
+    )
 
 class Credential(Base):
     __tablename__ = "credentials"
@@ -54,9 +51,7 @@ class Credential(Base):
     credential_type = Column(String, nullable=False)  # e.g., "snmp", "ssh", "api"
     vault_path = Column(
         String, nullable=False, unique=True
-        )  # Path in the vault where credentials are stored
+    )  # Path in the vault where credentials are stored
 
     # Relationship
     device = relationship("Device", back_populates="credentials")
-
-
