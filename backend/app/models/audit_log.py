@@ -18,4 +18,3 @@ class AuditLog(Base):
 
     # Relationship
     user = relationship("User", back_populates="audit_logs")
-    

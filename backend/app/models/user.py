@@ -34,3 +34,4 @@ class User(Base):
     # Relationships
     devices = relationship("Device", backref="created_by")
     audit_logs = relationship("AuditLog", back_populates="user")
+    

@@ -43,6 +43,7 @@ class Device(Base):
         "Alert", back_populates="device", cascade="all, delete-orphan"
     )
 
+
 class Credential(Base):
     __tablename__ = "credentials"
 
