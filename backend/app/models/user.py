@@ -1,16 +1,20 @@
+import enum
+
 from sqlalchemy import (
+    Boolean,
     Column,
+    DateTime,
+)
+from sqlalchemy import Enum as SQLEnum
+from sqlalchemy import (
+    ForeignKey,
     Integer,
     String,
-    DateTime,
     func,
-    ForeignKey,
-    Boolean,
-    Enum as SQLEnum,
 )
 from sqlalchemy.orm import relationship
+
 from .base import Base
-import enum
 
 
 class UserRole(enum.Enum):

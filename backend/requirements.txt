@@ -27,3 +27,4 @@ httpx==0.24.1
 
 # Clean code
 black==24.3.0
+isort==5.12.0
