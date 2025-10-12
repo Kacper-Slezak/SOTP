@@ -1,0 +1,93 @@
+# infrastructure/docker/docker-compose.yml (NEW BASE FILE)
+# Defines the core, shared architecture for all environments.
+version: '3.8'
+
+services:
+  # Serwis backendu (FastAPI)
+  backend:
+    build:
+      context: ../../backend
+      dockerfile: Dockerfile
+    env_file:
+      - ../../.env
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    networks:
+      - sotp_network
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+    restart: unless-stopped
+
+  # Serwis frontendu (Next.js)
+  frontend:
+    build:
+      context: ../../frontend
+      dockerfile: Dockerfile
+    networks:
+      - sotp_network
+    restart: unless-stopped
+
+  # Baza danych dla inwentarza
+  postgres:
+    image: postgres:15-alpine
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      POSTGRES_DB: ${POSTGRES_DB}
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    networks:
+      - sotp_network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER} -d ${POSTGRES_DB}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    restart: unless-stopped
+
+  # Baza danych dla metryk
+  timescaledb:
+    image: timescale/timescaledb:latest-pg15
+    environment:
+      POSTGRES_USER: ${TIMESCALEDB_USER}
+      POSTGRES_PASSWORD: ${TIMESCALEDB_PASSWORD}
+      POSTGRES_DB: ${TIMESCALEDB_DB}
+    volumes:
+      - timescale_data:/var/lib/postgresql/data
+    networks:
+      - sotp_network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${TIMESCALEDB_USER} -d ${TIMESCALEDB_DB}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    restart: unless-stopped
+
+  # Serwis Redis
+  redis:
+    image: redis:7-alpine
+    volumes:
+      - redis_data:/data
+    networks:
+      - sotp_network
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+    restart: unless-stopped
+
+networks:
+  sotp_network:
+    driver: bridge
+
+volumes:
+  postgres_data:
+  timescale_data:
+  redis_data:

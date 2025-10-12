@@ -1,79 +1,31 @@
-# Plik docker-compose dla środowiska deweloperskiego
-
+# infrastructure/docker/docker-compose.dev.yml (SIMPLIFIED OVERRIDE)
+# Overrides the base docker-compose.yml with settings for local development.
 version: '3.8'
 
 services:
-  # Serwis backendu (FastAPI)
   backend:
-    build:
-      context: ../../backend
-      dockerfile: Dockerfile
     ports:
-      - "8000:8000"
+      - "${BACKEND_PORT:-8000}:8000" # Expose backend port
     volumes:
-      - ../../backend:/app
-    env_file:
-      - ../../.env
-    depends_on:
-      - postgres
-      - redis
-    networks:
-      - sotp_network
+      - ../../backend:/app # Mount source code for hot-reloading
 
-  # Serwis frontendu (Next.js)
   frontend:
-    build:
-      context: ../../frontend
-      dockerfile: Dockerfile
     ports:
-      - "3000:3000"
+      - "${FRONTEND_PORT:-3000}:3000" # Expose frontend port
     volumes:
-      - ../../frontend:/app
+      - ../../frontend:/app # Mount source code for hot-reloading
+      # Keep these to prevent local node_modules from overwriting container's
       - /app/node_modules
       - /app/.next
-    networks:
-      - sotp_network
 
-  # Baza danych dla inwentarza
   postgres:
-    image: postgres:15-alpine
-    environment:
-      POSTGRES_USER: ${POSTGRES_USER}
-      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
-      POSTGRES_DB: ${POSTGRES_DB}
     ports:
-      - "${POSTGRES_PORT}:5432"
-    volumes:
-      - postgres_data:/var/lib/postgresql/data
-    networks:
-      - sotp_network
+      - "${POSTGRES_PORT}:5432" # Expose postgres port
 
-  # Baza danych dla metryk
   timescaledb:
-    image: timescale/timescaledb:latest-pg15
-    environment:
-      POSTGRES_USER: ${TIMESCALEDB_USER}
-      POSTGRES_PASSWORD: ${TIMESCALEDB_PASSWORD}
-      POSTGRES_DB: ${TIMESCALEDB_DB}
     ports:
-      - "${TIMESCALEDB_PORT}:5432"
-    volumes:
-      - timescale_data:/var/lib/postgresql/data
-    networks:
-      - sotp_network
+      - "${TIMESCALEDB_PORT}:5432" # Expose timescaledb port
 
-  # Serwis Redis
   redis:
-    image: redis:7-alpine
     ports:
-      - "6379:6379"
-    networks:
-      - sotp_network
-
-networks:
-  sotp_network:
-    driver: bridge
-
-volumes:
-  postgres_data:
-  timescale_data:
+      - "${REDIS_PORT:-6379}:6379" # Expose redis port
