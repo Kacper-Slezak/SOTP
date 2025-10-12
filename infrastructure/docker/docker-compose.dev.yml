@@ -1,4 +1,4 @@
-# Plik docker-compose dla środowiska deweloperskiego
+# Plik docker-compose dla środowiska deweloperskiego (POPRAWIONA WERSJA)
 
 version: '3.8'
 
@@ -15,8 +15,14 @@ services:
     env_file:
       - ../../.env
     depends_on:
-      - postgres
-      - redis
+      postgres:
+        condition: service_healthy
+      timescaledb:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      vault:
+        condition: service_healthy
     networks:
       - sotp_network
 
@@ -29,8 +35,8 @@ services:
       - "3000:3000"
     volumes:
       - ../..:/workspace
-      - /workspace/src/frontend/node_modules
-      - /workspace/src/frontend/.next
+      - /workspace/frontend/node_modules
+      - /workspace/frontend/.next
     networks:
       - sotp_network
 
@@ -48,11 +54,10 @@ services:
     networks:
       - sotp_network
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER} -d ${POSTGRES_DB}"]     
-      interval: 5s 
-      timeout: 10s
-      retries: 6
-      start_period: 10s
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER} -d ${POSTGRES_DB}"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
 
   # Baza danych dla metryk
   timescaledb:
@@ -68,11 +73,10 @@ services:
     networks:
       - sotp_network
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U ${TIMESCALEDB_USER} -d ${TIMESCALEDB_DB}"]     
-      interval: 5s 
-      timeout: 10s
-      retries: 6
-      start_period: 10s
+      test: ["CMD-SHELL", "pg_isready -U ${TIMESCALEDB_USER} -d ${TIMESCALEDB_DB}"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
 
   # Serwis Redis
   redis:
@@ -84,12 +88,12 @@ services:
     healthcheck:
       test: ["CMD", "redis-cli", "ping"]
       interval: 5s
-      timeout: 10s
-      retries: 6
-      start_period: 10s
-  
+      timeout: 3s
+      retries: 5
+
+  # Celery Worker
   celery-worker:
-    build: 
+    build:
       context: ../../backend
       dockerfile: Dockerfile
     command: celery -A app.tasks.celery_app worker --loglevel=info
@@ -104,9 +108,10 @@ services:
         condition: service_healthy
     networks:
       - sotp_network
-  
+
+  # Celery Beat
   celery-beat:
-    build: 
+    build:
       context: ../../backend
       dockerfile: Dockerfile
     command: celery -A app.tasks.celery_app beat --loglevel=info
@@ -121,8 +126,10 @@ services:
         condition: service_healthy
     networks:
       - sotp_network
+
+  # Vault
   vault:
-    image: hasicorp/vault:1.15
+    image: hashicorp/vault:1.15
     ports:
       - "8200:8200"
     environment:
@@ -133,11 +140,10 @@ services:
     networks:
       - sotp_network
     healthcheck:
-      test: ["CMD", "wget", "--no-verbose", "--spider", "http://127.0.0.1:8200/v1/sys/health"]      
-      interval: 5
-      timeout: 10s
-      retries: 6
-      start_period: 10s
+      test: ["CMD", "wget", "--no-verbose", "--spider", "http://127.0.0.1:8200/v1/sys/health"]
+      interval: 5s
+      timeout: 3s
+      retries: 5
 
 networks:
   sotp_network:
