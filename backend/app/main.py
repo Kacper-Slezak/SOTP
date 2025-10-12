@@ -18,6 +18,6 @@ app.add_middleware(
 )
 
 
-@app.get("/")
+@app.get("/health")
 async def main():
-    return {"message": "Hello World"}
+    return {"status": "ok"}
