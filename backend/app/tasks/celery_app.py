@@ -9,7 +9,8 @@ celery_app = Celery(
     "sotp_tasks",
     broker=redis_url,
     backend=redis_url,
-    include=["app.tasks.monitoring_tasks"],)
+    include=["app.tasks.monitoring_tasks"],
+)
 
 celery_app.conf.update(
     task_track_started=True,
