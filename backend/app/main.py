@@ -11,12 +11,12 @@ async def lifespan(app: FastAPI):
     app.state.redis = create_redis()
 
     yield
-    app.state.postgres.dispose()
-    app.state.timescaledb.dispose()
+    await app.state.postgres.dispose()
+    await app.state.timescaledb.dispose()
     await app.state.redis.close()
 
 
-app = FastAPI(lifespan=lifespan)
+app = FastAPI(lifespan=lifespan, debug=True)
 
 origins = [
     "http://localhost",
@@ -32,18 +32,32 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-
 @app.get("/health")
-async def main():
-    def _pg():
-        with app.state.postgres.connect() as c:
-            return c.execute(text("SELECT 1")).scalar_one()
+async def health():
+    errors = {}
+    out = {}
 
-    def _ts():
-        with app.state.timescaledb.connect() as c:
-            return c.execute(text("SELECT 1")).scalar_one()
+    try:
+        async with app.state.postgres.connect() as c:
+            out["postgres"] = (await c.execute(text("SELECT 1"))).scalar_one()
+    except Exception as e:
+        errors["postgres"] = str(e)
 
-    pg_ok = await anyio.to_thread.run_sync(_pg)
-    ts_ok = await anyio.to_thread.run_sync(_ts)
-    redis_ok = await app.state.redis.ping()
-    return {"status": "ok", "postgres": pg_ok, "timescaledb": ts_ok, "redis": redis_ok}
+    try:
+        async with app.state.timescaledb.connect() as c:
+            out["timescaledb"] = (await c.execute(text("SELECT 1"))).scalar_one()
+    except Exception as e:
+        errors["timescaledb"] = str(e)
+
+    try:
+        out["redis"] = bool(await app.state.redis.ping())
+    except Exception as e:
+        errors["redis"] = str(e)
+
+    status = "ok" if not errors else "degraded"
+    return {"status": status, "results": out, "errors": errors}
+
+#Check app
+@app.get("/ping")
+def ping():
+    return {"ok": True}
