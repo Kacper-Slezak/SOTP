@@ -5,6 +5,7 @@ from sqlalchemy.orm import Session
 from sqlalchemy import text
 from app.utils.databases import create_postgres, create_timescaledb, create_redis
 
+
 async def lifespan(app: FastAPI):
     app.state.postgres = create_postgres()
     app.state.timescaledb = create_timescaledb()
@@ -57,7 +58,8 @@ async def health():
     status = "ok" if not errors else "degraded"
     return {"status": status, "results": out, "errors": errors}
 
-#Check app
+
+# Check app
 @app.get("/ping")
 def ping():
     return {"ok": True}
