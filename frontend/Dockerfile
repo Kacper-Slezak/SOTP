@@ -1,18 +1,20 @@
-# Etap 1: Instalacja zależności
-FROM node:20-alpine as deps
+# Etap 1: Instalacja zależności (deps)
+# Używamy node:20-slim (oparty na Debianie) zamiast Alpine,
+# aby mieć dostęp do 'bash' i standardowych narzędzi systemowych.
+FROM node:20-slim as deps
 WORKDIR /app
 COPY package.json package-lock.json ./
 RUN npm install
 
-# Etap 2: Budowanie aplikacji
-FROM node:20-alpine as builder
+# Etap 2: Budowanie aplikacji (builder)
+FROM node:20-slim as builder
 WORKDIR /app
 COPY --from=deps /app/node_modules ./node_modules
 COPY . .
 RUN npm run build
 
-# Etap 3: Finalny obraz produkcyjny (dla dev będzie inaczej)
-FROM node:20-alpine
+# Etap 3: Finalny obraz produkcyjny/Dev Runtime
+FROM node:20-slim
 WORKDIR /app
 # W trybie dev, Next.js uruchamia się inaczej, ale Dockerfile jest potrzebny
 COPY package.json package-lock.json ./
