@@ -74,6 +74,7 @@ services:
       - "${TIMESCALEDB_PORT}:5432"
     volumes:
       - timescale_data:/var/lib/postgresql/data
+      - ./init-scripts/timescale-init.sql:/docker-entrypoint-initdb.d/init.sql
     networks:
       - sotp_network
     healthcheck:
