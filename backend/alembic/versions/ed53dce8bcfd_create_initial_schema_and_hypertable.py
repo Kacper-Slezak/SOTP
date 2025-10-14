@@ -1,7 +1,7 @@
 """Create initial schema and hypertable
 
 Revision ID: ed53dce8bcfd
-Revises: 
+Revises:
 Create Date: 2025-10-14 10:09:33.792539
 
 """
