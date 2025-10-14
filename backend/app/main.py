@@ -1,9 +1,9 @@
 import anyio
+from app.utils.databases import create_postgres, create_redis, create_timescaledb
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
-from sqlalchemy.orm import Session
 from sqlalchemy import text
-from app.utils.databases import create_postgres, create_timescaledb, create_redis
+from sqlalchemy.orm import Session
 
 
 async def lifespan(app: FastAPI):
