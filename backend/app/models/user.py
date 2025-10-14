@@ -1,13 +1,12 @@
 import enum
 
 from sqlalchemy import (
-    Boolean,
+    Boolean as Bool,
     Column,
     DateTime,
 )
 from sqlalchemy import Enum as SQLEnum
 from sqlalchemy import (
-    ForeignKey,
     Integer,
     String,
     func,
@@ -31,7 +30,7 @@ class User(Base):
     email = Column(String, unique=True, index=True, nullable=False)
     name = Column(String, index=True, nullable=False)
     password_hash = Column(String, nullable=False)
-    role = Column(SqlEnum(UserRole), default=UserRole.READONLY, nullable=False)
+    role = Column(SQLEnum(UserRole), default=UserRole.READONLY, nullable=False)
     is_active = Column(Bool, default=True, nullable=False)
     created_at = Column(DateTime, default=func.now(), nullable=False)
 
