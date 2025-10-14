@@ -1,6 +1,7 @@
 # backend/app/models/metric.py
 
 from sqlalchemy import Column, DateTime, Float, ForeignKey, Integer, String, func
+
 from .base import Base
 
 

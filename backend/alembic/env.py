@@ -3,19 +3,18 @@
 import os
 from logging.config import fileConfig
 
-from sqlalchemy import engine_from_config
-from sqlalchemy.engine import URL
-from sqlalchemy.pool import NullPool
-
 from alembic import context
+from app.models.alert import Alert, AlertRule
+from app.models.audit_log import AuditLog
 
 # Import your Base and all your models here so Alembic can see them
 from app.models.base import Base
-from app.models.user import User
-from app.models.device import Device, Credential
-from app.models.alert import Alert, AlertRule
-from app.models.audit_log import AuditLog
+from app.models.device import Credential, Device
 from app.models.metric import DeviceMetric
+from app.models.user import User
+from sqlalchemy import engine_from_config
+from sqlalchemy.engine import URL
+from sqlalchemy.pool import NullPool
 
 config = context.config
 
