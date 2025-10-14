@@ -24,6 +24,7 @@ if config.config_file_name is not None:
 
 target_metadata = Base.metadata
 
+
 def get_db_url():
     # TA FUNKCJA MUSI WSKAZYWAĆ NA TIMESCALEDB!
     return URL.create(
@@ -35,6 +36,7 @@ def get_db_url():
         database=os.getenv("TIMESCALEDB_DB"),
     )
 
+
 def run_migrations_offline() -> None:
     url = get_db_url()
     context.configure(
@@ -45,6 +47,7 @@ def run_migrations_offline() -> None:
     )
     with context.begin_transaction():
         context.run_migrations()
+
 
 def run_migrations_online() -> None:
     configuration = config.get_section(config.config_ini_section)
@@ -58,6 +61,7 @@ def run_migrations_online() -> None:
         context.configure(connection=connection, target_metadata=target_metadata)
         with context.begin_transaction():
             context.run_migrations()
+
 
 if context.is_offline_mode():
     run_migrations_offline()
