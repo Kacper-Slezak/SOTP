@@ -31,10 +31,10 @@ class User(Base):
     email = Column(String, unique=True, index=True, nullable=False)
     name = Column(String, index=True, nullable=False)
     password_hash = Column(String, nullable=False)
-    role = Column(SqlEnum(UserRole), default=UserRole.READONLY, nullable=False)
-    is_active = Column(Bool, default=True, nullable=False)
+    role = Column(SQLEnum(UserRole), default=UserRole.READONLY, nullable=False)
+    is_active = Column(Boolean, default=True, nullable=False)
     created_at = Column(DateTime, default=func.now(), nullable=False)
 
     # Relationships
-    devices = relationship("Device", backref="created_by")
+    devices = relationship("Device", back_populates="created_by")
     audit_logs = relationship("AuditLog", back_populates="user")
