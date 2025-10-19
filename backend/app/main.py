@@ -3,19 +3,19 @@ import app.models
 from app.utils.databases import create_postgres, create_redis, create_timescaledb
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi import Depends, Request
-from sqlalchemy import text, select
+from fastapi import Depends, Request, Response
+from sqlalchemy import text, select, delete
 from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker
 from typing import AsyncGenerator, Literal, Annotated
 from app.models.device import Device
 
 async def lifespan(app: FastAPI):
-    #Database engines
+    # Database engines
     app.state.postgres = create_postgres()
     app.state.timescaledb = create_timescaledb()
     app.state.redis = create_redis()
 
-    #Session constructor
+    # Session constructor
     app.state.sessions = {
         "pg" : async_sessionmaker(app.state.postgres, expire_on_commit=False, class_=AsyncSession),
         "ts" : async_sessionmaker(app.state.timescaledb, expire_on_commit=False, class_=AsyncSession),
@@ -87,6 +87,18 @@ async def ping():
 
 
 @app.get("/api/v1/devices")
-async def get_devices(session: SessionPG): # type: ignore
-    rows = (await session.execute(select(Device))).scalars().all()
-    return [{"id": d.id, "name": d.name} for d in rows]
+async def get_all_devices(session: SessionPG): # type: ignore
+    devices = (await session.execute(select(Device))).scalars().all()
+    return [{"id": d.id, "name": d.name} for d in devices]
+
+@app.get("/api/v1/devices/{id}")
+async def get_device(session: SessionPG):
+    device = (await session.execute(select(Device).where(Device.id == id))).scalars().all()
+    return [{"id": d.id, "name": d.name} for d in device]
+
+@app.delete("/api/v1/devices/{id}")
+async def delete_device(id ,session: SessionPG):
+    device = session.get(Device, id)
+    session.delete(device)
+    session.commit()
+    return Response(status_code=200)
