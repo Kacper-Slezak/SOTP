@@ -1,9 +1,4 @@
-# infrastructure/docker/docker-compose.dev.yml 
-
-version: '3.8'
-
 services:
-  # Serwis backendu (FastAPI)
   backend:
     build:
       context: ../../backend
@@ -12,12 +7,18 @@ services:
       - "8000:8000"
     volumes:
       - ../..:/workspace
-    env_file:
-      - ../../.env
+    working_dir: /workspace/backend
     environment:
       POSTGRES_HOST: postgres
+      POSTGRES_DB: ${POSTGRES_DB}
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+
       TIMESCALE_HOST: timescale
-      TIMESCALE_PORT: 5432
+      TIMESCALE_PORT: "5432"
+      TIMESCALE_USER: ${TIMESCALE_USER}
+      TIMESCALE_PASSWORD: ${TIMESCALE_PASSWORD}
+      TIMESCALE_DB: ${TIMESCALE_DB}
     depends_on:
       postgres:
         condition: service_healthy
@@ -31,15 +32,13 @@ services:
       - sotp_network
     command: >
       bash -c "echo 'Waiting for databases...' &&
-               # Run migrations for postgres FIRST
-               alembic upgrade head -x db=postgres &&
-               # Then run migrations for timescaledb
-               alembic upgrade head -x db=timescaledb &&
-               # Then start the app
+               echo 'Running PostgreSQL migrations...' &&
+               alembic -x db=postgres upgrade postgres@head &&
+               echo 'Running TimescaleDB migrations...' &&
+               alembic -x db=timescale upgrade timescale@head &&
                echo 'Starting Uvicorn...' &&
                uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload"
 
-  # Serwis frontendu (Next.js)
   frontend:
     build:
       context: ../../frontend
@@ -50,18 +49,17 @@ services:
       - ../..:/workspace
       - /workspace/frontend/node_modules
       - /workspace/frontend/.next
-    env_file:
-      - ../../.env
     networks:
       - sotp_network
 
-  # Baza danych dla inwentarza
   postgres:
     image: postgres:15-alpine
-    env_file: # <-- Ta sekcja wczyta wszystkie zmienne, w tym POSTGRES_USER, _PASSWORD, _DB
-      - ../../.env
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB}
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
     ports:
-      - "${POSTGRES_PORT}:5432"
+      - "5432:5432"
     volumes:
       - postgres_data:/var/lib/postgresql/data
     networks:
@@ -72,35 +70,29 @@ services:
       timeout: 5s
       retries: 5
 
-  # Baza danych dla metryk
   timescale:
     image: timescale/timescaledb:latest-pg15
-    env_file: # <-- Ta sekcja wczyta wszystkie zmienne, w tym TIMESCALEDB_USER, _PASSWORD, _DB
-      - ../../.env
     environment:
-      TIMESCALE_USER: ${TIMESCALE_USER}
-      TIMESCALE_PASSWORD: ${TIMESCALE_PASSWORD}
-      TIMESCALE_DB: ${TIMESCALE_DB}
+      POSTGRES_DB: ${TIMESCALE_DB}
+      POSTGRES_USER: ${TIMESCALE_USER}
+      POSTGRES_PASSWORD: ${TIMESCALE_PASSWORD}
     ports:
-      - "${TIMESCALE_PORT}:5433"
+      - "${TIMESCALE_PORT:-5433}:5432"
     volumes:
       - timescale_data:/var/lib/postgresql/data
       - ./init-scripts/timescale-init.sql:/docker-entrypoint-initdb.d/init.sql
     networks:
       - sotp_network
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U ${TIMESCALEDB_USER} -d ${TIMESCALEDB_DB}"]
+      test: ["CMD-SHELL", "pg_isready -U ${TIMESCALE_USER} -d ${TIMESCALE_DB}"]
       interval: 5s
       timeout: 5s
       retries: 5
 
-  # Serwis Redis
   redis:
     image: redis:7-alpine
     ports:
       - "6379:6379"
-    env_file:
-      - ../../.env
     networks:
       - sotp_network
     healthcheck:
@@ -109,7 +101,6 @@ services:
       timeout: 3s
       retries: 5
 
-  # Celery Worker
   celery-worker:
     build:
       context: ../../backend
@@ -117,8 +108,9 @@ services:
     command: celery -A app.tasks.celery_app worker --loglevel=info
     volumes:
       - ../..:/workspace
-    env_file:
-      - ../../.env
+    environment:
+      TIMESCALE_HOST: timescale
+      TIMESCALE_PORT: "5432"
     depends_on:
       redis:
         condition: service_healthy
@@ -127,7 +119,6 @@ services:
     networks:
       - sotp_network
 
-  # Celery Beat
   celery-beat:
     build:
       context: ../../backend
@@ -135,8 +126,9 @@ services:
     command: celery -A app.tasks.celery_app beat --loglevel=info
     volumes:
       - ../..:/workspace
-    env_file:
-      - ../../.env
+    environment:
+      TIMESCALE_HOST: timescale
+      TIMESCALE_PORT: "5432"
     depends_on:
       redis:
         condition: service_healthy
@@ -145,7 +137,6 @@ services:
     networks:
       - sotp_network
 
-  # Vault
   vault:
     image: hashicorp/vault:1.15
     ports:
@@ -155,8 +146,6 @@ services:
       VAULT_DEV_LISTEN_ADDRESS: "0.0.0.0:8200"
     cap_add:
       - IPC_LOCK
-    env_file:
-      - ../../.env
     networks:
       - sotp_network
     healthcheck:

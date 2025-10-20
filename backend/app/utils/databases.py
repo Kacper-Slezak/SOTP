@@ -8,7 +8,7 @@ def create_postgres():
 
 
 def create_timescaledb():
-    return create_async_engine(url=Config.TIMESCALEDB_URL, pool_pre_ping=True)
+    return create_async_engine(url=Config.TIMESCALE_URL, pool_pre_ping=True)
 
 
 def create_redis():

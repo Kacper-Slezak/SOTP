@@ -26,26 +26,29 @@ config = context.config
 if config.config_file_name is not None:
     fileConfig(config.config_file_name)
 
+from sqlalchemy import MetaData  # <-- Import MetaData
+
 # --- Define which models go to which database ---
-# All models inherit from Base by default
-# We only need to specify the target_metadata for TimescaleDB explicitly
-timescale_metadata = Base.metadata  # Initially assume all, then filter
-postgres_metadata = Base.metadata
 
-# Filter metadata: Keep only DeviceMetric in timescale_metadata
-timescale_metadata.tables = {
-    k: v for k, v in Base.metadata.tables.items() if k == DeviceMetric.__tablename__
-}
-# Filter metadata: Remove DeviceMetric from postgres_metadata
-postgres_metadata.tables = {
-    k: v for k, v in Base.metadata.tables.items() if k != DeviceMetric.__tablename__
-}
 
+
+# Create new, separate MetaData objects
+postgres_metadata = MetaData()
+timescale_metadata = MetaData()
+
+for table_name, table_obj in Base.metadata.tables.items():
+    if table_name == DeviceMetric.__tablename__:
+        # Copy the DeviceMetric table to timescale_metadata
+        table_obj.to_metadata(timescale_metadata)
+    else:
+        # Copy all other tables to postgres_metadata
+        table_obj.to_metadata(postgres_metadata)
+# --- End of model segregation ---
 
 # --- Function to determine target metadata based on command-line argument ---
 def get_target_metadata():
     db_name = context.get_x_argument(as_dictionary=True).get("db")
-    if db_name == "timescaledb":
+    if db_name == "timescale":
         print("Targeting TimescaleDB metadata")
         return timescale_metadata
     elif db_name == "postgres":
@@ -63,14 +66,15 @@ target_metadata = get_target_metadata()
 
 
 # --- Function to get the correct database URL ---
+# --- Function to get the correct database URL ---
 def get_db_url():
     db_name = context.get_x_argument(as_dictionary=True).get("db")
-    if db_name == "timescaledb":
+    if db_name == "timescale":
         print(
-            f"Using TimescaleDB URL: {Config.TIMESCALEDB_URL.replace('+asyncpg', '+psycopg2')}"
+            f"Using TimescaleDB URL: {Config.TIMESCALE_URL.replace('+asyncpg', '+psycopg2')}"
         )
         # Alembic needs a sync driver, replace asyncpg with psycopg2
-        return Config.TIMESCALEDB_URL.replace("+asyncpg", "+psycopg2")
+        return Config.TIMESCALE_URL.replace("+asyncpg", "+psycopg2")
     else:  # Default to postgres
         print(
             f"Using PostgreSQL URL: {Config.POSTGRES_URL.replace('+asyncpg', '+psycopg2')}"
