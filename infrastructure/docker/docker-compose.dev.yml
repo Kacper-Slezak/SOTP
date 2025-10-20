@@ -41,6 +41,8 @@ services:
       - ../..:/workspace
       - /workspace/frontend/node_modules
       - /workspace/frontend/.next
+    env_file:
+      - ../../.env
     networks:
       - sotp_network
 
@@ -88,6 +90,8 @@ services:
     image: redis:7-alpine
     ports:
       - "6379:6379"
+    env_file:
+      - ../../.env
     networks:
       - sotp_network
     healthcheck:
