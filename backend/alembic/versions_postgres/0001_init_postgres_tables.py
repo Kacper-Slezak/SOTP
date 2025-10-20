@@ -5,6 +5,7 @@ Revises:
 Create Date: 2025-10-20 10:30:00.000000
 
 """
+
 from typing import Sequence, Union
 
 import sqlalchemy as sa
@@ -13,7 +14,7 @@ from alembic import op
 # revision identifiers, used by Alembic.
 revision: str = "0001_init_postgres"
 down_revision: Union[str, None] = None
-branch_labels: Union[str, Sequence[str], None] = ('postgres',) # Branch label
+branch_labels: Union[str, Sequence[str], None] = ("postgres",)  # Branch label
 depends_on: Union[str, Sequence[str], None] = None
 
 

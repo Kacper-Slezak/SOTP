@@ -5,6 +5,7 @@ Revises:
 Create Date: 2025-10-20 10:31:00.000000
 
 """
+
 from typing import Sequence, Union
 
 import sqlalchemy as sa
@@ -13,7 +14,7 @@ from alembic import op
 # revision identifiers, used by Alembic.
 revision: str = "0001_init_timescale"
 down_revision: Union[str, None] = None
-branch_labels: Union[str, Sequence[str], None] = ('timescale',) # Branch label
+branch_labels: Union[str, Sequence[str], None] = ("timescale",)  # Branch label
 depends_on: Union[str, Sequence[str], None] = None
 
 
@@ -23,14 +24,12 @@ def upgrade() -> None:
     op.create_table(
         "device_metrics",
         sa.Column("time", sa.DateTime(timezone=True), nullable=False),
-        sa.Column("device_id", sa.Integer(), nullable=False), # FK removed
+        sa.Column("device_id", sa.Integer(), nullable=False),  # FK removed
         sa.Column("metric_name", sa.String(), nullable=False),
         sa.Column("value", sa.Float(), nullable=False),
-        
         # NOTE: The ForeignKeyConstraint to 'devices.id' has been removed.
         # You cannot create a foreign key between two separate databases.
         # This relationship must be handled at the application layer.
-        
         sa.PrimaryKeyConstraint("time", "device_id", "metric_name"),
     )
     op.execute("SELECT create_hypertable('device_metrics', 'time');")

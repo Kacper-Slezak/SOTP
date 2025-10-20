@@ -31,7 +31,6 @@ from sqlalchemy import MetaData  # <-- Import MetaData
 # --- Define which models go to which database ---
 
 
-
 # Create new, separate MetaData objects
 postgres_metadata = MetaData()
 timescale_metadata = MetaData()
@@ -44,6 +43,7 @@ for table_name, table_obj in Base.metadata.tables.items():
         # Copy all other tables to postgres_metadata
         table_obj.to_metadata(postgres_metadata)
 # --- End of model segregation ---
+
 
 # --- Function to determine target metadata based on command-line argument ---
 def get_target_metadata():
