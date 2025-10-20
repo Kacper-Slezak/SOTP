@@ -1,10 +1,8 @@
-import asyncio
-import asyncpg
+# backend/app/main.py
 from app.utils.databases import create_postgres, create_redis, create_timescaledb
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from sqlalchemy import text
-from backend.app.models import PingResult
 
 
 

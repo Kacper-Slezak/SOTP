@@ -29,13 +29,12 @@ def device_icmp(self, device_address: str):
         
         # 3. Zapis Wyników (do TimescaleDB) -- tu podobno funkcje robi kacper????
         main.insert_ping_result(
-            device_id=device.id,
             ip_address=host.address,               
             is_alive=host.is_alive,
             rtt_avg_ms=host.avg_rtt,
             packet_loss_percent=host.packet_loss
         )
-        return {"status": "UP" if host.is_alive else "DOWN", "rtt_avg_ms": host.avg_rtt}
+        return {"status": "UP" , "rtt_avg_ms": host.avg_rtt,"ip_address": host.address,"packet_loss_percent": host.packet_loss} if host.is_alive else {"status": "DOWN", "error": "Host unreachable"}
         
     except SQLAlchemyError as db_err:
         result = {"status": "ERROR", "reason": f"Database error: {str(db_err)}"}
