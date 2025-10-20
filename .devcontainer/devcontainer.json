@@ -17,9 +17,6 @@
         "ghcr.io/devcontainers/features/git:1": {}
     },
 
-    "runArgs": [
-        "--env-file=${localWorkspaceFolder}/.env"
-    ],
 
     // Personalizacja środowiska wewnątrz VS Code
     "customizations": {
