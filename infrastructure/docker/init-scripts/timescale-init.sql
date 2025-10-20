@@ -1,2 +1,2 @@
 CREATE EXTENSION IF NOT EXISTS timescaledb;
--- All another wiill be done by the Alembic migrations
+-- All another will be done by the Alembic migrations
