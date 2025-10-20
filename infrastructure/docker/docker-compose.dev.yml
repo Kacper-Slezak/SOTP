@@ -29,6 +29,15 @@ services:
         condition: service_healthy
     networks:
       - sotp_network
+    command: >
+      bash -c "echo 'Waiting for databases...' &&
+               # Run migrations for postgres FIRST
+               alembic upgrade head -x db=postgres &&
+               # Then run migrations for timescaledb
+               alembic upgrade head -x db=timescaledb &&
+               # Then start the app
+               echo 'Starting Uvicorn...' &&
+               uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload"
 
   # Serwis frontendu (Next.js)
   frontend:

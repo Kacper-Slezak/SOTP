@@ -18,7 +18,7 @@ icmplib==3.0.4
 pysnmp==4.4.12
 netmiko==4.3.0
 celery[redis]==5.3.4
-h vac==1.2.0
+hvac==1.2.0
 
 # Development & Testing
 pytest==7.4.0

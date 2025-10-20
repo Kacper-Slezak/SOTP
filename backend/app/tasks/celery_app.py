@@ -1,15 +1,15 @@
 # backend/app/tasks/celery_app.py
 from celery import Celery
+from app.core.config import Config # Import Config
 
-# TODO: W przyszłości załaduj konfigurację z pliku config.py
-# Na razie wystarczą wartości na sztywno, aby usługa wstała.
-redis_url = "redis://redis:6379/0"
+# Use the Redis URL from the configuration
+redis_url = Config.REDIS_URL
 
 celery_app = Celery(
     "sotp_tasks",
     broker=redis_url,
     backend=redis_url,
-    include=["app.tasks.monitoring_tasks"],
+    include=["app.tasks.monitoring_tasks"], 
 )
 
 celery_app.conf.update(
