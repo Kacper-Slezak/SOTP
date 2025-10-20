@@ -16,12 +16,12 @@ services:
       - ../../.env
     environment:
       POSTGRES_HOST: postgres
-      TIMESCALEDB_HOST: timescaledb
-      TIMESCALEDB_PORT: 5432
+      TIMESCALE_HOST: timescale
+      TIMESCALE_PORT: 5432
     depends_on:
       postgres:
         condition: service_healthy
-      timescaledb:
+      timescale:
         condition: service_healthy
       redis:
         condition: service_healthy
@@ -62,16 +62,16 @@ services:
       retries: 5
 
   # Baza danych dla metryk
-  timescaledb:
+  timescale:
     image: timescale/timescaledb:latest-pg15
     env_file: # <-- Ta sekcja wczyta wszystkie zmienne, w tym TIMESCALEDB_USER, _PASSWORD, _DB
       - ../../.env
     environment:
-      POSTGRES_USER: ${TIMESCALEDB_USER}
-      POSTGRES_PASSWORD: ${TIMESCALEDB_PASSWORD}
-      POSTGRES_DB: ${TIMESCALEDB_DB}
+      TIMESCALE_USER: ${TIMESCALE_USER}
+      TIMESCALE_PASSWORD: ${TIMESCALE_PASSWORD}
+      TIMESCALE_DB: ${TIMESCALE_DB}
     ports:
-      - "${TIMESCALEDB_PORT}:5432"
+      - "${TIMESCALE_PORT}:5433"
     volumes:
       - timescale_data:/var/lib/postgresql/data
       - ./init-scripts/timescale-init.sql:/docker-entrypoint-initdb.d/init.sql
