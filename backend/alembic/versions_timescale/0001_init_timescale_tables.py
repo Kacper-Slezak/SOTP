@@ -1,7 +1,7 @@
 """Create initial schema and hypertable for TimescaleDB
 
 Revision ID: 0001_init_timescale
-Revises: 
+Revises:
 Create Date: 2025-10-20 10:31:00.000000
 
 """

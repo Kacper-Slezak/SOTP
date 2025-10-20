@@ -1,7 +1,7 @@
 """Create initial postgres schema
 
 Revision ID: 0001_init_postgres
-Revises: 
+Revises:
 Create Date: 2025-10-20 10:30:00.000000
 
 """
