@@ -1,9 +1,11 @@
-import anyio
+import asyncio
+import asyncpg
 from app.utils.databases import create_postgres, create_redis, create_timescaledb
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from sqlalchemy import text
-from sqlalchemy.orm import Session
+from backend.app.models import PingResult
+
 
 
 async def lifespan(app: FastAPI):
@@ -64,3 +66,5 @@ async def health():
 @app.get("/ping")
 def ping():
     return {"ok": True}
+
+

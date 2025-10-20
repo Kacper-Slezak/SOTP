@@ -1,0 +1,64 @@
+# app/tasks/monitoring_tasks.py
+from sqlalchemy.exc import SQLAlchemyError
+from celery import shared_task
+from icmplib import ping
+
+# --- Importy modeli i sesji DB
+
+from backend.app.models import PingResult,device
+from app.utils import main
+
+
+PING_COUNT = 5
+PING_TIMEOUT = 2.0 
+
+@shared_task(bind=True, name="device_icmp")
+def device_icmp(self, device_address: str):
+    
+    result = {"status": "ERROR", "reason": "Unknown error."}
+   
+
+    
+
+    try:
+        
+        address = device_address
+        
+        # 2. Wykonanie Pingu (ICMP)
+        host = ping(address, count=PING_COUNT, timeout=PING_TIMEOUT, privileged=False) 
+        
+        # 3. Zapis Wyników (do TimescaleDB) -- tu podobno funkcje robi kacper????
+        main.insert_ping_result(
+            device_id=device.id,
+            ip_address=host.address,               
+            is_alive=host.is_alive,
+            rtt_avg_ms=host.avg_rtt,
+            packet_loss_percent=host.packet_loss
+        )
+        return {"status": "UP" if host.is_alive else "DOWN", "rtt_avg_ms": host.avg_rtt}
+        
+    except SQLAlchemyError as db_err:
+        result = {"status": "ERROR", "reason": f"Database error: {str(db_err)}"}
+    except Exception as e:
+        result = {"status": "ERROR", "reason": f"General error: {str(e)}"}
+
+@shared_task(name="schedule_all_pings")
+def schedule_all_pings(only_active: bool = True):
+    
+    
+    
+    count = 0
+    try:
+        devices = main.get_all_devices() # Pobranie wszystkich urządzeń z bazy danych kiryl mówi że jakoś ma byc ale jakoś nie ma sensu
+        if only_active:
+            devices = [d for d in devices if d.is_active]
+
+        for device in devices:
+            device_icmp.delay(device_address=device.ip_address)
+            count += 1
+
+        return f"Scheduled {count} ICMP polls."
+    
+        
+    except Exception as e:
+        return f"Error scheduling ICMP polls: {str(e)}"

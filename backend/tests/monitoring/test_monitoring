@@ -1,0 +1,107 @@
+import unittest
+from unittest.mock import patch, MagicMock
+
+# Zaimportuj zadanie i modele do testowania
+# Zakładamy, że modele są dostępne w app.models
+from app.models import PingResult, device
+# Zakładamy, że zadania są w app.tasks.monitoring_tasks
+from app.tasks.monitoring_tasks import device_icmp 
+
+# Ścieżki do mockowania muszą być pełnymi ścieżkami, pod którymi obiekty są używane w zadaniu
+
+class TestDeviceICMPTask(unittest.TestCase):
+
+    
+    @patch('app.tasks.monitoring_tasks.ping')
+    @patch('app.tasks.monitoring_tasks.get_db')
+    # Aby Celery 'bind=True' działało, musimy również symulować instancję zadania ('self')
+    def test_device_icmp_success(self, mock_get_db, mock_ping):
+        """Testuje, czy zadanie poprawnie pinguje, zapisuje i zwraca status UP."""
+
+        TEST_DEVICE_ID = 123
+        TEST_IP = "192.168.1.1"
+        TEST_AVG_RTT = 5.5
+
+        # --- A. Konfiguracja Mocków Bazy Danych (get_db) ---
+
+        # 1. Tworzymy sztuczne urządzenie, które ma zostać zwrócone przez DB
+        mock_device = MagicMock(spec=device)
+        mock_device.id = TEST_DEVICE_ID
+        mock_device.ip_address = TEST_IP
+
+        # 2. Konfigurujemy mock sesji DB
+        mock_db_session = MagicMock()
+        # db.query(Device).filter(Device.id == device_id).one_or_none() zwróci nasze urządzenie
+        mock_db_session.query.return_value.filter.return_value.one_or_none.return_value = mock_device
+        
+        # 3. Konfigurujemy get_db, by działał jako generator
+        mock_generator = iter([mock_db_session]) 
+        mock_get_db.return_value = mock_generator
+
+        # --- B. Konfiguracja Mocka Pingu (icmplib.ping) ---
+        
+        # Tworzymy sztuczny wynik hosta
+        mock_host = MagicMock()
+        mock_host.is_alive = True # Symulacja pomyślnego pingu
+        mock_host.avg_rtt = TEST_AVG_RTT
+        mock_ping.return_value = mock_host # ping(address, ...) zwróci ten obiekt
+
+        # --- C. Wywołanie Testowanej Funkcji ---
+
+        # Tworzymy mock dla argumentu 'self' (bind=True)
+        mock_task_self = MagicMock() 
+        result = device_icmp(mock_task_self, device_id=TEST_DEVICE_ID)
+
+        # --- D. Aserty (Sprawdzenie Wyników) ---
+        
+        # 1. Weryfikacja wywołania DB w celu pobrania urządzenia
+        mock_db_session.query.assert_called_once()
+        
+        # 2. Weryfikacja wywołania pingu
+        mock_ping.assert_called_once_with(
+            TEST_IP, 
+            count=5, # Sprawdzamy, czy użyto globalnych stałych
+            timeout=2.0, 
+            privileged=False
+        )
+        
+        # 3. Weryfikacja zapisu do DB
+        # Sprawdzamy, czy db.add zostało wywołane
+        self.assertTrue(mock_db_session.add.called)
+        # Sprawdzamy, czy db.commit zostało wywołane (transakcja zakończona)
+        mock_db_session.commit.assert_called_once()
+        
+        # 4. Weryfikacja wartości zwracanej
+        self.assertEqual(result['status'], 'UP')
+        self.assertEqual(result['rtt_avg_ms'], TEST_AVG_RTT)
+        
+        # 5. Weryfikacja, czy połączenie z DB zostało zamknięte
+        mock_generator.close.assert_called_once()
+        
+    @patch('app.tasks.monitoring_tasks.ping') 
+    @patch('app.tasks.monitoring_tasks.get_db')
+    def test_device_icmp_not_found(self, mock_get_db, mock_ping):
+        """Testuje, co się dzieje, gdy urządzenie nie zostanie znalezione w DB."""
+        
+        TEST_DEVICE_ID = 999
+        
+        # Konfiguracja: db.query(...).one_or_none() zwraca None
+        mock_db_session = MagicMock()
+        mock_db_session.query.return_value.filter.return_value.one_or_none.return_value = None
+        mock_generator = iter([mock_db_session]) 
+        mock_get_db.return_value = mock_generator
+
+        mock_task_self = MagicMock() 
+        result = device_icmp(mock_task_self, device_id=TEST_DEVICE_ID)
+
+        # Weryfikacja:
+        self.assertEqual(result['status'], 'ABORTED')
+        self.assertIn(f"Device ID {TEST_DEVICE_ID} not found.", result['reason'])
+
+        # Sprawdzenie, że Ping i Zapis do DB NIE zostały wywołane
+        mock_ping.assert_not_called()
+        mock_db_session.add.assert_not_called()
+        mock_db_session.commit.assert_not_called()
+        
+        # Sprawdzenie, że połączenie z DB zostało zamknięte
+        mock_generator.close.assert_called_once()
