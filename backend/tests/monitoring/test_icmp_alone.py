@@ -3,7 +3,7 @@ from app.tasks import monitoring_tasks
 # --- TESTY ---
 def test_device_icmp():
     
-    TEST_IP = "8.8.8.8" # Stały adres IP do testowania
+    TEST_IP = "127.0.0.1" # Stały adres IP do testowania
     result = monitoring_tasks.device_icmp(None, device_address=TEST_IP) 
     print(result.status)
     print(result)

@@ -1,5 +1,6 @@
 # app/tasks/monitoring_tasks.py
 from sqlalchemy.exc import SQLAlchemyError
+from celery.exceptions import MaxRetriesExceededError, TimeoutError
 from celery import shared_task
 from icmplib import ping
 
@@ -53,11 +54,17 @@ def schedule_all_pings(only_active: bool = True):
             devices = [d for d in devices if d.is_active]
 
         for device in devices:
-            device_icmp.delay(device_address=device.ip_address)
-            count += 1
+            try:
+                device_icmp.delay(device_address=device.ip_address)
+                count += 1
+            except (MaxRetriesExceededError, TimeoutError) as e:
+                print(f"Failed to schedule ping for {device.ip_address}: {str(e)}")
+                continue
 
         return f"Scheduled {count} ICMP polls."
-    
-        
+    except SQLAlchemyError as db_err:
+        return f"Error scheduling ICMP polls (Database connection issue): {str(db_err)}"
+    except AttributeError as attr_err:
+        return f"Error scheduling ICMP polls (Device attribute missing): {str(attr_err)}. Check 'is_active' or 'ip_address' on devices."
     except Exception as e:
-        return f"Error scheduling ICMP polls: {str(e)}"
+        return f"Error scheduling ICMP polls (General failure): {str(e)}"

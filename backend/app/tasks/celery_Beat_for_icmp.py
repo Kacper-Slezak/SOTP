@@ -1,19 +1,19 @@
-from celery import Celery
+# backend/app/tasks/celery_Beat_for_icmp.py
 from celery.schedules import crontab
 from celery_app import app
-import os
+
 
 
 
 app.conf.beat_schedule = {
-    'every-thirty-sek-active': {
+    'every-10-min-active': {
         'task': 'schedule_all_pings',
         'schedule': crontab(minute='*/10'),
         'args': (True,), 
     },
-    'every-10-min-all-devices': { 
+    'every-hour-all-devices': { 
         'task': 'schedule_all_pings',
-        'schedule': crontab(minute=0), 
+        'schedule': crontab(minute=0, hour='*'), 
         'args': (False,), 
     },
-}
+}   
