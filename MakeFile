@@ -2,8 +2,8 @@
 # Użyj `make` lub `make help` aby wyświetlić dostępne komendy.
 
 # Zmienne
-DOCKER_COMPOSE_DEV = docker-compose -f infrastructure/docker/docker-compose.dev.yml
-DOCKER_COMPOSE_PROD = docker-compose -f infrastructure/docker/docker-compose.prod.yml
+DOCKER_COMPOSE_DEV = docker-compose --env-file .env -f infrastructure/docker/docker-compose.dev.yml
+DOCKER_COMPOSE_PROD = docker-compose --env-file .env -f infrastructure/docker/docker-compose.prod.yml
 
 .PHONY: help dev up down logs shell-backend shell-frontend test setup build push deploy clean
 
