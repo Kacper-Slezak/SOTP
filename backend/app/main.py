@@ -1,12 +1,14 @@
 import anyio
 import app.models
 from app.utils.databases import create_postgres, create_redis, create_timescaledb
-from fastapi import FastAPI
+from fastapi import FastAPI, Form, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi import Depends, Request, Response
+from fastapi import Depends, Request, Response, File, UploadFile, Query
+from fastapi import Depends
+from pydantic import BaseModel
 from sqlalchemy import text, select, delete
 from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker
-from typing import AsyncGenerator, Literal, Annotated
+from typing import AsyncGenerator, Literal, Annotated, Optional
 from app.models.device import Device
 
 async def lifespan(app: FastAPI):
@@ -43,6 +45,20 @@ origins = [
     "http://localhost",
     "http://localhost:8080",
 ]
+
+class DevicePut(BaseModel):
+    name: str
+    ip_address: str
+    device_type: str
+    vendor: str
+    model: str
+    os_version: str
+    location: str
+    is_active: bool
+    snmp_config: Optional[str] = None
+    ssh_config: Optional[str] = None
+    api_config: Optional[str] = None
+
 
 app.add_middleware(
     CORSMiddleware,
@@ -89,16 +105,63 @@ async def ping():
 @app.get("/api/v1/devices")
 async def get_all_devices(session: SessionPG): # type: ignore
     devices = (await session.execute(select(Device))).scalars().all()
-    return [{"id": d.id, "name": d.name} for d in devices]
+    return [{"id": d.id, "name": d.name, "ip_address": d.ip_address} for d in devices]
 
 @app.get("/api/v1/devices/{id}")
-async def get_device(session: SessionPG):
+async def get_device(id: int, session: SessionPG):
     device = (await session.execute(select(Device).where(Device.id == id))).scalars().all()
-    return [{"id": d.id, "name": d.name} for d in device]
+    return [{"id": d.id, "name": d.name, "ip_address": d.ip_address} for d in device]
 
 @app.delete("/api/v1/devices/{id}")
-async def delete_device(id ,session: SessionPG):
-    device = session.get(Device, id)
-    session.delete(device)
-    session.commit()
+async def delete_device(id: int,session: SessionPG):
+    device = await session.get(Device, id)
+    await session.delete(device)
+    await session.commit()
     return Response(status_code=200)
+
+@app.post("/api/v1/devices")
+async def add_device(
+    payload: DevicePut,
+    session: SessionPG
+):
+    
+    exists_q = await session.execute(select(Device).where(Device.ip_address == payload.ip_address))
+    if exists_q.scalar_one_or_none():
+        raise HTTPException(status_code=409, detail="device with this ip_address already exists")
+
+    device = Device(**payload.model_dump())
+
+    session.add(device)
+    await session.commit()
+    await session.refresh(device)
+
+    return {"id": device.id, 
+            "name": device.name}
+
+@app.put("/api/v1/devices/{id}")
+async def edit_device(
+    id: int,
+    payload: DevicePut,
+    session: SessionPG
+):
+    device = await session.get(Device, id)
+    if not device:
+        raise HTTPException(404, "Device not found")
+    
+    exists_q = await session.execute(
+        select(Device.id).where(
+            Device.ip_address == payload.ip_address,
+            Device.id != id
+        )
+    )
+    if exists_q.scalar_one_or_none():
+        raise HTTPException(status_code=409, detail="device with this ip_address already exists")
+    
+    for field, value in payload.model_dump().items():
+        setattr(device, field, value)
+
+    await session.commit()
+    await session.refresh(device)
+
+    return {"id": device.id, 
+            "name": device.name}
