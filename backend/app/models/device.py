@@ -30,7 +30,7 @@ class Device(Base):
 
     # Relationships
     credentials = relationship(
-        "Credential", backref="device", cascade="all, delete-orphan"
+        "Credential", back_populates="device", cascade="all, delete-orphan"
     )
     created_by = relationship("User", back_populates="devices")
     alerts = relationship(
