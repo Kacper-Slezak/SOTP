@@ -128,10 +128,10 @@ async def get_all_devices(session: SessionPG):  # type: ignore
 
 @app.get("/api/v1/devices/{id}")
 async def get_device(id: int, session: SessionPG):
-    device = (
-        (await session.execute(select(Device).where(Device.id == id))).scalars().all()
-    )
-    return [{"id": d.id, "name": d.name, "ip_address": d.ip_address} for d in device]
+    device = await session.get(Device, id)
+    if not device:
+        raise HTTPException(status_code=404, detail="Device not found")
+    return {"id": device.id, "name": device.name, "ip_address": device.ip_address}
 
 
 @app.delete("/api/v1/devices/{id}")
@@ -139,7 +139,7 @@ async def delete_device(id: int, session: SessionPG):
     device = await session.get(Device, id)
     await session.delete(device)
     await session.commit()
-    return Response(status_code=200)
+    return Response(status_code=200, content="Device deleted successfully")
 
 
 @app.post("/api/v1/devices")
