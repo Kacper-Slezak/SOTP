@@ -1,30 +1,125 @@
 {
-    "name": "SOTP DevOps (Full Workspace)",
+  "name": "SOTP DevOps (Full Workspace)",
 
-    // Ładujemy plik bazowy ORAZ nasz nowy plik z nadpisaniem
-    "dockerComposeFile": [
-        "../../infrastructure/docker/docker-compose.dev.yml",
-        "../../infrastructure/docker/docker-compose.devops.override.yml"
-    ],
+  // Load base file AND override file
+  "dockerComposeFile": [
+    "../../infrastructure/docker/docker-compose.dev.yml",
+    "../../infrastructure/docker/docker-compose.devops.override.yml"
+  ],
 
-    // Wciąż łączymy się z usługą 'backend' po narzędzia
-    "service": "backend",
+  // Connect to 'backend' service for development tools
+  "service": "backend",
 
-    // Folder, który otworzy VS Code, to teraz korzeń całego projektu
-    "workspaceFolder": "/workspace",
+  // Root folder that VS Code will open
+  "workspaceFolder": "/workspace",
 
-    // Upewniamy się, że Git jest dostępny
-    "features": {
-        "ghcr.io/devcontainers/features/git:1": {}
-    },
+  // Set the user inside the container
+  "remoteUser": "root",
 
-    // Możemy też dodać podstawowe rozszerzenia dla wygody
-    "customizations": {
-        "vscode": {
-            "extensions": [
-                "ms-python.python",
-                "ms-azuretools.vscode-docker"
-            ]
-        }
+  // Ensure Git is available
+  "features": {
+    "ghcr.io/devcontainers/features/git:1": {}
+  },
+
+  // VS Code extensions and settings
+  "customizations": {
+    "vscode": {
+      "extensions": [
+        // Python development
+        "ms-python.python",
+        "ms-python.vscode-pylance",
+        "ms-python.black-formatter",
+        "ms-python.isort",
+        "charliermarsh.ruff",
+
+        // Docker support
+        "ms-azuretools.vscode-docker",
+
+        // Database tools
+        "mtxr.sqltools",
+        "mtxr.sqltools-driver-pg",
+
+        // YAML support for docker-compose
+        "redhat.vscode-yaml",
+
+        // Optional but recommended
+        "github.copilot",
+        "eamodio.gitlens"
+      ],
+      "settings": {
+        // Python settings
+        "python.defaultInterpreterPath": "/usr/local/bin/python",
+        "python.linting.enabled": true,
+        "python.linting.pylintEnabled": false,
+        "python.formatting.provider": "black",
+
+        // Editor settings
+        "editor.formatOnSave": true,
+        "editor.codeActionsOnSave": {
+          "source.organizeImports": "explicit"
+        },
+        "[python]": {
+          "editor.defaultFormatter": "ms-python.black-formatter",
+          "editor.tabSize": 4
+        },
+
+        // Files to exclude from explorer
+        "files.exclude": {
+          "**/__pycache__": true,
+          "**/*.pyc": true,
+          "**/.pytest_cache": true,
+          "**/node_modules": true
+        },
+
+        // Terminal settings
+        "terminal.integrated.defaultProfile.linux": "bash"
+      }
     }
+  },
+
+  // Forward ports so you can access services from your host machine
+  "forwardPorts": [
+    8000,  // Backend API
+    3000,  // Frontend
+    5432,  // PostgreSQL
+    5433,  // TimescaleDB
+    6379,  // Redis
+    8200   // Vault
+  ],
+
+  // Port labels for clarity
+  "portsAttributes": {
+    "8000": {
+      "label": "Backend API",
+      "onAutoForward": "notify"
+    },
+    "3000": {
+      "label": "Frontend",
+      "onAutoForward": "notify"
+    },
+    "5432": {
+      "label": "PostgreSQL"
+    },
+    "5433": {
+      "label": "TimescaleDB"
+    },
+    "6379": {
+      "label": "Redis"
+    },
+    "8200": {
+      "label": "Vault"
+    }
+  },
+
+  // Commands to run after the container is created
+  "postCreateCommand": "cd /workspace/backend && pip install -e . && echo '✅ Dev container ready!'",
+
+  // Shutdown behavior
+  "shutdownAction": "stopCompose",
+
+  // Mount additional paths if needed
+  "mounts": [
+    // Persist bash history
+    "source=${localEnv:HOME}${localEnv:USERPROFILE}/.bash_history,target=/root/.bash_history,type=bind,consistency=cached"
+  ]
 }
