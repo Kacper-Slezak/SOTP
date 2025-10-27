@@ -1,10 +1,7 @@
-<<<<<<< HEAD
 # infrastructure/docker/docker-compose.dev.yml
 
 version: '3.8'
 
-=======
->>>>>>> a33fce86355ca22c7c208656454eee9e5266c61d
 services:
   backend:
     build:

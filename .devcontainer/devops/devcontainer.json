@@ -75,8 +75,6 @@
         "terminal.integrated.defaultProfile.linux": "bash"
       }
     }
-<<<<<<< HEAD
-=======
   },
 
   // Forward ports so you can access services from your host machine
@@ -124,5 +122,5 @@
     // Persist bash history
     "source=${localEnv:HOME}${localEnv:USERPROFILE}/.bash_history,target=/root/.bash_history,type=bind,consistency=cached"
   ]
->>>>>>> a33fce86355ca22c7c208656454eee9e5266c61d
 }
+
