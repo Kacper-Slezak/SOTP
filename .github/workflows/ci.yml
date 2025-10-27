@@ -131,7 +131,7 @@ jobs:
   notify_on_push:
     name: Discord Notification
     needs: [quality, security, test, build]
-    if: always() && github.event_name == 'push'
+    if: always()
     uses: ./.github/workflows/discord_notifier.yml
     with:
       status: ${{ (needs.quality.result == 'success' && needs.security.result == 'success' && needs.test.result == 'success' && (needs.test.outputs.pytest_exit_code == '0' || needs.test.outputs.pytest_exit_code == '5')) && needs.build.result || 'failure' }}
