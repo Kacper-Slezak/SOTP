@@ -123,3 +123,4 @@
     "source=${localEnv:HOME}${localEnv:USERPROFILE}/.bash_history,target=/root/.bash_history,type=bind,consistency=cached"
   ]
 }
+
