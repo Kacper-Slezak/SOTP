@@ -2,8 +2,8 @@
 # Użyj `make` lub `make help` aby wyświetlić dostępne komendy.
 
 # Zmienne
-DOCKER_COMPOSE_DEV = docker-compose -f infrastructure/docker/docker-compose.dev.yml
-DOCKER_COMPOSE_PROD = docker-compose -f infrastructure/docker/docker-compose.prod.yml
+DOCKER_COMPOSE_DEV = docker-compose --env-file .env -f infrastructure/docker/docker-compose.dev.yml
+DOCKER_COMPOSE_PROD = docker-compose --env-file .env -f infrastructure/docker/docker-compose.prod.yml
 
 .PHONY: help dev up down logs shell-backend shell-frontend test setup build push deploy clean
 
@@ -80,4 +80,9 @@ setup:
 	(cd backend && python -m venv venv && . venv/bin/activate && pip install -r requirements.txt)
 	@echo "🛠️  (Lokalnie) Instalowanie zależności frontendu z npm..."
 	(cd frontend && npm install)
+<<<<<<< HEAD
 	@echo "✅ Setup lokalny zakończony. Pamiętaj, aby aktywować venv dla backendu."
+=======
+	@echo "✅ Setup lokalny zakończony. Pamiętaj, aby aktywować venv dla backendu."
+
+>>>>>>> a33fce86355ca22c7c208656454eee9e5266c61d

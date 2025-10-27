@@ -8,7 +8,7 @@ RUN pip wheel --no-cache-dir --wheel-dir /wheels -r requirements.txt
 # Etap 2: Finalny, lekki obraz
 FROM python:3.11-slim
 WORKDIR /app
-RUN apt-get update && apt-get install -y curl iproute2 grep && rm -rf /var/lib/apt/lists/*
+RUN apt-get update && apt-get install -y curl iproute2 grep postgresql-client && rm -rf /var/lib/apt/lists/*
 COPY --from=builder /wheels /wheels
 COPY requirements.txt .
 RUN pip install --no-cache /wheels/*
