@@ -110,4 +110,3 @@ The deployment process is designed for zero-downtime updates.
     ```bash
     docker image prune -f
     ```
-

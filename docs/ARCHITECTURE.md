@@ -69,4 +69,3 @@ The system is designed as a multi-layered, service-oriented architecture, optimi
 * **Task Queuing (Celery & Redis):** Celery, with Redis as its message broker, is used to run all data collection tasks asynchronously in the background. This prevents the API from being blocked by long-running tasks and ensures the UI remains responsive.
 
 * **Secrets Management (HashiCorp Vault):** Vault is used as a centralized and secure store for all secrets, such as database credentials and API keys. This avoids storing sensitive information in configuration files or environment variables.
-

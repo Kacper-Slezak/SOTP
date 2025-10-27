@@ -36,4 +36,4 @@ All work is tracked through GitHub Issues and managed on our Project board. The 
     * Once approved, a project lead will merge the PR.
     * **The issue will automatically move to the "Done" column on our board.**
 
-This workflow ensures that our project board is always an accurate reflection of our progress.  
+This workflow ensures that our project board is always an accurate reflection of our progress.
