@@ -140,8 +140,4 @@ jobs:
       commit_sha: ${{ github.sha }}
       actor: ${{ github.actor }}
     secrets:
-<<<<<<< HEAD
       webhook_url: ${{ secrets.DISCORD_WEBHOOK_URL }}
-=======
-      webhook_url: ${{ secrets.DISCORD_WEBHOOK_URL }}
->>>>>>> a33fce86355ca22c7c208656454eee9e5266c61d
