@@ -19,7 +19,7 @@ export default function HomePage() {
         href="/devices"
         className="text-2xl text-blue-800 hover:text-blue-500 mt-8 block underline font-medium"
       >
-        Przejdź do strony Urządzeń (Devices)
+        Przejdź do strony Urządzeń - (Devices)
       </Link>
 
       {/* Dodatkowy element, żeby pokazać tło */}
