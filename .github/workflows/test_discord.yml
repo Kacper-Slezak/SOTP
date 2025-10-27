@@ -30,7 +30,7 @@ jobs:
     runs-on: ubuntu-latest
     if: github.event.inputs.test_type == 'success' || github.event.inputs.test_type == 'both' || github.event_name == 'push'
     timeout-minutes: 2
-    
+
     steps:
       - name: 🎭 Mock successful operation
         run: |
@@ -38,16 +38,16 @@ jobs:
           echo "🚀 Starting deployment simulation..."
           echo "==================================="
           sleep 3
-          
+
           echo "✅ Database connection: OK"
           sleep 2
-          
+
           echo "✅ Services health check: OK"
           sleep 2
-          
+
           echo "✅ Deployment process: OK"
           sleep 2
-          
+
           echo "==================================="
           echo "🎉 Deployment completed successfully!"
           echo "==================================="
@@ -60,7 +60,7 @@ jobs:
     runs-on: ubuntu-latest
     if: github.event.inputs.test_type == 'failure' || github.event.inputs.test_type == 'both' || github.event_name == 'push'
     timeout-minutes: 2
-    
+
     steps:
       - name: 🎭 Mock failed operation
         run: |
@@ -68,14 +68,14 @@ jobs:
           echo "🚀 Starting deployment simulation..."
           echo "==================================="
           sleep 3
-          
+
           echo "✅ Database connection: OK"
           sleep 2
-          
+
           echo "❌ Services health check: FAILED"
           echo "Error: Connection timeout to service 'api-gateway'"
           sleep 2
-          
+
           echo "==================================="
           echo "🚨 Deployment FAILED!"
           echo "==================================="
@@ -123,7 +123,7 @@ jobs:
     runs-on: ubuntu-latest
     needs: [notify_success, notify_failure]
     if: always()
-    
+
     steps:
       - name: 📋 Display results
         run: |
