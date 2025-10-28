@@ -1,8 +1,10 @@
-from app.core.config import Config
-from redis.asyncio import Redis
-from sqlalchemy.ext.asyncio import create_async_engine, AsyncEngine, AsyncSession
-from sqlalchemy.orm import sessionmaker
 from typing import Optional
+
+from redis.asyncio import Redis
+from sqlalchemy.ext.asyncio import AsyncEngine, AsyncSession, create_async_engine
+from sqlalchemy.orm import sessionmaker
+
+from app.core.config import Config
 
 
 def create_postgres():
@@ -15,12 +17,3 @@ def create_timescaledb():
 
 def create_redis():
     return Redis.from_url(Config.REDIS_URL, decode_responses=True)
-
-
-
-
-
-
-  
-
-    

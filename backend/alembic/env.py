@@ -3,6 +3,11 @@
 import os
 from logging.config import fileConfig
 
+from sqlalchemy import (  # Use create_engine for sync connection in migrations
+    create_engine,
+    pool,
+)
+
 from alembic import context
 
 # Import your Config to get database URLs
@@ -15,10 +20,6 @@ from app.models.base import Base  # Keep this base
 from app.models.device import Credential, Device
 from app.models.metric import DeviceMetric  # TimescaleDB model
 from app.models.user import User
-from sqlalchemy import (  # Use create_engine for sync connection in migrations
-    create_engine,
-    pool,
-)
 
 # configuration from alembic.ini
 config = context.config

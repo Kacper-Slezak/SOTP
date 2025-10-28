@@ -1,9 +1,6 @@
 from typing import Annotated, AsyncGenerator, Literal, Optional
 
 import anyio
-import app.models
-from app.models.device import Device
-from app.utils.databases import create_postgres, create_redis, create_timescaledb
 from fastapi import (
     Depends,
     FastAPI,
@@ -19,6 +16,10 @@ from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 from sqlalchemy import delete, select, text
 from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker
+
+import app.models
+from app.models.device import Device
+from app.utils.databases import create_postgres, create_redis, create_timescaledb
 
 
 async def lifespan(app: FastAPI):

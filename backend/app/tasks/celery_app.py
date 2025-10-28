@@ -1,6 +1,7 @@
 # backend/app/tasks/celery_app.py
-from app.core.config import Config  # Import Config
 from celery import Celery
+
+from app.core.config import Config  # Import Config
 
 # Use the Redis URL from the configuration
 redis_url = Config.REDIS_URL

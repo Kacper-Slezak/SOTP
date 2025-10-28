@@ -1,44 +1,60 @@
 # app/tasks/monitoring_tasks.py
 import asyncio
-from sqlalchemy.exc import SQLAlchemyError
-from celery.exceptions import MaxRetriesExceededError, TimeoutError
-from celery import shared_task
-from icmplib import async_ping as ping
-from app.services.ping_services import insert_ping_result
-from app.services.device_services import get_all_devices
 import ipaddress
 
+from celery import shared_task
+from celery.exceptions import MaxRetriesExceededError, TimeoutError
+from icmplib import async_ping as ping
+from sqlalchemy.exc import SQLAlchemyError
+
+from app.services.device_services import get_all_devices
+from app.services.ping_services import insert_ping_result
+
 PING_COUNT = 5
-PING_TIMEOUT = 2.0 
+PING_TIMEOUT = 2.0
+
 
 @shared_task(bind=True, name="device_icmp")
 async def device_icmp(self, device_id: int, device_address: str):
     address = device_address
     result = {"status": "ERROR", "reason": "Unknown error."}
-    
+
     try:
         ipaddress.ip_address(address)
     except ValueError:
         # Jeśli 'target_ip' to "google.com" lub "złe ip", test natychmiast się wywali
-        return {"status": "ERROR", "reason": f"Zły format IP: {device_address}. Test wymaga adresu IP."}
+        return {
+            "status": "ERROR",
+            "reason": f"Zły format IP: {device_address}. Test wymaga adresu IP.",
+        }
 
     try:
 
-        
         # 2. Wykonanie Pingu (ICMP)
-        host = await ping(address, count=PING_COUNT, timeout=PING_TIMEOUT, privileged=False) 
-        
-        # 3. Zapis Wyników (do TimescaleDB) 
+        host = await ping(
+            address, count=PING_COUNT, timeout=PING_TIMEOUT, privileged=False
+        )
+
+        # 3. Zapis Wyników (do TimescaleDB)
         await insert_ping_result(
             device_id=device_id,
-            ip_address=host.address,               
+            ip_address=host.address,
             is_alive=host.is_alive,
             rtt_avg_ms=host.avg_rtt,
             packet_loss_percent=host.packet_loss,
-            diagnostic_message="host available" if host.is_alive else "host unreachable",
+            diagnostic_message=("host available" if host.is_alive else "host unreachable")
         )
-        return {"status": "UP" , "rtt_avg_ms": host.avg_rtt,"ip_address": host.address,"packet_loss_percent": host.packet_loss} if host.is_alive else {"status": "DOWN", "error": "Host unreachable"}
-        
+        return (
+            {
+                "status": "UP",
+                "rtt_avg_ms": host.avg_rtt,
+                "ip_address": host.address,
+                "packet_loss_percent": host.packet_loss,
+            }
+            if host.is_alive
+            else {"status": "DOWN", "error": "Host unreachable"}
+        )
+
     except SQLAlchemyError as db_err:
         result = {"status": "DB_ERROR", "reason": f"Database error: {str(db_err)}"}
         return result
@@ -46,14 +62,15 @@ async def device_icmp(self, device_id: int, device_address: str):
         result = {"status": "ERROR", "reason": f"General error: {str(e)}"}
         return result
 
+
 @shared_task(name="schedule_all_pings")
 def schedule_all_pings(only_active: bool = True):
-    
-    
-    
+
     count = 0
     try:
-        devices = asyncio.run(get_all_devices()) # Pobranie wszystkich urządzeń z bazy danych kiryl mówi że jakoś ma byc ale jakoś nie ma sensu
+        devices = asyncio.run(
+            get_all_devices()
+        )  # Pobranie wszystkich urządzeń z bazy danych kiryl mówi że jakoś ma byc ale jakoś nie ma sensu
 
         if not devices:
             return "No devices found."

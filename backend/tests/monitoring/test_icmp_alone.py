@@ -1,6 +1,8 @@
-from app.tasks import monitoring_tasks 
 import asyncio
 import ipaddress
+
+from app.tasks import monitoring_tasks
+
 
 # --- TESTY ---
 async def test_device_icmp(test_ip: str):
@@ -33,25 +35,27 @@ async def test_device_icmp(test_ip: str):
         assert "reason" in result
         print(result)
 
+
 async def main():
     """Główna funkcja asynchroniczna, która zarządza całą pętlą testów."""
-    
-    # ADRESY_IP_DO_TESTU = [
-    #     "googlebla bla bla", # Zostanie poprawnie pominięty
-    #     "8.8.8.8",
-    #     "1.1.1.1",
-    #     "192.168.1.1",
-    #     "192.168.71.5",
-    #     "google.com"         # Zostanie poprawnie pominięty
-    # ]
-    
-    # print("Uruchamianie wszystkich testów ICMP...")
-    
-    # # Pętla 'for' musi być WEWNĄTRZ funkcji async
-    # for test_ip in ADRESY_IP_DO_TESTU:
-    #     await test_device_icmp(test_ip)
-    #     print("="*40) # Separator dla czytelności
-    # print("Wszy")
+
+    ADRESY_IP_DO_TESTU = [
+        "googlebla bla bla", # Zostanie poprawnie pominięty
+        "8.8.8.8",
+        "1.1.1.1",
+        "192.168.1.1",
+        "192.168.71.5",
+        "google.com"         # Zostanie poprawnie pominięty
+    ]
+
+    print("Uruchamianie wszystkich testów ICMP...")
+
+    # Pętla 'for' musi być WEWNĄTRZ funkcji async
+    for test_ip in ADRESY_IP_DO_TESTU:
+        await test_device_icmp(test_ip)
+        print("="*40) # Separator dla czytelności
+    print("Wszy")
+
 
 # --- SEKCJA URUCHOMIENIOWA ---
 if __name__ == "__main__":
@@ -61,4 +65,3 @@ if __name__ == "__main__":
         print("\nWszystkie testy zakończone.")
     except Exception as e:
         print(f"\nKrytyczny błąd podczas uruchamiania pętli głównej: {e}")
-

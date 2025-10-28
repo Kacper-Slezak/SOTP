@@ -17,10 +17,11 @@ AsyncPostgresSessionLocal = sessionmaker(
     expire_on_commit=False,
 )
 
+
 # 4. Utwórz asynchroniczny context manager
 @asynccontextmanager
 async def get_postgres_session() -> AsyncGenerator[AsyncSession, None]:
-    
+
     async with AsyncPostgresSessionLocal() as session:
         try:
             yield session
