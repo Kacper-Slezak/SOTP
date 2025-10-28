@@ -11,6 +11,7 @@
   },
   "dependencies": {
     "@tanstack/react-query": "^5.0.0",
+    "autoupgrade": "^1.1.0",
     "axios": "^1.6.2",
     "lucide-react": "^0.294.0",
     "next": "^15.5.4",
