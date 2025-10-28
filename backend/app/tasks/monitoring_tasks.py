@@ -1,29 +1,35 @@
 # app/tasks/monitoring_tasks.py
+import asyncio
 from sqlalchemy.exc import SQLAlchemyError
 from celery.exceptions import MaxRetriesExceededError, TimeoutError
 from celery import shared_task
-from icmplib import _async_ping as ping
+from icmplib import async_ping as ping
 from app.services.ping_services import insert_ping_result
 from app.services.device_services import get_all_devices
+import ipaddress
 
 PING_COUNT = 5
 PING_TIMEOUT = 2.0 
 
 @shared_task(bind=True, name="device_icmp")
 async def device_icmp(self, device_id: int, device_address: str):
-    
+    address = device_address
     result = {"status": "ERROR", "reason": "Unknown error."}
-   
+    
+    try:
+        ipaddress.ip_address(address)
+    except ValueError:
+        # Jeśli 'target_ip' to "google.com" lub "złe ip", test natychmiast się wywali
+        return {"status": "ERROR", "reason": f"Zły format IP: {device_address}. Test wymaga adresu IP."}
 
     try:
-        
-        address = device_address
+
         
         # 2. Wykonanie Pingu (ICMP)
         host = await ping(address, count=PING_COUNT, timeout=PING_TIMEOUT, privileged=False) 
         
         # 3. Zapis Wyników (do TimescaleDB) 
-        insert_ping_result(
+        await insert_ping_result(
             device_id=device_id,
             ip_address=host.address,               
             is_alive=host.is_alive,
@@ -34,7 +40,7 @@ async def device_icmp(self, device_id: int, device_address: str):
         return {"status": "UP" , "rtt_avg_ms": host.avg_rtt,"ip_address": host.address,"packet_loss_percent": host.packet_loss} if host.is_alive else {"status": "DOWN", "error": "Host unreachable"}
         
     except SQLAlchemyError as db_err:
-        result = {"status": "ERROR", "reason": f"Database error: {str(db_err)}"}
+        result = {"status": "DB_ERROR", "reason": f"Database error: {str(db_err)}"}
         return result
     except Exception as e:
         result = {"status": "ERROR", "reason": f"General error: {str(e)}"}
@@ -47,7 +53,11 @@ def schedule_all_pings(only_active: bool = True):
     
     count = 0
     try:
-        devices = get_all_devices() # Pobranie wszystkich urządzeń z bazy danych kiryl mówi że jakoś ma byc ale jakoś nie ma sensu
+        devices = asyncio.run(get_all_devices()) # Pobranie wszystkich urządzeń z bazy danych kiryl mówi że jakoś ma byc ale jakoś nie ma sensu
+
+        if not devices:
+            return "No devices found."
+
         if only_active:
             devices = [d for d in devices if d.is_active]
 
