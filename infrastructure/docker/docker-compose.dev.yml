@@ -1,3 +1,7 @@
+# infrastructure/docker/docker-compose.dev.yml
+
+version: '3.8'
+
 services:
   backend:
     build:

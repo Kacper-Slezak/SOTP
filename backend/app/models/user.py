@@ -28,5 +28,5 @@ class User(Base):
     created_at = Column(DateTime, default=func.now(), nullable=False)
 
     # Relationships
-    devices = relationship("Device", backref="created_by")
+    devices = relationship("Device", back_populates="created_by")
     audit_logs = relationship("AuditLog", back_populates="user")
