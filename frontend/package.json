@@ -20,6 +20,7 @@
     "zustand": "^4.4.7"
   },
   "devDependencies": {
+    "@tailwindcss/postcss": "4.1.16",
     "@types/node": "^20.0.0",
     "@types/prop-types": "^15.7.15",
     "@types/react": "^18.3.26",

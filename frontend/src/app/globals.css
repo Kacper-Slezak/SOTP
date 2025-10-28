@@ -1,2 +1,9 @@
 /* src/app/globals.css */
-@import "tailwindcss";
+/* stylelint-disable-next-line at-rule-no-unknown */
+@tailwind base;
+/* stylelint-disable-next-line at-rule-no-unknown */
+@tailwind components;
+/* stylelint-disable-next-line at-rule-no-unknown */
+@tailwind utilities;
+
+/* You can add any custom global styles below this */
