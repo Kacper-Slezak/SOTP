@@ -158,6 +158,33 @@ services:
       timeout: 3s
       retries: 5
 
+  prometheus:
+    image: prom/prometheus
+    ports:
+      - "9090:9090"
+    volumes:
+      - ../prometheus/prometheus.yml:/etc/prometheus/prometheus.yml
+    networks:
+      - sotp_network
+
+  grafana:
+    image: grafana/grafana-oss
+    ports:
+      - "3001:3000"
+    volumes:
+      - grafana_data:/var/lib/grafana
+      # Datasource provisioning
+      - ../grafana/datasources:/etc/grafana/provisioning/datasources
+      # Dashboard provisioning provider file
+      - ../grafana/dashboards/provider.yml:/etc/grafana/provisioning/dashboards/provider.yml
+      # Dashboard JSON files volume
+      - ../grafana/dashboards:/var/lib/grafana/dashboards
+    environment:
+      GF_SECURITY_ADMIN_USER: admin # Set default user as per acceptance criteria
+      GF_SECURITY_ADMIN_PASSWORD: admin # Set default password as per acceptance criteria
+    networks:
+      - sotp_network
+
 networks:
   sotp_network:
     driver: bridge
