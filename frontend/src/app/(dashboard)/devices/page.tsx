@@ -1,11 +1,14 @@
-// frontend/src/app/(dashboard)/devices/page.tsx
+import React from "react";
+import Link from "next/link";
 
 const DevicesPage = () => {
   return (
-    <div>
-      <h1>Strona Urządzeń</h1>
-      <p>Tutaj będzie lista urządzeń.</p>
-    </div>
+    <main className="p-10 bg-[#E6E6FA] min-h-screen">
+      <div>
+        <h1>Strona Urządzeń</h1>
+        <p>Tutaj będzie lista urządzeń.</p>
+      </div>
+      </main>
   );
 };
 
