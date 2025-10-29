@@ -1,18 +1,15 @@
 import React from "react";
 import Link from "next/link";
+//import { DevicesTable } from './DevicesTable';
 
-const DevicesPage = () => {
+export default function DevicesPage() {
   return (
-    <main className="p-10 bg-[#E6E6FA] min-h-screen">
-      <div>
-        <h1>Strona Urządzeń</h1>
-        <p>Tutaj będzie lista urządzeń.</p>
-      </div>
-      </main>
+    <div className="container mx-auto py-8">
+      <h1 className="text-4xl font-bold mb-6 text-gray-800">Manage Devices</h1>
+     {/* <DevicesTable /> */}
+    </div>
   );
 };
-
-export default DevicesPage;
 
 // Jeśli powyższy kod już tam jest, a błąd nadal występuje,
 // możesz dodać poniższą linię na końcu pliku jako ostateczność.

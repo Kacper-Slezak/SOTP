@@ -8,14 +8,9 @@ export default function HomePage() {
     // Zmieniamy tło na widoczny żółty, używamy p-10 i min-h-screen, aby pokryć całą stronę
     <main className="p-10 bg-[#E6E6FA] min-h-screen">
 
-      {/* Zmieniamy kolor tekstu na ciemny fiolet (700).
-        Używamy większego tekstu (text-6xl) i grubego pogrubienia (font-black).
-      */}
       <h1 className="text-5xl font-black text-purple-700 p-4 border-b-4 border-purple-900 flex justify-center">
         Welcome to the SOTP Platform!
       </h1>
-
-      {/* Link zostawiamy z niebieskim, ale zwiększamy jego kontrast i margines górny */}
 {/*
       <Link
         href="/devices"
@@ -24,7 +19,7 @@ export default function HomePage() {
         Przejdź do strony Urządzeń - (Devices)
       </Link>
 */}
-      {/* Dodatkowy element, żeby pokazać tło */}
+
       <div className="mt-10 p-5 bg-white shadow-lg rounded-lg max-w-2xl flex intems-center justify-center mx-auto">
         <p className="text-gray-700 flex justify-center">Many changes are coming! It's just the beginning.</p>
       </div>
