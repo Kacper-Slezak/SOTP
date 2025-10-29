@@ -12,7 +12,7 @@ export default function ClientLayout({ children }: { children: React.ReactNode }
 
   return (
     <div className="flex h-screen overflow-hidden">
- 
+
       {/* Sidebar - Desktop */}
       <div className="hidden md:flex">
         <Sidebar />
@@ -20,8 +20,8 @@ export default function ClientLayout({ children }: { children: React.ReactNode }
 
       {/* Sidebar - Mobile */}
       {isSidebarOpen && (
-        <div 
-          className="fixed inset-0 bg-black bg-opacity-50 z-20 md:hidden" 
+        <div
+          className="fixed inset-0 bg-black bg-opacity-50 z-20 md:hidden"
           onClick={() => setSidebarOpen(false)}
       >
           <div onClick={e => e.stopPropagation()} className="absolute top-0 left-0 h-full">

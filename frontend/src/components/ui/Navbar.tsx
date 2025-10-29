@@ -1,7 +1,7 @@
 import Image from "next/image";
 import React from "react";
 import { FiMenu, FiUser } from "react-icons/fi";
-import Link from 'next/link';
+import Link from "next/link";
 
 type NavbarProps = {
     onMenuClick: () => void;
@@ -10,7 +10,7 @@ type NavbarProps = {
 const Navbar = ({ onMenuClick }: NavbarProps) => {
     return (
         <header className="bg-white shadow-sm h-16 flex items-center justify-between px-4 md:px-6 border-b border-gray-200">
-            
+
             <Link href="/" className="flex items-center gap-x-3">
                 <Image
                     src="/SOTP1(1).png"
@@ -27,7 +27,7 @@ const Navbar = ({ onMenuClick }: NavbarProps) => {
                 </h1>
             </Link>
 
-            
+
             <div className="flex items-center gap-x-2">
                 <button
                     onClick={onMenuClick}

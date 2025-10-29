@@ -1,4 +1,4 @@
-import Link from 'next/link';
+import Link from "next/link";
 import Image from 'next/image';
 import { FiGrid, FiBarChart2, FiFileText, FiAlertTriangle, FiSettings } from 'react-icons/fi';
 
