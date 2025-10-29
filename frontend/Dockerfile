@@ -1,9 +1,8 @@
 # Etap 1: Instalacja zależności
-
 FROM node:20-slim as deps
 WORKDIR /app
 COPY package.json package-lock.json ./
-RUN npm install 
+RUN npm install
 
 
 # Etap 2: Budowanie aplikacji
