@@ -1,6 +1,10 @@
-from app.core.config import Config
+from typing import Optional
+
 from redis.asyncio import Redis
-from sqlalchemy.ext.asyncio import create_async_engine
+from sqlalchemy.ext.asyncio import AsyncEngine, AsyncSession, create_async_engine
+from sqlalchemy.orm import sessionmaker
+
+from app.core.config import Config
 
 
 def create_postgres():
