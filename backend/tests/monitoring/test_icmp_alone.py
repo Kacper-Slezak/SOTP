@@ -4,14 +4,14 @@ import ipaddress
 from app.tasks import monitoring_tasks
 
 
-# --- TESTY ---
+
 async def test_device_icmp(test_ip: str):
 
     TEST_IP = test_ip
     result = await monitoring_tasks.device_icmp(device_id=0, device_address=test_ip)
     assert result["status"] in ["UP", "DOWN", "ERROR", "DB_ERROR"]
     if result["status"] == "UP":
-        print(f"Host [{TEST_IP}] is UP ⬆️")
+        print(f"Host [{TEST_IP}] is UP ")
         assert "rtt_avg_ms" in result
         assert result["rtt_avg_ms"] >= 0
         assert "ip_address" in result
@@ -21,17 +21,17 @@ async def test_device_icmp(test_ip: str):
         print(result)
 
     elif result["status"] == "DOWN":
-        print(f"Host [{TEST_IP}] is DOWN ⬇️   ")
+        print(f"Host [{TEST_IP}] is DOWN   ")
         assert "error" in result
         assert result["error"] == "Host unreachable"
         print(result)
     elif result["status"] == "DB_ERROR":
-        print(f"Host [{TEST_IP}] DB_ERROR ⚠️   ")
+        print(f"Host [{TEST_IP}] DB_ERROR ")
         assert "reason" in result
         print(result)
     else:
         assert result["status"] == "ERROR"
-        print(f"Host [{TEST_IP}] is ERROR ⚠️")
+        print(f"Host [{TEST_IP}] is ERROR ")
         assert "reason" in result
         print(result)
 

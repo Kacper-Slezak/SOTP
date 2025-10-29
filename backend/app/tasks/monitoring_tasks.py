@@ -22,7 +22,7 @@ async def device_icmp(self, device_id: int, device_address: str):
     try:
         ipaddress.ip_address(address)
     except ValueError:
-        # Jeśli 'target_ip' to "google.com" lub "złe ip", test natychmiast się wywali
+        
         return {
             "status": "ERROR",
             "reason": f"Zły format IP: {device_address}. Test wymaga adresu IP.",
@@ -30,12 +30,12 @@ async def device_icmp(self, device_id: int, device_address: str):
 
     try:
 
-        # 2. Wykonanie Pingu (ICMP)
+        
         host = await ping(
             address, count=PING_COUNT, timeout=PING_TIMEOUT, privileged=False
         )
 
-        # 3. Zapis Wyników (do TimescaleDB)
+        
         await insert_ping_result(
             device_id=device_id,
             ip_address=host.address,
@@ -72,7 +72,7 @@ def schedule_all_pings(only_active: bool = True):
     try:
         devices = asyncio.run(
             get_all_devices()
-        )  # Pobranie wszystkich urządzeń z bazy danych kiryl mówi że jakoś ma byc ale jakoś nie ma sensu
+        )  
 
         if not devices:
             return "No devices found."

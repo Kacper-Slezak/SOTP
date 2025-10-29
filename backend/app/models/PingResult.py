@@ -1,5 +1,5 @@
 from sqlalchemy import (
-    Boolean as Bool,  # ForeignKey  <--- USUNIĘTE: Nie możemy mieć klucza obcego do innej bazy danych
+    Boolean as Bool, 
 )
 from sqlalchemy import (
     Column,
@@ -10,7 +10,6 @@ from sqlalchemy import (
     func,
 )
 
-# from sqlalchemy.orm import relationship  <--- USUNIĘTE: Nie możemy mieć relacji ORM bez klucza obcego
 from sqlalchemy.schema import PrimaryKeyConstraint
 
 from .base import Base
@@ -24,7 +23,6 @@ class PingResult(Base):
 
     device_id = Column(
         Integer,
-        # ForeignKey("devices.id"),  <--- TA LINIA ZOSTAŁA USUNIĘTA
         nullable=False,
         index=True,
     )
@@ -35,7 +33,6 @@ class PingResult(Base):
     packet_loss_percent = Column(Float, nullable=True)
     diagnostic_message = Column(String, nullable=True)
 
-    # device = relationship("Device", back_populates="ping_results") <--- TA LINIA ZOSTAŁA USUNIĘTA
 
     __table_args__ = (
         PrimaryKeyConstraint("timestamp", "device_id"),
