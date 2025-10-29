@@ -1,4 +1,3 @@
-import Link from "next/link";
 import React from "react";
 
 
@@ -21,7 +20,7 @@ export default function HomePage() {
 */}
 
       <div className="mt-10 p-5 bg-white shadow-lg rounded-lg max-w-2xl flex intems-center justify-center mx-auto">
-        <p className="text-gray-700 flex justify-center">Many changes are coming! It's just the beginning.</p>
+        <p className="text-gray-700 flex justify-center">Many changes are coming! It is just the beginning.</p>
       </div>
 
     </main>

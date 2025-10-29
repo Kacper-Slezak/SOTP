@@ -1,6 +1,5 @@
 import React from "react";
-import Link from "next/link";
-//import { DevicesTable } from './DevicesTable';
+//import { DevicesTable } from "./DevicesTable";
 
 export default function DevicesPage() {
   return (
