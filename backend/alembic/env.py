@@ -19,6 +19,7 @@ from app.models.audit_log import AuditLog
 from app.models.base import Base  # Keep this base
 from app.models.device import Credential, Device
 from app.models.metric import DeviceMetric  # TimescaleDB model
+from app.models.PingResult import PingResult
 from app.models.user import User
 
 # configuration from alembic.ini
@@ -36,14 +37,16 @@ from sqlalchemy import MetaData  # <-- Import MetaData
 postgres_metadata = MetaData()
 timescale_metadata = MetaData()
 
+# <<<--- POPRAWKA NR 2: Zdefiniuj listę modeli dla timescale
+timescale_tables = {DeviceMetric.__tablename__, PingResult.__tablename__}
+
 for table_name, table_obj in Base.metadata.tables.items():
-    if table_name == DeviceMetric.__tablename__:
-        # Copy the DeviceMetric table to timescale_metadata
+    if table_name in timescale_tables:
+        # Kopiuj modele TimescaleDB do timescale_metadata
         table_obj.to_metadata(timescale_metadata)
     else:
-        # Copy all other tables to postgres_metadata
+        # Kopiuj wszystkie pozostałe modele do postgres_metadata
         table_obj.to_metadata(postgres_metadata)
-# --- End of model segregation ---
 
 
 # --- Function to determine target metadata based on command-line argument ---

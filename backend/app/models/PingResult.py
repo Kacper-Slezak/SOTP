@@ -1,29 +1,32 @@
 from sqlalchemy import (
+    Boolean as Bool,  # ForeignKey  <--- USUNIĘTE: Nie możemy mieć klucza obcego do innej bazy danych
+)
+from sqlalchemy import (
     Column,
     DateTime,
     Float,
     Integer,
     String,
     func,
-    Boolean as Bool,
-    ForeignKey  # <--- WAŻNE: Zaimportuj ForeignKey
 )
-from sqlalchemy.orm import relationship  # <--- WAŻNE: Zaimportuj relationship
+
+# from sqlalchemy.orm import relationship  <--- USUNIĘTE: Nie możemy mieć relacji ORM bez klucza obcego
 from sqlalchemy.schema import PrimaryKeyConstraint
 
 from .base import Base
 
+
 class PingResult(Base):
     __tablename__ = "ping_results"
 
-    # Klucz główny jest kompozytowy, tak jak chciałeś
+    # Klucz główny jest kompozytowy
     timestamp = Column(DateTime, default=func.now(), nullable=False)
-    
+
     device_id = Column(
-        Integer, 
-        ForeignKey("devices.id"),  # <--- TO JEST KRYTYCZNE
-        nullable=False, 
-        index=True
+        Integer,
+        # ForeignKey("devices.id"),  <--- TA LINIA ZOSTAŁA USUNIĘTA
+        nullable=False,
+        index=True,
     )
 
     ip_address = Column(String(45), nullable=False)
@@ -32,13 +35,11 @@ class PingResult(Base):
     packet_loss_percent = Column(Float, nullable=True)
     diagnostic_message = Column(String, nullable=True)
 
-    
-    device = relationship("Device", back_populates="ping_results")
+    # device = relationship("Device", back_populates="ping_results") <--- TA LINIA ZOSTAŁA USUNIĘTA
 
-    
     __table_args__ = (
-        PrimaryKeyConstraint('timestamp', 'device_id'),
-        {}, 
+        PrimaryKeyConstraint("timestamp", "device_id"),
+        {},
     )
 
     def __repr__(self):

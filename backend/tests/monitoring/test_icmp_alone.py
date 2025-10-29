@@ -40,12 +40,12 @@ async def main():
     """Główna funkcja asynchroniczna, która zarządza całą pętlą testów."""
 
     ADRESY_IP_DO_TESTU = [
-        "googlebla bla bla", # Zostanie poprawnie pominięty
+        "googlebla bla bla",  # Zostanie poprawnie pominięty
         "8.8.8.8",
         "1.1.1.1",
         "192.168.1.1",
         "192.168.71.5",
-        "google.com"         # Zostanie poprawnie pominięty
+        "google.com",  # Zostanie poprawnie pominięty
     ]
 
     print("Uruchamianie wszystkich testów ICMP...")
@@ -53,7 +53,7 @@ async def main():
     # Pętla 'for' musi być WEWNĄTRZ funkcji async
     for test_ip in ADRESY_IP_DO_TESTU:
         await test_device_icmp(test_ip)
-        print("="*40) # Separator dla czytelności
+        print("=" * 40)  # Separator dla czytelności
     print("Wszy")
 
 

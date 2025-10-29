@@ -42,7 +42,9 @@ async def device_icmp(self, device_id: int, device_address: str):
             is_alive=host.is_alive,
             rtt_avg_ms=host.avg_rtt,
             packet_loss_percent=host.packet_loss,
-            diagnostic_message=("host available" if host.is_alive else "host unreachable")
+            diagnostic_message=(
+                "host available" if host.is_alive else "host unreachable"
+            ),
         )
         return (
             {

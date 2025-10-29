@@ -9,7 +9,6 @@ from app.models.device import Device
 # 1. Importuj context manager dla sesji Postgres
 
 
-
 async def get_all_devices() -> Sequence[Device]:
 
     # 3. Użyj context managera, aby automatycznie zarządzać sesją
