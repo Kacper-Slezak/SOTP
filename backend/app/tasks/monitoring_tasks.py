@@ -22,7 +22,7 @@ async def device_icmp(self, device_id: int, device_address: str):
     try:
         ipaddress.ip_address(address)
     except ValueError:
-        
+
         return {
             "status": "ERROR",
             "reason": f"Zły format IP: {device_address}. Test wymaga adresu IP.",
@@ -30,12 +30,10 @@ async def device_icmp(self, device_id: int, device_address: str):
 
     try:
 
-        
         host = await ping(
             address, count=PING_COUNT, timeout=PING_TIMEOUT, privileged=False
         )
 
-        
         await insert_ping_result(
             device_id=device_id,
             ip_address=host.address,
@@ -70,9 +68,7 @@ def schedule_all_pings(only_active: bool = True):
 
     count = 0
     try:
-        devices = asyncio.run(
-            get_all_devices()
-        )  
+        devices = asyncio.run(get_all_devices())
 
         if not devices:
             return "No devices found."

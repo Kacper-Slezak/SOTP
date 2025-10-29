@@ -4,7 +4,6 @@ import ipaddress
 from app.tasks import monitoring_tasks
 
 
-
 async def test_device_icmp(test_ip: str):
 
     TEST_IP = test_ip
