@@ -10,13 +10,14 @@
     "tailwind-init": "tailwindcss init -p"
   },
   "dependencies": {
-    "@tanstack/react-query": "^5.0.0",
+    "@tanstack/react-query": "^5.90.5",
     "autoupgrade": "^1.1.0",
     "axios": "^1.6.2",
     "lucide-react": "^0.294.0",
     "next": "^15.5.4",
     "react": "18.2.0",
     "react-dom": "18.2.0",
+    "react-icons": "^5.5.0",
     "recharts": "^2.10.3",
     "zustand": "^4.4.7"
   },
