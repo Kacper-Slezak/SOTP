@@ -1,10 +1,9 @@
 from typing import Optional
 
+from app.core.config import Config
 from redis.asyncio import Redis
 from sqlalchemy.ext.asyncio import AsyncEngine, AsyncSession, create_async_engine
 from sqlalchemy.orm import sessionmaker
-
-from app.core.config import Config
 
 
 def create_postgres():

@@ -2,13 +2,12 @@
 import asyncio
 import ipaddress
 
+from app.services.device_services import get_all_devices
+from app.services.ping_services import insert_ping_result
 from celery import shared_task
 from celery.exceptions import MaxRetriesExceededError, TimeoutError
 from icmplib import async_ping as ping
 from sqlalchemy.exc import SQLAlchemyError
-
-from app.services.device_services import get_all_devices
-from app.services.ping_services import insert_ping_result
 
 PING_COUNT = 5
 PING_TIMEOUT = 2.0

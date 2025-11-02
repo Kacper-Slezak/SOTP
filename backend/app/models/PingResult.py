@@ -1,12 +1,5 @@
 from sqlalchemy import Boolean as Bool
-from sqlalchemy import (
-    Column,
-    DateTime,
-    Float,
-    Integer,
-    String,
-    func,
-)
+from sqlalchemy import Column, DateTime, Float, Integer, String, func
 from sqlalchemy.schema import PrimaryKeyConstraint
 
 from .base import Base

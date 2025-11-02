@@ -6,17 +6,16 @@ from unittest.mock import AsyncMock, MagicMock, patch
 # WAŻNE: Importujemy prawdziwe funkcje, które będziemy testować
 # -----------------------------------------------------------------
 try:
-    from celery.exceptions import MaxRetriesExceededError, TimeoutError
-
-    # Importujemy też wyjątki, których kod szuka
-    from sqlalchemy.exc import SQLAlchemyError
-
     from app.tasks.monitoring_tasks import (
         PING_COUNT,
         PING_TIMEOUT,
         device_icmp,
         schedule_all_pings,
     )
+    from celery.exceptions import MaxRetriesExceededError, TimeoutError
+
+    # Importujemy też wyjątki, których kod szuka
+    from sqlalchemy.exc import SQLAlchemyError
 except ImportError as e:
     print(
         f"Błąd importu! Upewnij się, że test jest uruchamiany z głównego katalogu 'backend'."

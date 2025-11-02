@@ -1,10 +1,9 @@
 from typing import Sequence
 
-from sqlalchemy.future import select
-
 # 2. Zaimportuj swój model Device (zakładam, że masz go np. tutaj)
 from app.db.postgres_session import get_postgres_session
 from app.models.device import Device
+from sqlalchemy.future import select
 
 # 1. Importuj context manager dla sesji Postgres
 
