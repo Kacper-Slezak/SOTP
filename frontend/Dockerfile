@@ -1,5 +1,4 @@
 # Etap 1: Instalacja zależności
-
 FROM node:20-slim as deps
 WORKDIR /app
 COPY package.json package-lock.json ./
