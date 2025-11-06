@@ -1,7 +1,4 @@
 # infrastructure/docker/docker-compose.dev.yml
-
-version: '3.8'
-
 services:
   backend:
     build:
@@ -192,3 +189,4 @@ networks:
 volumes:
   postgres_data:
   timescale_data:
+  grafana_data:
