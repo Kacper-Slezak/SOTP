@@ -24,7 +24,7 @@ async def device_icmp(self, device_id: int, device_address: str):
 
         return {
             "status": "ERROR",
-            "reason": f"Zły format IP: {device_address}. Test wymaga adresu IP.",
+            "reason": f"Bad IP format: {device_address}. Test requires a valid IP address.",
         }
 
     try:

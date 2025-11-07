@@ -1,4 +1,3 @@
-# Importuj tylko context manager i model
 from app.db.timescaleDB_session import get_timescale_session
 from app.models.PingResult import PingResult
 
@@ -11,8 +10,6 @@ async def insert_ping_result(
     packet_loss_percent: float | None,
     diagnostic_message: str | None = None,
 ):
-
-    # Użyj context managera, aby automatycznie zarządzać sesją
     async with get_timescale_session() as db:
 
         new_result = PingResult(

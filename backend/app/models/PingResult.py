@@ -8,7 +8,6 @@ from .base import Base
 class PingResult(Base):
     __tablename__ = "ping_results"
 
-    # Klucz główny jest kompozytowy
     timestamp = Column(DateTime, default=func.now(), nullable=False)
 
     device_id = Column(
