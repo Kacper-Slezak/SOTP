@@ -172,9 +172,9 @@ services:
       - grafana_data:/var/lib/grafana
       # Datasource provisioning
       - ../grafana/datasources:/etc/grafana/provisioning/datasources
-      # Dashboard provisioning provider file
-      - ../grafana/dashboards/provider.yml:/etc/grafana/provisioning/dashboards/provider.yml
-      # Dashboard JSON files volume
+      # Dashboard provisioning
+      - ../grafana/dashboards/provisioning:/etc/grafana/provisioning/dashboards
+      # Dashboard JSON files
       - ../grafana/dashboards:/var/lib/grafana/dashboards
     environment:
       GF_SECURITY_ADMIN_USER: admin # Set default user as per acceptance criteria

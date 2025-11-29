@@ -16,6 +16,7 @@ from fastapi import (
     UploadFile,
 )
 from fastapi.middleware.cors import CORSMiddleware
+from prometheus_fastapi_instrumentator import Instrumentator
 from pydantic import BaseModel
 from sqlalchemy import delete, select, text
 from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker
@@ -56,6 +57,7 @@ SessionPG = Annotated[AsyncSession, Depends(session_dep("pg"))]
 SessionTS = Annotated[AsyncSession, Depends(session_dep("ts"))]
 
 app = FastAPI(lifespan=lifespan, debug=True)
+Instrumentator().instrument(app).expose(app)
 
 origins = [
     "http://localhost",
