@@ -175,7 +175,7 @@ services:
       # Dashboard provisioning
       - ../grafana/dashboards/provisioning:/etc/grafana/provisioning/dashboards
       # Dashboard JSON files
-      - ../grafana/dashboards:/var/lib/grafana/dashboards
+      - ../grafana/dashboards:/var/lib/grafana/dashboards/prometheus
     environment:
       GF_SECURITY_ADMIN_USER: admin # Set default user as per acceptance criteria
       GF_SECURITY_ADMIN_PASSWORD: admin # Set default password as per acceptance criteria

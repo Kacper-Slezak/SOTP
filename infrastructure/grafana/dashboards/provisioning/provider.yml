@@ -1,11 +1,62 @@
 apiVersion: 1
 
 providers:
-  - name: 'Default'
+  # System Overview Dashboards
+  - name: 'SOTP System Overview'
+    orgId: 1
+    folder: 'SOTP - System'
+    type: file
+    disableDeletion: false
+    updateIntervalSeconds: 30
+    allowUiUpdates: true
+    options:
+      path: /var/lib/grafana/dashboards/system
+      foldersFromFilesStructure: false
+
+  # Device Monitoring Dashboards
+  - name: 'SOTP Device Monitoring'
+    orgId: 1
+    folder: 'SOTP - Devices'
+    type: file
+    disableDeletion: false
+    updateIntervalSeconds: 30
+    allowUiUpdates: true
+    options:
+      path: /var/lib/grafana/dashboards/devices
+      foldersFromFilesStructure: false
+
+  # Performance & Infrastructure
+  - name: 'SOTP Infrastructure'
+    orgId: 1
+    folder: 'SOTP - Infrastructure'
+    type: file
+    disableDeletion: false
+    updateIntervalSeconds: 30
+    allowUiUpdates: true
+    options:
+      path: /var/lib/grafana/dashboards/infrastructure
+      foldersFromFilesStructure: false
+
+  # Business Metrics
+  - name: 'SOTP Business Metrics'
+    orgId: 1
+    folder: 'SOTP - Business'
+    type: file
+    disableDeletion: false
+    updateIntervalSeconds: 30
+    allowUiUpdates: true
+    options:
+      path: /var/lib/grafana/dashboards/business
+      foldersFromFilesStructure: false
+
+  # Prometheus Self-Monitoring (zachowane z oryginalnej konfiguracji)
+  - name: 'Prometheus Self-Monitoring'
     orgId: 1
     folder: 'Prometheus Self-Monitoring'
     type: file
     disableDeletion: false
-    editable: true
+    updateIntervalSeconds: 30
+    allowUiUpdates: true
     options:
-      path: /var/lib/grafana/dashboards
+      path: /var/lib/grafana/dashboards/prometheus
+      foldersFromFilesStructure: false
