@@ -1,0 +1,36 @@
+apiVersion: v1
+kind: Secret
+metadata:
+  name: postgres-secret
+  namespace: sotp
+type: Opaque
+data:
+  POSTGRES_USER: c29wdF91c2Vy       # base64 for 'sotp_user'
+  POSTGRES_PASSWORD: c29wdF9wYXNzd29yZA== # base64 for 'sotp_password'
+  POSTGRES_DB: c29wdFf3b3Jk            # base64 for 'sotp_db'
+
+---
+
+apiVersion: v1
+kind: Service
+metadata:
+  name: postgres-service
+  namespace: sotp
+spec:
+  ports:
+    - port: 5432
+      targetPort: 5432
+  selector:
+    app: postgres
+  clusterIP: None  # Headless service for StatefulSet
+
+---
+
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: postgres
+  namespace: sotp
+spec:
+  serviceName: "postgres-service"
+  # to be continued...

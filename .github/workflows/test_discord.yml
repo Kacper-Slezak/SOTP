@@ -37,16 +37,12 @@ jobs:
           echo "==================================="
           echo "🚀 Starting deployment simulation..."
           echo "==================================="
-          sleep 3
 
           echo "✅ Database connection: OK"
-          sleep 2
 
           echo "✅ Services health check: OK"
-          sleep 2
 
           echo "✅ Deployment process: OK"
-          sleep 2
 
           echo "==================================="
           echo "🎉 Deployment completed successfully!"
