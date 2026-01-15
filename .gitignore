@@ -1,68 +1,77 @@
 # ####################
-# # ZALEŻNOŚCI I PAKIETY
+# # ZALEŻNOŚCI (Globalne dla wszystkich folderów)
 # ####################
 
-# Zależności backendu (Python)
-backend/venv/
-backend/env/
-backend/__pycache__/
-backend/*.egg-info/
-./__pycache__/
+# Python (Wirtualne środowiska i paczki)
+venv/
+.venv/
+env/
+.env/
+__pycache__/
 *.pyc
-# Zależności frontendu (Node.js/Next.js)
-frontend/node_modules/
-frontend/.pnp
-frontend/.pnp.js
+*.pyo
+*.pyd
+.Python
+*.egg-info/
+.installed.cfg
+*.egg
+MANIFEST
 
-# ####################
-# # PLIKI BUILDU I CACHE
-# ####################
-
-# Cache i build frontendu (Next.js)
-frontend/.next/
-frontend/out/
-frontend/build/
-
-# Cache testów i narzędzi Python
-.pytest_cache/
-.mypy_cache/
-.ruff_cache/
-htmlcov/
-.coverage
-
-# ####################
-# # PLIKI LOKALNEGO ŚRODOWISKA
-# ####################
-
-# Zmienne środowiskowe - NIGDY nie dodawaj ich do repozytorium!
-.env
-.env.local
-.env.development.local
-.env.test.local
-.env.production.local
-
-# Logi
-*.log
+# Node.js (Frontend i narzędzia JS)
+node_modules/
+.pnp
+.pnp.js
 npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
+pnpm-debug.log*
 
 # ####################
-# # USTAWIENIA IDE I SYSTEMOWE
+# # BUILD I CACHE (Frontend & Backend)
 # ####################
 
-# System operacyjny
+# Next.js
+.next/
+out/
+
+# Ogólne foldery buildu
+build/
+dist/
+
+# Cache narzędzi Python
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.coverage
+htmlcov/
+.tox/
+
+# ####################
+# # ŚRODOWISKO I SEKRETY
+# ####################
+
+# Pliki .env w KAŻDYM folderze
+.env
+.env.*
+!.env.example
+
+# Logi systemowe
+*.log
+logs/
+
+# ####################
+# # SYSTEM I IDE
+# ####################
+
+# macOS / Windows
 .DS_Store
 Thumbs.db
+Desktop.ini
 
-# VSCode
-.vscode/
-
-# JetBrains (PyCharm, WebStorm, etc.)
+# IDE (VSCode, JetBrains)
 .idea/
-
-# Inne
+.vscode/
+*.swp
+*.swo
 *.suo
 *.user
-*.userosscache
-*.sln.docstates
