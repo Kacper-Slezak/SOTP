@@ -8,7 +8,7 @@ Before proceeding with the deployment, ensure the server meets the following req
 
 * **Operating System:** A modern Linux distribution (e.g., Ubuntu 22.04 LTS, Debian 11).
 * **CPU:** 2+ cores
-* **RAM:** 4GB+
+* **RAM:** 8GB+
 * **Storage:** 20GB+ of free space.
 * **Software:**
     * **Docker Engine:** Latest stable version.

@@ -1,71 +1,149 @@
-# SOTP System Architecture
+# SOTP Architecture Documentation
 
-This document describes the high-level architecture of the System Observability & Telemetry Platform (SOTP).
+## 1. System Overview
 
-## 1. High-Level Diagram
+SOTP (System Observability & Telemetry Platform) is a hybrid cloud-native monitoring solution designed to bridge the gap between legacy network infrastructure and modern server environments.
 
-The system is designed as a multi-layered, service-oriented architecture, optimized for scalability and maintainability. The diagram below illustrates the flow of data and interaction between components.
+Unlike traditional NMS (Network Monitoring Systems), SOTP employs a microservices architecture to handle two distinct telemetry models:
+
+1. **Agentless (Pull):** For network devices (Routers, Switches) via SNMP/ICMP.
+2. **Agent-based (Push):** For servers and cloud instances via a custom lightweight agent.
+
+---
+
+## 2. High-Level Architecture
+
+The system is designed as a **Monorepo** containing independent microservices deployed on Kubernetes.
+
+```mermaid
+ flowchart TD
+
+    subgraph "Infrastructure (Home Lab)"
+
+        Ingress["Ingress Controller<br/>(Traefik)"]
+
+
+
+        subgraph "Services"
+
+            Core["SOTP Core API"]
+
+            DB[("TimescaleDB")]
+
+            Redis[("Redis")]
+
+            NetWorker["Network Worker"]
+
+
+
+            Core -->|"Zapis/Odczyt"| DB
+
+            Core -->|"Cache"| Redis
+
+            NetWorker -->|"Kolejka Zadań"| Redis
+
+            NetWorker -->|"Zapis Wyników"| Core
+
+        end
+
+    end
+
+
+    subgraph "Świat Zewnętrzny (Urządzenia)"
+
+        Router1["Router Cisco"]
+
+        Router2["Switch HP"]
+
+        Server1["Twój Serwer / Laptop"]
+
+        Agent["SOTP Python Agent"]
+
+
+
+        NetWorker -- "PULL (SNMP/ICMP)" --> Router1
+
+        NetWorker -- "PULL (SNMP/ICMP)" --> Router2
+
+        Agent -- "PUSH (HTTP POST)" --> Ingress
+
+        Agent -.-> Server1
+
+    end
+
+
+    User["Użytkownik"] -->|"Przeglądarka"| Frontend["SOTP Frontend"]
+
+    Frontend -->|"API REST"| Ingress --> Core
+
+    end
 
 ```
 
-┌─────────────────────────────────────────────────────────────┐
-│                    USER INTERFACE LAYER                      │
-│  React/Next.js Frontend + Grafana Dashboards                │
-└────────────────────┬────────────────────────────────────────┘
-│
-┌────────────────────▼────────────────────────────────────────┐
-│                   API GATEWAY LAYER                          │
-│  Traefik (Load Balancer + SSL) → FastAPI (REST + WebSocket) │
-└────────────────────┬────────────────────────────────────────┘
-│
-┌────────────────────▼────────────────────────────────────────┐
-│                  APPLICATION LAYER                           │
-│  ┌──────────────┐  ┌──────────────┐  ┌──────────────┐      │
-│  │   Inventory  │  │  Auth/RBAC   │  │   Alerting   │      │
-│  │   Service    │  │   Service    │  │   Service    │      │
-│  └──────────────┘  └──────────────┘  └──────────────┘      │
-└────────────────────┬────────────────────────────────────────┘
-│
-┌────────────────────▼────────────────────────────────────────┐
-│                   CACHE & QUEUE LAYER                        │
-│  Redis (Cache + Session) + Celery (Task Queue)              │
-└────────────────────┬────────────────────────────────────────┘
-│
-┌────────────────────▼────────────────────────────────────────┐
-│                  COLLECTOR WORKERS                           │
-│  ┌──────────┐ ┌──────────┐ ┌──────────┐ ┌──────────┐       │
-│  │   SNMP   │ │   ICMP   │ │   SSH    │ │  Syslog  │       │
-│  │ Collector│ │ Collector│ │ Collector│ │ Collector│       │
-│  └──────────┘ └──────────┘ └──────────┘ └──────────┘       │
-└────────────────────┬────────────────────────────────────────┘
-│
-┌────────────────────▼────────────────────────────────────────┐
-│                   DATA LAYER                                 │
-│  ┌─────────────────┐  ┌─────────────────┐                  │
-│  │  PostgreSQL     │  │  TimescaleDB    │                  │
-│  │  (Inventory)    │  │  (Time-Series)  │                  │
-│  └─────────────────┘  └─────────────────┘                  │
-│  ┌─────────────────┐  ┌─────────────────┐                  │
-│  │  Loki           │  │  Vault          │                  │
-│  │  (Logs)         │  │  (Secrets)      │                  │
-│  └─────────────────┘  └─────────────────┘                  │
-└─────────────────────────────────────────────────────────────┘
+---
 
-```
+## 3. Core Components
 
+### 3.1. Core Backend (`apps/core-backend`)
 
-## 2. Key Technology Choices & Rationale
+* **Role:** The central brain of the platform.
+* **Tech Stack:** Python 3.11, FastAPI.
+* **Responsibilities:**
+* REST API for the Frontend.
+* Ingestion endpoint for SOTP Agents (`POST /api/v1/ingest`).
+* Authentication & Authorization.
+* Data aggregation and storage in TimescaleDB.
 
-* **Containerization (Docker & Docker Compose):** The entire application stack is containerized. This ensures consistency across all environments (development, testing, production) and simplifies deployment.
+### 3.2. Network Worker (`apps/network-worker`)
 
-* **Backend (FastAPI):** A FastAPI application written in Python serves as the core API and application layer. Its asynchronous nature is ideal for handling I/O-bound tasks like network polling and database queries, ensuring high performance.
+* **Role:** A specialized worker for network tasks.
+* **Tech Stack:** Python, Celery (optional), Netmiko, PySNMP.
+* **Responsibilities:**
+* Executes active checks (ICMP Ping) against routers.
+* Polls SNMP data from network devices.
+* Connects to routers via SSH for configuration backups.
+* Operates asynchronously from the Core API.
 
-* **Frontend (Next.js):** A Next.js (React) application provides a modern, server-rendered user interface. This choice allows for excellent performance, SEO capabilities, and a rich user experience.
+### 3.3. SOTP Agent (`apps/sotp-agent`)
 
-* **Databases:**
-    * **PostgreSQL** is used for storing relational, inventory-style data (users, devices, settings). It is a robust and reliable relational database.
-    * **TimescaleDB** (a PostgreSQL extension) is used for all time-series data (metrics from collectors). This provides massive performance gains for analytical queries over time, which is critical for a monitoring platform.
+* **Role:** Lightweight metric collector.
+* **Tech Stack:** Python (Zero-dependency mostly).
+* **Responsibilities:**
+* Runs as a systemd service on target Linux servers.
+* Collects CPU, RAM, and Disk usage via `psutil`.
+* Pushes data to the Core API at defined intervals.
 
-* **Task Queuing (Celery & Redis):** Celery, with Redis as its message broker, is used to run all data collection tasks asynchronously in the background. This prevents the API from being blocked by long-running tasks and ensures the UI remains responsive.
+### 3.4. Web Frontend (`apps/web-frontend`)
 
-* **Secrets Management (HashiCorp Vault):** Vault is used as a centralized and secure store for all secrets, such as database credentials and API keys. This avoids storing sensitive information in configuration files or environment variables.
+* **Role:** User Interface.
+* **Tech Stack:** Next.js, React, Tailwind CSS.
+* **Responsibilities:**
+* Visualizes real-time metrics.
+* Provides dashboards for both Servers and Network Devices.
+
+---
+
+## 4. Data Flow
+
+### Scenario A: Server Monitoring (Push Model)
+
+1. **Agent** collects CPU usage on a remote server.
+2. **Agent** sends a JSON payload to `https://sotp.domain/api/v1/ingest`.
+3. **Core API** validates the token and saves the metric to **TimescaleDB** (hypertable).
+4. **Frontend** queries the API to update the live chart.
+
+### Scenario B: Router Monitoring (Pull Model)
+
+1. **Network Worker** receives a task from **Redis** (or internal scheduler).
+2. **Worker** sends an SNMP GET request to the target Router IP.
+3. **Router** responds with interface statistics.
+4. **Worker** processes the data and saves it to **Core API** (or directly to DB).
+
+---
+
+## 5. Technology Decisions
+
+* **Kubernetes (K3s):** Chosen for orchestration capabilities and self-healing.
+* **TimescaleDB:** Chosen over standard PostgreSQL for superior performance with time-series data.
+* **FastAPI:** Selected for high performance (async) and automatic documentation generation.
+* **Monorepo:** Used to maintain code consistency across all services.
