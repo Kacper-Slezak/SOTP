@@ -8,7 +8,7 @@ services:
       - "8000:8000"
     volumes:
       - ../..:/workspace
-    working_dir: /workspac./apps/core-backend
+    working_dir: /workspace/apps/core-backend
     environment:
       POSTGRES_HOST: postgres
       POSTGRES_DB: ${POSTGRES_DB}
@@ -48,8 +48,8 @@ services:
       - "3000:3000"
     volumes:
       - ../..:/workspace
-      - /workspac./apps/web-frontend/node_modules
-      - /workspac./apps/web-frontend/.next
+      - /workspace/apps/web-frontend/node_modules
+      - /workspace/apps/web-frontend/.next
     networks:
       - sotp_network
 
@@ -175,7 +175,7 @@ services:
       # Dashboard provisioning
       - ../grafana/dashboards/provisioning:/etc/grafana/provisioning/dashboards
       # Dashboard JSON files
-      - ../grafana/dashboards:/var/lib/grafana/dashboards/prometheus
+      - ../grafana/dashboards:/var/lib/grafana/dashboards
     environment:
       GF_SECURITY_ADMIN_USER: admin # Set default user as per acceptance criteria
       GF_SECURITY_ADMIN_PASSWORD: admin # Set default password as per acceptance criteria
