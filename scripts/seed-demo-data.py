@@ -1,4 +1,5 @@
 import asyncio
+import operator
 from datetime import datetime, timedelta, timezone
 
 from backend.app.models.device import Device
@@ -51,8 +52,20 @@ async def seed_data():
             await session_pg.refresh(default_user)
             print(f"Created user: {default_user.email} (ID: {default_user.id})")
 
-        # --- 2. Create Demo Devices ---
+        # --- 2. Create Demo Devices and Operator user---
         if default_user:
+            operator = User(
+                email="operator@sotp.local",
+                name="System Operator",
+                password_hash=DEFAULT_PASSWORD_HASH,
+                role=UserRole.OPERATOR,
+                is_active=True,
+            )
+            session_pg.add(operator)
+            await session_pg.commit()
+            await session_pg.refresh(operator)
+            print(f"Created operator user: {operator.email} (ID: {operator.id})")
+
             demo_devices = [
                 Device(
                     name="Core-Router-01",
