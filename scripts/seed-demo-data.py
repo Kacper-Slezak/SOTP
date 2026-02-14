@@ -2,12 +2,13 @@ import asyncio
 import operator
 from datetime import datetime, timedelta, timezone
 
-from backend.app.models.device import Device
-from backend.app.models.metric import DeviceMetric
-from backend.app.models.user import User, UserRole
-from backend.app.utils.databases import create_postgres, create_timescaledb
 from sqlalchemy import insert, select
 from sqlalchemy.ext.asyncio import async_sessionmaker
+
+from apps.core_backend.app.models.device import Device
+from apps.core_backend.app.models.metric import DeviceMetric
+from apps.core_backend.app.models.user import User, UserRole
+from apps.core_backend.app.utils.databases import create_postgres, create_timescaledb
 
 # Generate a proper password hash for "admin123"
 # You can change this password by running:
