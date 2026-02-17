@@ -1,7 +1,6 @@
 import datetime
 import asyncio
 from celery import shared_task
-from pysnmp.hlapi import *
 from sqlalchemy import select
 from app.core.config import Config 
 
@@ -10,6 +9,18 @@ from app.db.postgres_session import get_postgres_session
 from app.db.timescaleDB_session import get_timescale_session
 from app.models.device import Device
 from app.models.metric import DeviceMetric
+
+from pysnmp.hlapi import (
+    SnmpEngine,
+    UserData,
+    usmHMACSHAAuthProtocol,
+    usmAesCfb128Protocol,
+    UdpTransportTarget,
+    ContextData,
+    ObjectType,
+    ObjectIdentity,
+    getCmd,
+)
 
 OIDS = {
     "uptime": "1.3.6.1.2.1.1.3.0",
