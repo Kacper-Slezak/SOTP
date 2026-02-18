@@ -1,3 +1,4 @@
+from datetime import datetime, timezone
 from typing import Annotated, AsyncGenerator, Literal, Optional
 
 import anyio
@@ -18,7 +19,8 @@ from fastapi import (
 from fastapi.middleware.cors import CORSMiddleware
 from prometheus_fastapi_instrumentator import Instrumentator
 from pydantic import BaseModel
-from sqlalchemy import delete, select, text
+from sqlalchemy import delete, select, text, update
+from sqlalchemy.exc import SQLAlchemyError
 from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker
 
 
@@ -124,7 +126,11 @@ async def ping():
 
 @app.get("/api/v1/devices")
 async def get_all_devices(session: SessionPG):  # type: ignore
-    devices = (await session.execute(select(Device))).scalars().all()
+    devices = (
+        (await session.execute(select(Device).where(Device.deleted_at.is_(None))))
+        .scalars()
+        .all()
+    )
     return [{"id": d.id, "name": d.name, "ip_address": d.ip_address} for d in devices]
 
 
@@ -138,9 +144,30 @@ async def get_device(id: int, session: SessionPG):
 
 @app.delete("/api/v1/devices/{id}")
 async def delete_device(id: int, session: SessionPG):
-    device = await session.get(Device, id)
-    await session.delete(device)
-    await session.commit()
+    stmt = (
+        update(Device)
+        .where(Device.id == id, Device.deleted_at.is_(None))
+        .values(deleted_at=datetime.now(timezone.utc))
+    )
+
+    try:
+        result = await session.execute(stmt)
+
+        if result.rowcount == 0:
+            await session.rollback()
+            raise HTTPException(status_code=404, detail="Device not found")
+
+        await session.commit()
+        return Response(status_code=200, content="Device deleted successfully")
+
+    except SQLAlchemyError:
+        await session.rollback()
+        raise HTTPException(status_code=500, detail="DB error")
+
+    # Hard delete part
+    # await session.delete(device)
+    # await session.commit()
+
     return Response(status_code=200, content="Device deleted successfully")
 
 
