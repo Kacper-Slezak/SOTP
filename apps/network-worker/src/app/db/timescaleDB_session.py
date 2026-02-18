@@ -2,7 +2,7 @@ from contextlib import asynccontextmanager
 from typing import AsyncGenerator
 
 from app.core.config import Config
-from app.utils.databases import create_timescaledb
+from app.db.databases import create_timescaledb
 from sqlalchemy.ext.asyncio import AsyncEngine, AsyncSession
 from sqlalchemy.orm import sessionmaker
 

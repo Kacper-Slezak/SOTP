@@ -14,8 +14,7 @@ app.conf.beat_schedule = {
         "args": (False,),
     },
     "snmp-every-minute": {
-        "task": "snmp.schedule_all_scans", 
-        "schedule": 60.0, 
+        "task": "snmp.schedule_all_scans",
+        "schedule": 60.0,
     },
-    
 }
