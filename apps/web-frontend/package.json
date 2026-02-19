@@ -6,10 +6,9 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "next lint",
+    "lint": "eslint .",
     "tailwind-init": "tailwindcss init -p"
   },
-
   "dependencies": {
     "@tanstack/react-query": "^5.90.5",
     "autoupgrade": "^1.1.0",
@@ -22,7 +21,6 @@
     "recharts": "^2.10.3",
     "zustand": "^4.4.7"
   },
-
   "devDependencies": {
     "@tailwindcss/postcss": "4.1.16",
     "@types/node": "^20.0.0",
