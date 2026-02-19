@@ -24,7 +24,7 @@ jobs:
         with:
           python-version: '3.11'
           cache: 'pip'
-          cache-dependency-path: apps/core-backend/requirements.txt
+          cache-dependency-path: apps/core_backend/requirements.txt
       - name: Install pre-commit
         run: pip install pre-commit
       - name: Run pre-commit hooks
@@ -43,15 +43,15 @@ jobs:
         with:
           python-version: '3.11'
           cache: 'pip'
-          cache-dependency-path: apps/core-backend/requirements.txt
+          cache-dependency-path: apps/core_backend/requirements.txt
       - name: Install security tools
         run: pip install bandit safety
       - name: Install backend dependencies for safety
-        run: pip install -r apps/core-backend/requirements.txt
+        run: pip install -r apps/core_backend/requirements.txt
       - name: Run Bandit (SAST)
-        run: bandit -r apps/core-backend/app -ll
+        run: bandit -r apps/core_backend/app -ll
       - name: Run Safety (Dependency Check)
-        run: safety check -r apps/core-backend/requirements.txt
+        run: safety check -r apps/core_backend/requirements.txt
 
       # --- NODE SECURITY (Frontend) ---
       - name: Set up Node.js
@@ -80,21 +80,18 @@ jobs:
         with:
           python-version: '3.11'
           cache: 'pip'
-          cache-dependency-path: apps/core-backend/requirements.txt
+          cache-dependency-path: apps/core_backend/requirements.txt
       - name: Install backend dependencies
         run: |
           python -m pip install --upgrade pip
-          # ZMIANA: Instalujemy zależności z nowej lokalizacji
-          pip install -r apps/core-backend/requirements.txt
+          pip install -r apps/core_backend/requirements.txt
           pip install pytest pytest-cov pytest-asyncio
       - name: Run backend tests
         id: pytest_check
         continue-on-error: true
         run: |
-          # ZMIANA: Ustawiamy PYTHONPATH na nowy folder core-backend
-          export PYTHONPATH=$(pwd)/apps/core-backend
-          # ZMIANA: Uruchamiamy testy z nowej lokalizacji
-          python -m pytest apps/core-backend/tests/ --cov=apps/core-backend/app --cov-report=xml --cov-report=term
+          export PYTHONPATH=$(pwd)/apps/core_backend
+          python -m pytest apps/core_backend/tests/ --cov=apps/core_backend/app --cov-report=xml --cov-report=term
           echo "exit_code=$?" >> $GITHUB_OUTPUT
 
       # --- FRONTEND TESTS ---
@@ -124,8 +121,8 @@ jobs:
       - name: Build Core Backend Image
         uses: docker/build-push-action@v5
         with:
-          context: ./apps/core-backend
-          file: ./apps/core-backend/Dockerfile
+          context: ./apps/core_backend
+          file: ./apps/core_backend/Dockerfile
           push: false
           tags: sotp-core:ci-${{ github.sha }}
 
