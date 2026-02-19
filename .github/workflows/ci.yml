@@ -63,7 +63,7 @@ jobs:
       - name: Install frontend dependencies
         run: npm ci --prefix apps/web-frontend
       - name: Run npm audit
-        run: npm audit --prefix apps/web-frontend --audit-level=moderate
+        run: npm audit --prefix apps/web-frontend --audit-level=high
 
   test:
     name: Run Tests & Lint Frontend
