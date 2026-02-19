@@ -9,7 +9,6 @@
     "lint": "next lint",
     "tailwind-init": "tailwindcss init -p"
   },
-
   "dependencies": {
     "@tanstack/react-query": "^5.90.5",
     "autoupgrade": "^1.1.0",
@@ -22,7 +21,6 @@
     "recharts": "^2.10.3",
     "zustand": "^4.4.7"
   },
-
   "devDependencies": {
     "@tailwindcss/postcss": "4.1.16",
     "@types/node": "^20.0.0",
@@ -32,7 +30,7 @@
     "@typescript-eslint/eslint-plugin": "^8.0.0",
     "@typescript-eslint/parser": "^8.0.0",
     "autoprefixer": "^10.4.20",
-    "eslint": "^9.8.0",
+    "eslint": "^8.57.1",
     "eslint-config-next": "^15.5.4",
     "postcss": "^8.4.49",
     "prettier": "^3.3.3",
