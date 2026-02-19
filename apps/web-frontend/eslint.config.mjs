@@ -1,43 +1,16 @@
-import { defineConfig } from "eslint/config";
-import nextCoreWebVitals from "eslint-config-next/core-web-vitals";
-import globals from "globals";
-import tsParser from "@typescript-eslint/parser";
-import path from "node:path";
-import { fileURLToPath } from "node:url";
-import js from "@eslint/js";
+import { dirname } from "path";
+import { fileURLToPath } from "url";
 import { FlatCompat } from "@eslint/eslintrc";
 
 const __filename = fileURLToPath(import.meta.url);
-const __dirname = path.dirname(__filename);
+const __dirname = dirname(__filename);
+
 const compat = new FlatCompat({
-    baseDirectory: __dirname,
-    recommendedConfig: js.configs.recommended,
-    allConfig: js.configs.all
+  baseDirectory: __dirname,
 });
 
-export default defineConfig([{
-    extends: [
-        ...compat.extends("eslint:recommended"),
-        ...compat.extends("plugin:@typescript-eslint/recommended"),
-        ...nextCoreWebVitals
-    ],
+const eslintConfig = [
+  ...compat.extends("next/core-web-vitals", "next/typescript"),
+];
 
-    languageOptions: {
-        globals: {
-            ...globals.browser,
-            ...globals.node,
-        },
-
-        parser: tsParser,
-        ecmaVersion: 2021,
-        sourceType: "module",
-
-        parserOptions: {
-            ecmaFeatures: {
-                jsx: true,
-            },
-        },
-    },
-
-    rules: {},
-}]);
+export default eslintConfig;
