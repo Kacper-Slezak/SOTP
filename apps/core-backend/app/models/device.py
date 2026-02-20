@@ -36,7 +36,7 @@ class Device(Base):
     alerts = relationship(
         "Alert", back_populates="device", cascade="all, delete-orphan"
     )
-    ping_results = relationship("PingResult", back_populates="device")
+    # ping_results = relationship("PingResult", back_populates="device")
 
 
 class Credential(Base):
