@@ -1,5 +1,6 @@
-import pytest
 from unittest.mock import patch
+
+import pytest
 from app.tasks.monitoring_tasks import device_icmp, schedule_all_pings
 
 # =================================================================
@@ -22,6 +23,7 @@ class MockDevice:
 # "Czy jeśli jedno urządzenie pada, reszta dalej działa?"
 # -----------------------------------------------------------------
 
+
 class TestFaultIsolation:
     @patch("app.tasks.monitoring_tasks.PING_TIMEOUT", 1)
     @patch("app.tasks.monitoring_tasks.PING_COUNT", 1)
@@ -32,18 +34,19 @@ class TestFaultIsolation:
         Sprawdzamy czy wynik każdego jest niezależny.
         """
         devices = [
-            MockDevice(id=1, ip_address="127.0.0.1"),   # zawsze działa
-            MockDevice(id=2, ip_address="10.0.2.34"),   # zawsze martwy (RFC 5737)
-            MockDevice(id=3, ip_address="127.0.0.1"),   # zawsze działa
+            MockDevice(id=1, ip_address="127.0.0.1"),  # zawsze działa
+            MockDevice(id=2, ip_address="10.0.2.34"),  # zawsze martwy (RFC 5737)
+            MockDevice(id=3, ip_address="127.0.0.1"),  # zawsze działa
         ]
 
         results = [device_icmp(device_address=d.ip_address) for d in devices]
 
-        assert results[0]["status"] == "UP",   "Device 1 powinien być UP"
+        assert results[0]["status"] == "UP", "Device 1 powinien być UP"
         assert results[1]["status"] == "DOWN", "Device 2 powinien być DOWN"
-        assert results[2]["status"] == "UP",   "Device 3 powinien być UP - nie zaraził się błędem device 2"
-    
-    
+        assert (
+            results[2]["status"] == "UP"
+        ), "Device 3 powinien być UP - nie zaraził się błędem device 2"
+
     @patch("app.tasks.monitoring_tasks.PING_TIMEOUT", 1)
     @patch("app.tasks.monitoring_tasks.PING_COUNT", 1)
     @patch("app.tasks.monitoring_tasks.insert_ping_result")
@@ -57,8 +60,10 @@ class TestFaultIsolation:
 
         results = [device_icmp(device_address=d.ip_address) for d in devices]
 
-        assert all(r["status"] == "DOWN" for r in results), \
-            f"Oczekiwano wszystkich DOWN, dostano: {[r['status'] for r in results]}"
+        assert all(
+            r["status"] == "DOWN" for r in results
+        ), f"Oczekiwano wszystkich DOWN, dostano: {[r['status'] for r in results]}"
+
     @patch("app.tasks.monitoring_tasks.PING_TIMEOUT", 1)
     @patch("app.tasks.monitoring_tasks.PING_COUNT", 1)
     @patch("app.tasks.monitoring_tasks.insert_ping_result")
@@ -77,16 +82,18 @@ class TestFaultIsolation:
 
         assert results[0]["status"] == "UP"
         assert results[1]["status"] == "DOWN"
-        assert results[2]["status"] == "ERROR", \
-            "Błędny adres powinien dać ERROR, nie crash całego systemu"
+        assert (
+            results[2]["status"] == "ERROR"
+        ), "Błędny adres powinien dać ERROR, nie crash całego systemu"
 
 
 # -----------------------------------------------------------------
 # SCENARIUSZ 2: Dispatcher - co wysyła do kolejki?
 # -----------------------------------------------------------------
 
+
 class TestDispatcherBehavior:
-    
+
     @patch("app.tasks.monitoring_tasks.device_icmp.delay")
     @patch("app.tasks.monitoring_tasks.get_all_devices")
     def test_dispatcher_skips_inactive_by_default(self, mock_get_devices, mock_delay):
@@ -95,21 +102,29 @@ class TestDispatcherBehavior:
         Sprawdzamy jakie IP trafiły do kolejki.
         """
         mock_get_devices.return_value = [
-            MockDevice(id=1, ip_address="1.1.1.1",   is_active=True),
-            MockDevice(id=2, ip_address="2.2.2.2",   is_active=False),  # ← ma być pominięte
-            MockDevice(id=3, ip_address="3.3.3.3",   is_active=True),
+            MockDevice(id=1, ip_address="1.1.1.1", is_active=True),
+            MockDevice(
+                id=2, ip_address="2.2.2.2", is_active=False
+            ),  # ← ma być pominięte
+            MockDevice(id=3, ip_address="3.3.3.3", is_active=True),
         ]
 
         schedule_all_pings(only_active=True)
 
-        called_with = [call.kwargs["device_address"] for call in mock_delay.call_args_list]
+        called_with = [
+            call.kwargs["device_address"] for call in mock_delay.call_args_list
+        ]
         assert "1.1.1.1" in called_with
-        assert "2.2.2.2" not in called_with,  "Nieaktywne urządzenie nie powinno trafić do kolejki"
+        assert (
+            "2.2.2.2" not in called_with
+        ), "Nieaktywne urządzenie nie powinno trafić do kolejki"
         assert "3.3.3.3" in called_with
 
     @patch("app.tasks.monitoring_tasks.device_icmp.delay")
     @patch("app.tasks.monitoring_tasks.get_all_devices")
-    def test_dispatcher_sends_each_device_exactly_once(self, mock_get_devices, mock_delay):
+    def test_dispatcher_sends_each_device_exactly_once(
+        self, mock_get_devices, mock_delay
+    ):
         """Każde urządzenie powinno dostać dokładnie jeden task - bez duplikatów."""
         mock_get_devices.return_value = [
             MockDevice(id=1, ip_address="1.1.1.1"),
@@ -118,14 +133,18 @@ class TestDispatcherBehavior:
 
         schedule_all_pings()
 
-        called_ips = [call.kwargs["device_address"] for call in mock_delay.call_args_list]
-        assert len(called_ips) == len(set(called_ips)), \
-            f"Znaleziono duplikaty w kolejce: {called_ips}"
+        called_ips = [
+            call.kwargs["device_address"] for call in mock_delay.call_args_list
+        ]
+        assert len(called_ips) == len(
+            set(called_ips)
+        ), f"Znaleziono duplikaty w kolejce: {called_ips}"
 
 
 # -----------------------------------------------------------------
 # SCENARIUSZ 3: Odporność na dane z bazy
 # -----------------------------------------------------------------
+
 
 class TestDataEdgeCases:
 
@@ -141,7 +160,9 @@ class TestDataEdgeCases:
         """Czy system obsługuje IPv6?"""
         try:
             result = device_icmp(device_address="::1")
-            assert result["status"] in ("UP", "ERROR"), \
-                "IPv6 powinno dać UP lub ERROR, nie cichy crash"
+            assert result["status"] in (
+                "UP",
+                "ERROR",
+            ), "IPv6 powinno dać UP lub ERROR, nie cichy crash"
         except Exception as e:
             pytest.fail(f"IPv6 rzucił nieobsłużony wyjątek: {e}")
