@@ -1,20 +1,21 @@
-import pytest
 import asyncio
-from unittest.mock import patch, MagicMock, AsyncMock
 from contextlib import asynccontextmanager
+from unittest.mock import AsyncMock, MagicMock, patch
 
+import pytest
 from app.tasks.snmp_collector import (
-    snmp_get_all,
+    OIDS,
+    collect_device_snmp,
     get_active_devices,
     save_metrics,
     schedule_all_snmp,
-    collect_device_snmp,
-    OIDS
+    snmp_get_all,
 )
 
 # ==========================================
 # 1. PROSTE TESTY JEDNOSTKOWE (LOGIKA SNMP)
 # ==========================================
+
 
 class TestSNMPLogic:
 
@@ -53,6 +54,7 @@ class TestSNMPLogic:
 # ==========================================
 # 2. TESTY INTEGRACYJNE (BEZ INICJALIZACJI MODELI)
 # ==========================================
+
 
 class TestSNMPDatabaseAndCelery:
 
