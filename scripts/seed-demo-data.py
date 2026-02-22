@@ -1,14 +1,12 @@
 import asyncio
-import operator
 from datetime import datetime, timedelta, timezone
 
+from backend.app.models.device import Device
+from backend.app.models.metric import DeviceMetric
+from backend.app.models.user import User, UserRole
+from backend.app.utils.databases import create_postgres, create_timescaledb
 from sqlalchemy import insert, select
 from sqlalchemy.ext.asyncio import async_sessionmaker
-
-from apps.core_backend.app.models.device import Device
-from apps.core_backend.app.models.metric import DeviceMetric
-from apps.core_backend.app.models.user import User, UserRole
-from apps.core_backend.app.utils.databases import create_postgres, create_timescaledb
 
 # Generate a proper password hash for "admin123"
 # You can change this password by running:
@@ -53,20 +51,8 @@ async def seed_data():
             await session_pg.refresh(default_user)
             print(f"Created user: {default_user.email} (ID: {default_user.id})")
 
-        # --- 2. Create Demo Devices and Operator user---
+        # --- 2. Create Demo Devices ---
         if default_user:
-            operator = User(
-                email="operator@sotp.local",
-                name="System Operator",
-                password_hash=DEFAULT_PASSWORD_HASH,
-                role=UserRole.OPERATOR,
-                is_active=True,
-            )
-            session_pg.add(operator)
-            await session_pg.commit()
-            await session_pg.refresh(operator)
-            print(f"Created operator user: {operator.email} (ID: {operator.id})")
-
             demo_devices = [
                 Device(
                     name="Core-Router-01",
