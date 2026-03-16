@@ -2,13 +2,13 @@
 services:
   backend:
     build:
-      context: ../../apps/core-backend
+      context: ../../apps/core_backend
       dockerfile: Dockerfile
     ports:
       - "8000:8000"
     volumes:
       - ../..:/workspace
-    working_dir: /workspace/apps/core-backend
+    working_dir: /workspace/apps/core_backend
     environment:
       POSTGRES_HOST: postgres
       POSTGRES_DB: ${POSTGRES_DB}
@@ -42,14 +42,14 @@ services:
 
   frontend:
     build:
-      context: ../../apps/web-frontend
+      context: ../../apps/web_frontend
       dockerfile: Dockerfile
     ports:
       - "3000:3000"
     volumes:
       - ../..:/workspace
-      - /workspace/apps/web-frontend/node_modules
-      - /workspace/apps/web-frontend/.next
+      - /workspace/apps/web_frontend/node_modules
+      - /workspace/apps/web_frontend/.next
     networks:
       - sotp_network
 
@@ -104,7 +104,7 @@ services:
 
   celery-worker:
     build:
-      context: ../../apps/core-backend
+      context: ../../apps/core_backend
       dockerfile: Dockerfile
     command: celery -A app.tasks.celery_app worker --loglevel=info
     volumes:
@@ -122,7 +122,7 @@ services:
 
   celery-beat:
     build:
-      context: ../../apps/core-backend
+      context: ../../apps/core_backend
       dockerfile: Dockerfile
     command: celery -A app.tasks.celery_app beat --loglevel=info
     volumes:

@@ -36,6 +36,8 @@ async def update_device(
 
 
 @router.delete("/{id}")
-async def delete_device(id: int, service: DeviceService = Depends(get_device_service)):
+async def soft_delete_device(
+    id: int, service: DeviceService = Depends(get_device_service)
+):
     await service.soft_delete(id)
-    return Response(status_code=200, content="Deleted")
+    return Response(status_code=200, content="Device deleted successfully")

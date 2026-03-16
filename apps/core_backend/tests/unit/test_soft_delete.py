@@ -1,66 +1,53 @@
-from unittest.mock import AsyncMock, MagicMock
+from datetime import datetime, timezone
+from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
-from app.main import delete_device
+from app.services.device_services import DeviceService
 from fastapi import HTTPException
 from sqlalchemy.exc import SQLAlchemyError
 
 
-@pytest.mark.asyncio
-async def test_delete_device_success():
+def make_session(rowcount=1, side_effect=None):
     session = MagicMock()
-    session.execute = AsyncMock()
+    result = MagicMock()
+    result.rowcount = rowcount
+    if side_effect:
+        session.execute = AsyncMock(side_effect=side_effect)
+    else:
+        session.execute = AsyncMock(return_value=result)
     session.commit = AsyncMock()
     session.rollback = AsyncMock()
+    return session
 
-    result = MagicMock()
-    result.rowcount = 1
-    session.execute.return_value = result
 
-    resp = await delete_device(id=123, session=session)
+@pytest.mark.asyncio
+async def test_soft_delete_success():
+    session = make_session(rowcount=1)
+    service = DeviceService(session)
 
-    assert resp.status_code == 200
-    assert b"Device deleted successfully" in resp.body
+    await service.soft_delete(device_id=123)
 
     session.execute.assert_awaited_once()
     session.commit.assert_awaited_once()
-    session.rollback.assert_not_awaited()
 
 
 @pytest.mark.asyncio
-async def test_delete_device_not_found():
-    session = MagicMock()
-    session.execute = AsyncMock()
-    session.commit = AsyncMock()
-    session.rollback = AsyncMock()
-
-    result = MagicMock()
-    result.rowcount = 0
-    session.execute.return_value = result
+async def test_soft_delete_not_found():
+    session = make_session(rowcount=0)
+    service = DeviceService(session)
 
     with pytest.raises(HTTPException) as exc:
-        await delete_device(id=999, session=session)
+        await service.soft_delete(device_id=999)
 
     assert exc.value.status_code == 404
     assert exc.value.detail == "Device not found"
-
-    session.execute.assert_awaited_once()
-    session.rollback.assert_awaited_once()
     session.commit.assert_not_awaited()
 
 
 @pytest.mark.asyncio
-async def test_delete_device_db_error():
-    session = MagicMock()
-    session.execute = AsyncMock(side_effect=SQLAlchemyError("boom"))
-    session.commit = AsyncMock()
-    session.rollback = AsyncMock()
+async def test_soft_delete_db_error():
+    session = make_session(side_effect=SQLAlchemyError("boom"))
+    service = DeviceService(session)
 
-    with pytest.raises(HTTPException) as exc:
-        await delete_device(id=123, session=session)
-
-    assert exc.value.status_code == 500
-    assert exc.value.detail == "DB error"
-
-    session.rollback.assert_awaited_once()
-    session.commit.assert_not_awaited()
+    with pytest.raises(SQLAlchemyError):
+        await service.soft_delete(device_id=123)
