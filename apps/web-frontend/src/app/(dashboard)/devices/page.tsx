@@ -9,7 +9,3 @@ export default function DevicesPage() {
     </div>
   );
 };
-
-// Jeśli powyższy kod już tam jest, a błąd nadal występuje,
-// możesz dodać poniższą linię na końcu pliku jako ostateczność.
-// export {};
