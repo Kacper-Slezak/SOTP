@@ -104,14 +104,22 @@ services:
 
   celery-worker:
     build:
-      context: ../../apps/core_backend
+      context: ../../apps/network_worker
       dockerfile: Dockerfile
     command: celery -A app.tasks.celery_app worker --loglevel=info
     volumes:
       - ../..:/workspace
     environment:
+      POSTGRES_HOST: postgres
+      POSTGRES_DB: ${POSTGRES_DB}
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+
       TIMESCALE_HOST: timescale
       TIMESCALE_PORT: "5432"
+      TIMESCALE_USER: ${TIMESCALE_USER}
+      TIMESCALE_PASSWORD: ${TIMESCALE_PASSWORD}
+      TIMESCALE_DB: ${TIMESCALE_DB}
     depends_on:
       redis:
         condition: service_healthy
@@ -122,7 +130,7 @@ services:
 
   celery-beat:
     build:
-      context: ../../apps/core_backend
+      context: ../../apps/network_worker
       dockerfile: Dockerfile
     command: celery -A app.tasks.celery_app beat --loglevel=info
     volumes:
