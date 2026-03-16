@@ -1,29 +1,67 @@
-from typing import Sequence
+from datetime import datetime, timezone
+from typing import Optional, Sequence
 
-# 2. Zaimportuj swój model Device (zakładam, że masz go np. tutaj)
-from app.db.postgres_session import get_postgres_session
 from app.models.device import Device
-from sqlalchemy.future import select
+from fastapi import HTTPException
+from pydantic import BaseModel
+from sqlalchemy import select, update
+from sqlalchemy.ext.asyncio import AsyncSession
 
-# 1. Importuj context manager dla sesji Postgres
 
+class DeviceService:
+    def __init__(self, session: AsyncSession):
+        self.session = session
 
-async def get_all_devices() -> Sequence[Device]:
+    async def get_all(self) -> Sequence[Device]:
+        query = select(Device).where(Device.deleted_at.is_(None)).order_by(Device.id)
+        result = await self.session.execute(query)
+        return result.scalars().all()
 
-    # 3. Użyj context managera, aby automatycznie zarządzać sesją
-    async with get_postgres_session() as db:
+    async def get_by_id(self, device_id: int) -> Device:
+        device = await self.session.get(Device, device_id)
+        if not device or device.deleted_at:
+            raise HTTPException(status_code=404, detail="Device not found")
+        return device
 
-        # 'db' to teraz aktywna sesja AsyncSession
+    async def create(self, data: dict) -> Device:
+        # Check for IP conflict
+        exists = await self.session.execute(
+            select(Device).where(Device.ip_address == data["ip_address"])
+        )
+        if exists.scalar_one_or_none():
+            raise HTTPException(status_code=409, detail="IP address already exists")
 
-        # 4. Zbuduj zapytanie SELECT * FROM devices
-        query = select(Device).order_by(Device.id)  # Sortowanie jest opcjonalne
+        device = Device(**data)
+        self.session.add(device)
+        await self.session.commit()
+        await self.session.refresh(device)
+        return device
 
-        # 5. Wykonaj zapytanie asynchronicznie
-        result = await db.execute(query)
+    async def update(self, device_id: int, data: dict) -> Device:
+        device = await self.get_by_id(device_id)
 
-        # 6. Pobierz obiekty i zwróć listę
-        # .scalars() pobiera same obiekty 'Device'
-        # .all() tworzy z nich listę
-        devices = result.scalars().all()
+        # Check IP conflict with other devices
+        conflict = await self.session.execute(
+            select(Device).where(
+                Device.ip_address == data["ip_address"], Device.id != device_id
+            )
+        )
+        if conflict.scalar_one_or_none():
+            raise HTTPException(status_code=409, detail="IP already in use")
 
-        return devices
+        for key, value in data.items():
+            setattr(device, key, value)
+
+        await self.session.commit()
+        return device
+
+    async def soft_delete(self, device_id: int):
+        stmt = (
+            update(Device)
+            .where(Device.id == device_id, Device.deleted_at.is_(None))
+            .values(deleted_at=datetime.now(timezone.utc))
+        )
+        result = await self.session.execute(stmt)
+        if result.rowcount == 0:
+            raise HTTPException(status_code=404, detail="Device not found")
+        await self.session.commit()

@@ -1,0 +1,32 @@
+# Core
+fastapi[all]>=0.109.1
+uvicorn[standard]==0.24.0
+sqlalchemy[asyncio]==2.0.23
+alembic==1.12.1
+
+# Database
+asyncpg==0.29.0
+psycopg2-binary==2.9.9
+redis==4.6.0
+
+# Monitoring & Security & Collectors & Tasks
+prometheus-client==0.19.0
+prometheus-fastapi-instrumentator==6.0.0
+python-json-logger==2.0.7
+python-jose[cryptography]>=3.4.0
+passlib[bcrypt]==1.7.4
+icmplib==3.0.4
+pysnmp==4.4.12
+netmiko==4.3.0
+celery[redis]==5.3.4
+hvac>=2.3.0
+
+# Development & Testing
+pytest==7.4.0
+pytest-cov==4.1.0
+pytest-asyncio==0.22.0
+
+httpx==0.24.1
+pre-commit==3.4.0
+black==24.4.0
+isort==5.12.0
