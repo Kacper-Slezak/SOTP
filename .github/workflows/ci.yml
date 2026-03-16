@@ -81,6 +81,13 @@ jobs:
           export PYTHONPATH=$(pwd)/apps/core_backend
           python -m pytest apps/core_backend/tests/ --cov=apps/core_backend/app --cov-report=xml --cov-report=term
           echo "exit_code=$?" >> $GITHUB_OUTPUT
+      - name: Run network_worker tests
+        id: pytest_worker
+        continue-on-error: true
+        run: |
+          export PYTHONPATH=$(pwd)/apps/network_worker/src
+          python -m pytest apps/network_worker/src/app/tests/ --cov-report=term
+          echo "exit_code=$?" >> $GITHUB_OUTPUT
 
       # --- FRONTEND TESTS ---
       - name: Set up Node.js
