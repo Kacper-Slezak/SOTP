@@ -88,11 +88,11 @@ jobs:
         with:
           node-version: '20'
           cache: 'npm'
-          cache-dependency-path: apps/web-frontend/package-lock.json
+          cache-dependency-path: apps/web_frontend/package-lock.json
       - name: Install frontend dependencies
-        run: npm ci --prefix apps/web-frontend
+        run: npm ci --prefix apps/web_frontend
       - name: Run frontend quality checks (Lint)
-        run: npm run lint --prefix apps/web-frontend
+        run: npm run lint --prefix apps/web_frontend
 
   build:
     name: Build Docker Images
@@ -118,8 +118,8 @@ jobs:
       - name: Build Web Frontend Image
         uses: docker/build-push-action@v5
         with:
-          context: ./apps/web-frontend
-          file: ./apps/web-frontend/Dockerfile
+          context: ./apps/web_frontend
+          file: ./apps/web_frontend/Dockerfile
           push: false
           tags: sotp-frontend:ci-${{ github.sha }}
 
@@ -127,8 +127,8 @@ jobs:
       - name: Build Network Worker Image
         uses: docker/build-push-action@v5
         with:
-          context: ./apps/network-worker
-          file: ./apps/network-worker/Dockerfile
+          context: ./apps/network_worker
+          file: ./apps/network_worker/Dockerfile
           push: false
           tags: sotp-worker:ci-${{ github.sha }}
 

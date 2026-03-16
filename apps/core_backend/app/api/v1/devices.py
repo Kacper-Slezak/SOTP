@@ -1,5 +1,5 @@
-# Assuming SessionPG is defined in your main or a deps file
-from app.main import DevicePut, SessionPG
+from app.main import SessionPG
+from app.schemas.devices import DevicePut
 from app.services.device_services import DeviceService
 from fastapi import APIRouter, Depends, Response
 
@@ -36,6 +36,8 @@ async def update_device(
 
 
 @router.delete("/{id}")
-async def delete_device(id: int, service: DeviceService = Depends(get_device_service)):
+async def soft_delete_device(
+    id: int, service: DeviceService = Depends(get_device_service)
+):
     await service.soft_delete(id)
-    return Response(status_code=200, content="Deleted")
+    return Response(status_code=200, content="Device deleted successfully")

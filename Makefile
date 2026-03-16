@@ -84,7 +84,7 @@ clean:
 # === Sekcja Development (Lokalnie z VENV) ===
 setup:
 	@echo "(Lokalnie) Instalowanie zależności backendu w venv..."
-	(cd apps/core-backend && python -m venv venv && . venv/bin/activate && pip install -r requirements.txt)
+	(cd apps/core_backend && python -m venv venv && . venv/bin/activate && pip install -r requirements.txt)
 	@echo "(Lokalnie) Instalowanie zależności frontendu z npm..."
-	(cd apps/web-frontend && npm install)
+	(cd apps/web_frontend && npm install)
 	@echo "Setup lokalny zakończony."

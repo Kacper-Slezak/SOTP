@@ -23,8 +23,8 @@
 |---|---|---|
 | Test importuje usunięty kod | `core_backend/tests/unit/test_soft_delete.py` importuje `delete_device` z `main.py` — ale tej funkcji już tam nie ma | Przepisać test żeby testował `DeviceService.soft_delete` |
 | Test importuje nieistniejący moduł | `core_backend/tests/unit/test_icmp_all.py` importuje `app.tasks.monitoring_tasks` — ale tasks są przeniesione do `network_worker` | Usunąć ten test z `core_backend`, jest duplikatem w `network_worker` |
-| CI wskazuje zły folder | `ci.yml` używa `apps/core_backend` (underscore), `docker-compose.dev.yml` używa `apps/core-backend` (hyphen) | Zdecyduj jedno nazewnictwo i zunifikuj wszędzie |
-| Celery w złym serwisie | `docker-compose.dev.yml` buduje `celery-worker` i `celery-beat` z kontekstu `core-backend` | Powinny być budowane z `network_worker` |
+| CI wskazuje zły folder | `ci.yml` używa `apps/core_backend` (underscore), `docker-compose.dev.yml` używa `apps/core_backend` (hyphen) | Zdecyduj jedno nazewnictwo i zunifikuj wszędzie |
+| Celery w złym serwisie | `docker-compose.dev.yml` buduje `celery-worker` i `celery-beat` z kontekstu `core_backend` | Powinny być budowane z `network_worker` |
 | `test_soft_delete.py` rozbity | Test oczekuje `delete_device` w `main.py` | Zaktualizować lub usunąć |
 
 ---
@@ -43,7 +43,7 @@ git checkout -b fix/broken-tests-and-ci
 
 - Przepisz `test_soft_delete.py` — niech testuje `DeviceService.soft_delete` (mocki na sesję)
 - Usuń `core_backend/tests/unit/test_icmp_all.py` — ten sam test jest w `network_worker`
-- Zunifikuj nazewnictwo: zdecyduj `core_backend` (underscore) lub `core-backend` (hyphen) i zmień wszędzie: `ci.yml`, `docker-compose.dev.yml`, `Makefile`
+- Zunifikuj nazewnictwo: zdecyduj `core_backend` (underscore) lub `core_backend` (hyphen) i zmień wszędzie: `ci.yml`, `docker-compose.dev.yml`, `Makefile`
 
 **Weryfikacja:** `make test` działa, CI jest zielone.
 
@@ -57,9 +57,9 @@ git checkout -b fix/celery-in-correct-service
 
 **Co zrobić:**
 
-- W `docker-compose.dev.yml`: zmień kontekst buildu `celery-worker` i `celery-beat` z `core-backend` na `network_worker`
+- W `docker-compose.dev.yml`: zmień kontekst buildu `celery-worker` i `celery-beat` z `core_backend` na `network_worker`
 - Dodaj brakujące zmienne środowiskowe do `celery-worker` (POSTGRES, TIMESCALE, REDIS)
-- Usuń `celery-worker` i `celery-beat` jeśli nadal są w kontekście `core-backend`
+- Usuń `celery-worker` i `celery-beat` jeśli nadal są w kontekście `core_backend`
 
 📖 [Docker Compose — build context](https://docs.docker.com/compose/compose-file/build/)
 
@@ -422,7 +422,7 @@ Zaktualizuj `Makefile` o: `make k3d-up`, `make k3d-down`, `make k3d-push`.
 git checkout -b build/75-helm-chart
 ```
 
-Stwórz `infrastructure/helm/sotp/` z szablonami dla: backend, frontend, network-worker, postgres (StatefulSet), timescaledb (StatefulSet), redis, vault, prometheus, loki, grafana, traefik ingress, migrations Job.
+Stwórz `infrastructure/helm/sotp/` z szablonami dla: backend, frontend, network_worker, postgres (StatefulSet), timescaledb (StatefulSet), redis, vault, prometheus, loki, grafana, traefik ingress, migrations Job.
 
 **Kluczowe:** Migracje Alembic jako K8s Job (`migrations-job.yaml`) — musi uruchomić się PRZED startem backendu (`initContainers` lub `helm hook: pre-install`).
 
