@@ -1,20 +1,10 @@
-from datetime import datetime, timezone
-from typing import Annotated, AsyncGenerator, Literal, Optional
+from typing import Annotated, Literal, Optional
 
-import anyio
-import app.models
-from app.models.device import Device
 from app.utils.databases import create_postgres, create_redis, create_timescaledb
 from fastapi import (
     Depends,
     FastAPI,
-    File,
-    Form,
-    HTTPException,
-    Query,
     Request,
-    Response,
-    UploadFile,
 )
 from fastapi.middleware.cors import CORSMiddleware
 from prometheus_fastapi_instrumentator import Instrumentator
@@ -67,20 +57,6 @@ origins = [
 ]
 
 
-class DevicePut(BaseModel):
-    name: str
-    ip_address: str
-    device_type: str
-    vendor: str
-    model: str
-    os_version: str
-    location: str
-    is_active: bool
-    snmp_config: Optional[str] = None
-    ssh_config: Optional[str] = None
-    api_config: Optional[str] = None
-
-
 app.add_middleware(
     CORSMiddleware,
     allow_origins=origins,
@@ -122,95 +98,3 @@ async def health():
 @app.get("/ping")
 async def ping():
     return {"ok": True}
-
-
-@app.get("/api/v1/devices")
-async def get_all_devices(session: SessionPG):  # type: ignore
-    devices = (
-        (await session.execute(select(Device).where(Device.deleted_at.is_(None))))
-        .scalars()
-        .all()
-    )
-    return [{"id": d.id, "name": d.name, "ip_address": d.ip_address} for d in devices]
-
-
-@app.get("/api/v1/devices/{id}")
-async def get_device(id: int, session: SessionPG):
-    device = await session.get(Device, id)
-    if not device:
-        raise HTTPException(status_code=404, detail="Device not found")
-    return {"id": device.id, "name": device.name, "ip_address": device.ip_address}
-
-
-@app.delete("/api/v1/devices/{id}")
-async def delete_device(id: int, session: SessionPG):
-    stmt = (
-        update(Device)
-        .where(Device.id == id, Device.deleted_at.is_(None))
-        .values(deleted_at=datetime.now(timezone.utc))
-    )
-
-    try:
-        result = await session.execute(stmt)
-
-        if result.rowcount == 0:
-            await session.rollback()
-            raise HTTPException(status_code=404, detail="Device not found")
-
-        await session.commit()
-        return Response(status_code=200, content="Device deleted successfully")
-
-    except SQLAlchemyError:
-        await session.rollback()
-        raise HTTPException(status_code=500, detail="DB error")
-
-    # Hard delete part
-    # await session.delete(device)
-    # await session.commit()
-
-    return Response(status_code=200, content="Device deleted successfully")
-
-
-@app.post("/api/v1/devices")
-async def add_device(payload: DevicePut, session: SessionPG):
-
-    exists_q = await session.execute(
-        select(Device).where(Device.ip_address == payload.ip_address)
-    )
-    if exists_q.scalar_one_or_none():
-        raise HTTPException(
-            status_code=409, detail="device with this ip_address already exists"
-        )
-
-    device = Device(**payload.model_dump())
-
-    session.add(device)
-    await session.commit()
-    await session.refresh(device)
-
-    return {"id": device.id, "name": device.name}
-
-
-@app.put("/api/v1/devices/{id}")
-async def edit_device(id: int, payload: DevicePut, session: SessionPG):
-    device = await session.get(Device, id)
-    if not device:
-        raise HTTPException(404, "Device not found")
-
-    exists_q = await session.execute(
-        select(Device.id).where(
-            Device.ip_address == payload.ip_address, Device.id != id
-        )
-    )
-    if exists_q.scalar_one_or_none():
-        raise HTTPException(
-            status_code=409, detail="device with this ip_address already exists"
-        )
-
-    for field, value in payload.model_dump().items():
-        setattr(device, field, value)
-
-    await session.commit()
-    await session.refresh(device)
-
-    return {"id": device.id, "name": device.name}
