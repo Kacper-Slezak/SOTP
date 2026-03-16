@@ -1,5 +1,5 @@
-# Assuming SessionPG is defined in your main or a deps file
-from app.main import DevicePut, SessionPG
+from app.main import SessionPG
+from app.schemas.devices import DevicePut
 from app.services.device_services import DeviceService
 from fastapi import APIRouter, Depends, Response
 

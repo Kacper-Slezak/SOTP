@@ -1,9 +1,8 @@
 from datetime import datetime, timezone
-from typing import Optional, Sequence
+from typing import Sequence
 
 from app.models.device import Device
 from fastapi import HTTPException
-from pydantic import BaseModel
 from sqlalchemy import select, update
 from sqlalchemy.ext.asyncio import AsyncSession
 
