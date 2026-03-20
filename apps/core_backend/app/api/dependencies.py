@@ -11,8 +11,7 @@ async def get_current_user(session: SessionPG, token: str = Depends(oauth2_schem
     try:
         payload = decode_access_token(token)
         user_id: str = payload.get("sub")
-        token_data = decode_access_token(token)
-        if token_data.get("type") != "access":
+        if payload.get("type") != "access":
             raise HTTPException(status_code=401, detail="Invalid token type")
         if user_id is None:
             raise HTTPException(

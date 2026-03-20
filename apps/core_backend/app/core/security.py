@@ -1,4 +1,4 @@
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 
 import jose
 import passlib.hash
@@ -21,9 +21,7 @@ def verify_password(password: str, hashed_password: str) -> bool:
 
 
 def create_access_token(data: dict) -> str:
-    exp = datetime.now(datetime.timezone.utc) + timedelta(
-        minutes=ACCESS_TOKEN_EXPIRE_MINUTES
-    )
+    exp = datetime.now(timezone.utc) + timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES)
     payload = data.copy()
     payload.update({"exp": exp, "type": "access"})
 
