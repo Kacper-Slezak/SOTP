@@ -1,5 +1,8 @@
+from app.api.dependencies import get_current_user
+from app.api.v1.auth import router as auth_router
+from app.api.v1.devices import router as devices_router
 from app.utils.databases import create_postgres, create_redis, create_timescaledb
-from fastapi import FastAPI
+from fastapi import Depends, FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from prometheus_fastapi_instrumentator import Instrumentator
 from sqlalchemy import text
@@ -45,6 +48,9 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+app.include_router(auth_router)
+app.include_router(devices_router, dependencies=[Depends(get_current_user)])
 
 
 # Check databases
