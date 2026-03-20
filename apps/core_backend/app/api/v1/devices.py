@@ -1,4 +1,4 @@
-from app.main import SessionPG
+from app.db.deps import SessionPG
 from app.schemas.devices import DevicePut
 from app.services.device_services import DeviceService
 from fastapi import APIRouter, Depends, Response
