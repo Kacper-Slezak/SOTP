@@ -11,17 +11,19 @@ Before proceeding with the deployment, ensure the server meets the following req
 * **RAM:** 4GB+
 * **Storage:** 20GB+ of free space.
 * **Software:**
-    * **Docker Engine:** Latest stable version.
-    * **Docker Compose:** Latest stable version.
-    * **Git:** For cloning the repository.
-    * **Make:** For using helper commands.
+  * **Docker Engine:** Latest stable version.
+  * **Docker Compose:** Latest stable version.
+  * **Git:** For cloning the repository.
+  * **Make:** For using helper commands.
 
 ## 2. Initial Setup
 
 These steps should be performed only once when setting up a new production server.
 
 ### 2.1. Clone the Repository
+
 Clone the project repository to the server:
+
 ```bash
 git clone [URL_DO_REPOZYTORIUM]
 cd sotp
@@ -48,14 +50,14 @@ docker swarm init
 
 ## 3\. First-Time Deployment
 
-1.  **Pull the latest changes** from the `main` branch (or the specific release tag):
+1. **Pull the latest changes** from the `main` branch (or the specific release tag):
 
     ```bash
     git pull
     git checkout v1.0.0 # Example release tag
     ```
 
-2.  **Build the production images:**
+2. **Build the production images:**
     This command will build all necessary Docker images based on the production configuration.
 
     ```bash
@@ -64,7 +66,7 @@ docker swarm init
 
     *(This runs `docker-compose -f infrastructure/docker/docker-compose.prod.yml build`)*
 
-3.  **Run the application stack:**
+3. **Run the application stack:**
     This command will start all services in detached mode.
 
     ```bash
@@ -73,7 +75,7 @@ docker swarm init
 
     *(This runs `docker-compose -f infrastructure/docker/docker-compose.prod.yml up -d`)*
 
-4.  **Verify the deployment:**
+4. **Verify the deployment:**
     Check the status of all running containers. All services should be in a `healthy` or `running` state.
 
     ```bash
@@ -90,21 +92,21 @@ docker swarm init
 
 The deployment process is designed for zero-downtime updates.
 
-1.  **Pull the latest version:**
+1. **Pull the latest version:**
 
     ```bash
     git pull
     git checkout v1.1.0 # Pull the new release tag
     ```
 
-2.  **Re-deploy the stack:**
+2. **Re-deploy the stack:**
     Docker Compose is smart enough to only rebuild and restart the services that have changed.
 
     ```bash
     make deploy
     ```
 
-3.  **Clean up old images (Optional):**
+3. **Clean up old images (Optional):**
     To free up disk space, you can periodically remove old, unused Docker images.
 
     ```bash

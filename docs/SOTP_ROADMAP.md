@@ -1,234 +1,209 @@
-# SOTP — Roadmapa Projektu v2.0
+# SOTP — Roadmapa Projektu v3.0
 >
-> **Cel:** Zbudowanie portfolio-ready platformy monitoringu infrastruktury sieciowej — solo.
-> **Kontekst:** SRE intern, projekt do CV, K8s jest częścią tego projektu (nie inżynierki).
-> **Zasada:** Każdy krok = osobna branch + PR. Docker Compose do Fazy 4, K8s od Fazy 5.
+> **Cel:** Portfolio-ready platforma monitoringu infrastruktury sieciowej — solo.
+> **Kontekst:** SRE intern, projekt do CV, K8s jest częścią tego projektu.
+> **Zasada:** Każdy krok = osobna branch + PR. Każdy krok ma issue na GitHubie.
 
 ---
 
-## Stan Obecny (po refactorze — marzec 2026)
+## Stan Obecny ✅ (marzec 2026)
 
-### ✅ Co działa poprawnie
+Wszystkie zadania cleanup/stabilizacji zakończone:
 
-- `apps/core_backend/` — czysty `main.py`, `DeviceService` istnieje i jest używany przez router
-- `apps/network_worker/` — `celery_app.py` ma naprawiony bug z duplikatem `include=`
-- CI/CD — `ci.yml` z quality + security + test + build + Discord notifications
-- Docker Compose — Prometheus, Grafana, Vault, Redis, TimescaleDB, PostgreSQL
-- Modele SQLAlchemy — Device, User, PingResult, DeviceMetric, Alert, AuditLog
-- Alembic — dual-database migrations (postgres + timescale branches)
-
-### ❌ Co jest nadal zepsute (napraw PRZED kolejnymi fazami)
-
-| Problem | Plik | Co zrobić |
-|---|---|---|
-| Test importuje usunięty kod | `core_backend/tests/unit/test_soft_delete.py` importuje `delete_device` z `main.py` — ale tej funkcji już tam nie ma | Przepisać test żeby testował `DeviceService.soft_delete` |
-| Test importuje nieistniejący moduł | `core_backend/tests/unit/test_icmp_all.py` importuje `app.tasks.monitoring_tasks` — ale tasks są przeniesione do `network_worker` | Usunąć ten test z `core_backend`, jest duplikatem w `network_worker` |
-| CI wskazuje zły folder | `ci.yml` używa `apps/core_backend` (underscore), `docker-compose.dev.yml` używa `apps/core_backend` (hyphen) | Zdecyduj jedno nazewnictwo i zunifikuj wszędzie |
-| Celery w złym serwisie | `docker-compose.dev.yml` buduje `celery-worker` i `celery-beat` z kontekstu `core_backend` | Powinny być budowane z `network_worker` |
-| `test_soft_delete.py` rozbity | Test oczekuje `delete_device` w `main.py` | Zaktualizować lub usunąć |
-
----
-
-## FAZA 0 — Cleanup & Stabilizacja *(TERAZ)*
->
-> **Cel:** `make dev` startuje bez błędów. CI jest zielone. Wszystko spójne.
-
-### Krok 0.1 — Napraw testy i CI
-
-```bash
-git checkout -b fix/broken-tests-and-ci
-```
-
-**Co zrobić:**
-
-- Przepisz `test_soft_delete.py` — niech testuje `DeviceService.soft_delete` (mocki na sesję)
-- Usuń `core_backend/tests/unit/test_icmp_all.py` — ten sam test jest w `network_worker`
-- Zunifikuj nazewnictwo: zdecyduj `core_backend` (underscore) lub `core_backend` (hyphen) i zmień wszędzie: `ci.yml`, `docker-compose.dev.yml`, `Makefile`
-
-**Weryfikacja:** `make test` działa, CI jest zielone.
-
-📖 [pytest — dokumentacja](https://docs.pytest.org/en/stable/)
-
-### Krok 0.2 — Przenieś Celery do network_worker w docker-compose
-
-```bash
-git checkout -b fix/celery-in-correct-service
-```
-
-**Co zrobić:**
-
-- W `docker-compose.dev.yml`: zmień kontekst buildu `celery-worker` i `celery-beat` z `core_backend` na `network_worker`
-- Dodaj brakujące zmienne środowiskowe do `celery-worker` (POSTGRES, TIMESCALE, REDIS)
-- Usuń `celery-worker` i `celery-beat` jeśli nadal są w kontekście `core_backend`
-
-📖 [Docker Compose — build context](https://docs.docker.com/compose/compose-file/build/)
-
-### Krok 0.3 — Napraw Pydantic schemas w core_backend
-
-```bash
-git checkout -b fix/pydantic-schemas
-```
-
-Zauważ że `apps/core_backend/app/schemas/user.py` jest pusty. `DevicePut` jest zdefiniowany bezpośrednio w `main.py` — przenieś go do `schemas/device.py`.
-
-**Weryfikacja końcowa Fazy 0:** `make dev` → backend healthy, Celery worker startuje z `network_worker`, CI zielone.
+- `apps/core_backend/` — czysty `main.py`, `DeviceService` używany przez router, `DevicePut` w `schemas/devices.py`
+- `apps/network_worker/` — izolowany serwis Celery, naprawiony bug `include=`, `celery-worker`/`celery-beat` zbudowane z `network_worker`
+- CI/CD — `ci.yml` z quality + security + test + build + Discord notifications, wszystkie ścieżki spójne (`apps/core_backend`, `apps/web_frontend`, `apps/network_worker`)
+- Docker Compose — Prometheus, Grafana, Vault, Redis, TimescaleDB, PostgreSQL, `celery-worker` i `celery-beat` z poprawnym working_dir
+- Testy — `test_soft_delete.py` przepisany na `DeviceService`, `test_icmp_all.py` usunięty z `core_backend`
 
 ---
 
 ## FAZA 1 — Backend: Auth & Security
->
+
 > **Cel:** Żaden endpoint nie jest publiczny. JWT + RBAC działające end-to-end.
 
 ### Krok 1.1 — JWT Authentication
+
+**Issue:** [#47](../../issues/47)
 
 ```bash
 git checkout -b feat/47-jwt-authentication
 ```
 
-**Co zaimplementować** (w `apps/core_backend/`):
+Co zaimplementować w `apps/core_backend/`:
 
-- `app/core/security.py` — funkcje `create_access_token`, `create_refresh_token`, `decode_token` (biblioteka `python-jose`)
-- `app/api/v1/auth.py` — endpointy: `POST /api/v1/auth/register`, `/login`, `/refresh`
+- `app/core/security.py` — `create_access_token`, `create_refresh_token`, `decode_token` (`python-jose`)
+- `app/api/v1/auth.py` — `POST /api/v1/auth/register`, `/login`, `/refresh`
 - `app/api/dependencies.py` — dependency `get_current_user` sprawdzająca Bearer token
-- `app/schemas/auth.py` — Pydantic schemas: `TokenResponse`, `LoginRequest`, `RegisterRequest`
-- Hasła hashowane przez `passlib[bcrypt]`
-- Zabezpiecz endpointy `/api/v1/devices` (dodaj `Depends(get_current_user)`)
+- `app/schemas/auth.py` — `TokenResponse`, `LoginRequest`, `RegisterRequest`
+- Hasła przez `passlib[bcrypt]`
+- Zabezpiecz `/api/v1/devices` przez `Depends(get_current_user)`
 
-**Zmienne środowiskowe** (dodaj do `.env.example`): `SECRET_KEY`, `ALGORITHM=HS256`, `ACCESS_TOKEN_EXPIRE_MINUTES=15`, `REFRESH_TOKEN_EXPIRE_DAYS=7`
-
-📖 [FastAPI — OAuth2 with JWT](https://fastapi.tiangolo.com/tutorial/security/oauth2-jwt/)
-📖 [python-jose docs](https://python-jose.readthedocs.io/en/latest/)
-📖 [Video: FastAPI Auth (ArjanCodes)](https://www.youtube.com/watch?v=5GxQ1rLTwaU)
+📖 [FastAPI — OAuth2 with JWT](https://fastapi.tiangolo.com/tutorial/security/oauth2-jwt/) | [python-jose](https://python-jose.readthedocs.io/en/latest/) | [Video (ArjanCodes)](https://www.youtube.com/watch?v=5GxQ1rLTwaU)
 
 ### Krok 1.2 — RBAC
+
+**Issue:** [#48](../../issues/48)
 
 ```bash
 git checkout -b feat/48-rbac
 ```
 
-**Co zaimplementować:**
-
 - `app/api/dependencies.py` — dependency `require_role(allowed_roles: list[UserRole])`
-- Zabezpiecz endpointy według schematu:
-  - `GET /devices` → ADMIN, OPERATOR, READONLY
-  - `POST /devices` → ADMIN
-  - `PUT /devices/{id}` → ADMIN, OPERATOR
-  - `DELETE /devices/{id}` → ADMIN
-- Endpoint `GET /api/v1/users/me` — zwraca aktualnego usera z rolą
+- `GET /devices` → ADMIN, OPERATOR, READONLY
+- `POST /devices` → ADMIN
+- `PUT /devices/{id}` → ADMIN, OPERATOR
+- `DELETE /devices/{id}` → ADMIN
+- `GET /api/v1/users/me` — zwraca aktualnego usera z rolą
 
 📖 [FastAPI — Dependencies in depth](https://fastapi.tiangolo.com/tutorial/dependencies/)
 
 ### Krok 1.3 — Testy Auth
 
+**Issue:** [#53](../../issues/53)
+
 ```bash
 git checkout -b test/53-auth-integration-tests
 ```
 
-Napisz testy dla: rejestracji, logowania, odświeżania tokena, dostępu bez tokena (401), dostępu z niewystarczającą rolą (403).
+Testy: rejestracja, logowanie, odświeżanie tokena, 401 bez tokena, 403 za mała rola.
 
-📖 [FastAPI Testing z httpx](https://fastapi.tiangolo.com/tutorial/testing/)
-📖 [pytest-asyncio](https://pytest-asyncio.readthedocs.io/en/latest/)
+📖 [FastAPI Testing](https://fastapi.tiangolo.com/tutorial/testing/) | [pytest-asyncio](https://pytest-asyncio.readthedocs.io/en/latest/)
+
+### Krok 1.4 — Testy CRUD API
+
+**Issue:** [#17](../../issues/17)
+
+```bash
+git checkout -b test/17-device-crud-tests
+```
+
+- Unit testy `DeviceService.create`, `get_by_id`, `get_all`, `update` — mock `AsyncSession`
+- API testy przez `httpx.AsyncClient` dla każdego endpointu
+- Pokrycie > 80%
+
+### Krok 1.5 — Pagination, Sorting, Filtering
+
+**Issue:** [#44](../../issues/44)
+
+```bash
+git checkout -b feat/44-device-list-pagination
+```
+
+- `DeviceService.get_all()` przyjmuje `limit`, `offset`, `sort_by`, `sort_order`, `is_active`, `device_type`, `vendor`
+- Response: `{ "items": [...], "total_count": ..., "limit": ..., "offset": ... }`
 
 ---
 
 ## FAZA 2 — Backend: Vault Integration
->
+
 > **Cel:** Credentials urządzeń (SNMP/SSH) w Vault, nie w bazie plain-text.
 
 ### Krok 2.1 — VaultService
+
+**Issue:** [#49](../../issues/49)
 
 ```bash
 git checkout -b feat/49-vault-service
 ```
 
-**Co zaimplementować** (w `apps/core_backend/`):
+- `app/services/vault_service.py` — `VaultService` z `set_device_credentials` i `get_device_credentials`
+- Modyfikacja `POST /devices` i `PUT /devices` — przyjmują opcjonalne `snmp_community`, `ssh_password`, zapisują przez Vault
+- Vault dev mode już działa w docker-compose
 
-- `app/services/vault_service.py` — klasa `VaultService` z metodami:
-  - `set_device_credentials(device_id, credential_type, data: dict)` — zapisuje do `secret/data/devices/{id}/{type}`, tworzy rekord `Credential` w Postgres
-  - `get_device_credentials(device_id, credential_type) -> dict` — pobiera z Vault po `vault_path` z tabeli `Credential`
-- Modyfikacja `POST /devices` i `PUT /devices` — przyjmują opcjonalne pola `snmp_community`, `ssh_password`, zapisują przez `VaultService`
-- Obsługa błędów: Vault niedostępny, ścieżka nie istnieje
-
-**Konfiguracja Vault dev mode** jest już w `docker-compose.dev.yml` — token jest `VAULT_TOKEN` z `.env`.
-
-📖 [hvac — Python Vault client](https://hvac.readthedocs.io/en/stable/)
-📖 [Vault KV v2 API](https://developer.hashicorp.com/vault/docs/secrets/kv/kv-v2)
-📖 [Video: HashiCorp Vault basics (TechWorld with Nana)](https://www.youtube.com/watch?v=ci_0TrDN8C0)
+📖 [hvac — Python Vault client](https://hvac.readthedocs.io/en/stable/) | [Vault KV v2](https://developer.hashicorp.com/vault/docs/secrets/kv/kv-v2) | [Video (TechWorld with Nana)](https://www.youtube.com/watch?v=ci_0TrDN8C0)
 
 ---
 
 ## FAZA 3 — Network Worker: Dopracowanie Kolektorów
->
+
 > **Cel:** `network_worker` jest kompletnym, izolowanym serwisem. ICMP + SNMP + SSH działają.
 
 ### Krok 3.1 — Dopracuj ICMP Collector
+
+**Issue:** brak — stwórz przez `gh issue create` z tytułem `[FIX] ICMP device_id not propagated to PingResult`
 
 ```bash
 git checkout -b fix/icmp-device-id-propagation
 ```
 
-**Co naprawić** w `apps/network_worker/src/app/tasks/monitoring_tasks.py`:
-
-- `device_icmp` nie przekazuje `device_id` do `insert_ping_result` — napraw to
-- `_async_insert_ping_result` nie ustawia `device_id` w obiekcie `PingResult` — napraw
-- Dodaj `tenacity` retry logic (3 próby, exponential backoff) dla timeoutów sieci
+- `device_icmp` nie przekazuje `device_id` do `insert_ping_result` — napraw
+- `_async_insert_ping_result` nie ustawia `device_id` w `PingResult` — napraw
+- Dodaj `tenacity` retry logic (3 próby, exponential backoff)
 
 📖 [tenacity — retry library](https://tenacity.readthedocs.io/en/latest/)
 
 ### Krok 3.2 — SNMP Collector: CPU/RAM
 
+**Issue:** [#54](../../issues/54)
+
 ```bash
 git checkout -b feat/54-snmp-cpu-ram
 ```
 
-Rozszerz `apps/network_worker/src/app/tasks/snmp_collector.py`:
+- Pobieranie credentials z Vault zamiast hardcoded `Config`
+- OIDy: CPU `1.3.6.1.4.1.2021.11.11.0`, RAM total `1.3.6.1.4.1.2021.4.5.0`, available `1.3.6.1.4.1.2021.4.6.0`
 
-- Pobieranie przez Vault (`VaultService`) credentials zamiast hardcoded config z `Config`
-- OIDy dla CPU: `1.3.6.1.4.1.2021.11.11.0`, RAM total: `1.3.6.1.4.1.2021.4.5.0`, available: `1.3.6.1.4.1.2021.4.6.0`
-- Poprawne zapisywanie do TimescaleDB przez `save_metrics()`
-
-📖 [pysnmp — async hlapi](https://pysnmp.readthedocs.io/en/latest/)
-📖 [SNMP OID reference](https://www.oid-info.com/)
+📖 [pysnmp](https://pysnmp.readthedocs.io/en/latest/) | [SNMP OID reference](https://www.oid-info.com/)
 
 ### Krok 3.3 — SSH Executor
+
+**Issue:** [#55](../../issues/55)
 
 ```bash
 git checkout -b feat/55-ssh-executor
 ```
 
-Stwórz `apps/network_worker/src/app/tasks/ssh_tasks.py`:
+- `apps/network_worker/src/app/tasks/ssh_tasks.py`
+- Celery task `execute_ssh_command(device_id, command)` — `netmiko`
+- Whitelist dozwolonych komend
+- Credentials z Vault
 
-- Celery task `execute_ssh_command(device_id, command)` — używa `netmiko`
-- Whitelist dozwolonych komend (konfigurowana przez env var lub plik YAML)
-- Pobieranie credentials z Vault
-- Zwraca raw output — parsowanie przez TextFSM opcjonalne
+📖 [netmiko](https://github.com/ktbyers/netmiko) | [ntc-templates](https://github.com/networktocode/ntc-templates)
 
-📖 [netmiko — Getting Started](https://github.com/ktbyers/netmiko)
-📖 [TextFSM templates (ntc-templates)](https://github.com/networktocode/ntc-templates)
+### Krok 3.4 — Testy kolektorów
+
+**Issue:** [#59](../../issues/59)
+
+```bash
+git checkout -b test/59-snmp-ssh-integration-tests
+```
+
+- Testy SNMP z `snmpsim` lub mockami
+- Testy SSH z mock serverem
+- Muszą działać w CI
 
 ---
 
-## FAZA 4 — Observability Stack (Docker Compose)
->
-> **Cel:** Pełny stos PLT (Prometheus + Loki + Tempo) działający lokalnie.
-> **Dlaczego ważne dla SRE:** To jest serce tej roli.
+## FAZA 4 — Observability Stack
+
+> **Cel:** Pełny stos PLT (Prometheus + Loki + Tempo) lokalnie.
 
 ### Krok 4.1 — Prometheus: metryki FastAPI
 
+**Issue:** [#63](../../issues/63)
+
 ```bash
-git checkout -b feat/63-prometheus-fastapi-metrics
+git checkout -b fix/63-prometheus-target
 ```
 
-`prometheus-fastapi-instrumentator` już masz w `requirements.txt`. Wystarczy:
+`Instrumentator().instrument(app).expose(app)` jest już w `main.py` ✅
 
-- W `main.py`: `Instrumentator().instrument(app).expose(app)` — **masz to już zrobione!**
-- Zaktualizuj `infrastructure/prometheus/prometheus.yml` — zmień target z `localhost:9090` na `backend:8000`
-- Zweryfikuj w Grafanie: `http://localhost:9090/targets` powinien pokazywać `backend` jako UP
+Tylko napraw `infrastructure/prometheus/prometheus.yml`:
 
-📖 [prometheus-fastapi-instrumentator](https://github.com/trallnag/prometheus-fastapi-instrumentator)
-📖 [PromQL Tutorial (promlabs)](https://promlabs.com/promql-tutorial/)
+```yaml
+- job_name: 'backend'
+  static_configs:
+    - targets: ['backend:8000']
+```
+
+Weryfikacja: `http://localhost:9090/targets` → `backend:8000` UP.
+
+📖 [prometheus-fastapi-instrumentator](https://github.com/trallnag/prometheus-fastapi-instrumentator) | [PromQL Tutorial](https://promlabs.com/promql-tutorial/)
 
 ### Krok 4.2 — Loki + Promtail
+
+**Issue:** [#72](../../issues/72)
 
 ```bash
 git checkout -b feat/72-loki-promtail
@@ -236,382 +211,365 @@ git checkout -b feat/72-loki-promtail
 
 Dodaj do `docker-compose.dev.yml`:
 
-```yaml
-loki:
-  image: grafana/loki:latest
-  ports: ["3100:3100"]
+- Serwis `loki` (`grafana/loki:latest`, port 3100)
+- Serwis `promtail` — Docker socket, zbiera logi ze wszystkich kontenerów
+- Datasource Loki w Grafanie
 
-promtail:
-  image: grafana/promtail:latest
-  volumes:
-    - /var/run/docker.sock:/var/run/docker.sock
-    - ./promtail-config.yml:/etc/promtail/config.yml
-```
+📖 [Loki Docker Compose](https://grafana.com/docs/loki/latest/setup/install/docker/) | [Video (TechWorld with Nana)](https://www.youtube.com/watch?v=h_GGd7HfKQ8)
 
-Stwórz `infrastructure/promtail/promtail-config.yml` — Docker target zbierający logi ze wszystkich kontenerów.
-Zaktualizuj `infrastructure/grafana/datasources/datasource.yml` — dodaj Loki.
+### Krok 4.3 — Grafana Tempo + OpenTelemetry
 
-📖 [Loki — Docker Compose quickstart](https://grafana.com/docs/loki/latest/setup/install/docker/)
-📖 [Promtail — Docker driver config](https://grafana.com/docs/loki/latest/send-data/promtail/configuration/)
-📖 [Video: Loki + Promtail (TechWorld with Nana)](https://www.youtube.com/watch?v=h_GGd7HfKQ8)
-
-### Krok 4.3 — Grafana Tempo (Distributed Tracing)
+**Issues:** [#73](../../issues/73) + [#74](../../issues/74)
 
 ```bash
 git checkout -b feat/73-74-tempo-opentelemetry
 ```
 
-**Infrastruktura:** Dodaj `tempo` service do `docker-compose.dev.yml`, zaktualizuj datasources Grafany.
+**Infrastruktura:** `tempo` service w docker-compose, datasource w Grafanie.
 
 **Instrumentacja backendu:**
 
-- Dodaj do `requirements.txt`: `opentelemetry-distro`, `opentelemetry-exporter-otlp`, `opentelemetry-instrumentation-fastapi`, `opentelemetry-instrumentation-sqlalchemy`
-- Stwórz `app/core/observability.py` — inicjalizuje SDK z OTLP exporter do Tempo
-- Wywołaj w `main.py` przy starcie aplikacji
+- `requirements.txt`: `opentelemetry-distro`, `opentelemetry-exporter-otlp`, `opentelemetry-instrumentation-fastapi`, `opentelemetry-instrumentation-sqlalchemy`
+- `app/core/observability.py` — inicjalizuje OTLP exporter do Tempo
+- Wywołaj przy starcie w `main.py`
 
-**Cel:** Po wywołaniu API możesz w Grafanie zobaczyć pełny trace: HTTP request → SQLAlchemy query → czas odpowiedzi.
-
-📖 [OpenTelemetry Python — Getting Started](https://opentelemetry.io/docs/languages/python/getting-started/)
-📖 [Grafana Tempo — Docker Compose setup](https://grafana.com/docs/tempo/latest/getting-started/)
-📖 [Video: OpenTelemetry explained (ByteByteGo)](https://www.youtube.com/watch?v=LAgI8vHKeeg)
+📖 [OpenTelemetry Python](https://opentelemetry.io/docs/languages/python/getting-started/) | [Grafana Tempo](https://grafana.com/docs/tempo/latest/getting-started/) | [Video (ByteByteGo)](https://www.youtube.com/watch?v=LAgI8vHKeeg)
 
 ### Krok 4.4 — Grafana Dashboards jako kod
 
+**Issue:** brak — stwórz przez `gh issue create` z tytułem `[INFRA] Grafana dashboards as provisioned JSON`
+
 ```bash
-git checkout -b feat/58-grafana-dashboards-as-code
+git checkout -b feat/grafana-dashboards-as-code
 ```
 
-Stwórz jako provisioned JSON (nie ręcznie w UI):
+- `network-overview.json` — devices up/down, avg RTT, % reachable
+- `device-details.json` — template variable `$device`, RTT, CPU, RAM
 
-- `network-overview.json` — Stat: devices up/down, Gauge: % reachable, Time series: avg RTT
-- `device-details.json` — z template variable `$device`, wykresy: RTT, packet loss, CPU, RAM
+📖 [Grafana Dashboard JSON](https://grafana.com/docs/grafana/latest/dashboards/build-dashboards/view-dashboard-json-model/) | [Grafana Provisioning](https://grafana.com/docs/grafana/latest/administration/provisioning/#dashboards)
 
-📖 [Grafana — Dashboard JSON model](https://grafana.com/docs/grafana/latest/dashboards/build-dashboards/view-dashboard-json-model/)
-📖 [Grafana — Provisioning dashboards](https://grafana.com/docs/grafana/latest/administration/provisioning/#dashboards)
+### Krok 4.5 — Traefik Reverse Proxy
 
-### Krok 4.5 — Traefik jako Reverse Proxy
+**Issue:** [#82](../../issues/82)
 
 ```bash
 git checkout -b feat/82-traefik-reverse-proxy
 ```
 
-Dodaj `traefik` service do `docker-compose.dev.yml`. Cel:
+- `sotp.localhost/` → Frontend
+- `sotp.localhost/api` → Backend
+- Rozwiązuje CORS
 
-- `sotp.localhost/` → Frontend (port 3000)
-- `sotp.localhost/api` → Backend (port 8000)
-- `sotp.localhost/dashboard` → Traefik Dashboard
-- Rozwiązuje CORS issues
-
-📖 [Traefik — Docker Provider](https://doc.traefik.io/traefik/providers/docker/)
-📖 [Video: Traefik + Docker Compose (TechWorld with Nana)](https://www.youtube.com/watch?v=C6IL8tjwC5E)
+📖 [Traefik Docker Provider](https://doc.traefik.io/traefik/providers/docker/) | [Video (TechWorld with Nana)](https://www.youtube.com/watch?v=C6IL8tjwC5E)
 
 ---
 
 ## FAZA 5 — Frontend: Minimum Viable UI
->
-> **Cel:** Projekt nie może wyglądać jak backend-only. Podstawowe strony działające z prawdziwym API.
-> **Strategia:** Opisz co chcesz — Claude generuje komponenty.
+
+> **Cel:** Projekt nie wygląda jak backend-only. Opisz Claudowi co chcesz — dostaniesz komponent.
 
 ### Krok 5.1 — Devices Table podłączona do API
+
+**Issue:** [#15](../../issues/15)
 
 ```bash
 git checkout -b feat/15-devices-table-api
 ```
 
-`apps/web_frontend/src/app/(dashboard)/devices/page.tsx` — odkomentuj i podłącz:
-
 - React Query `useQuery` → `GET /api/v1/devices`
-- Tabela: Nazwa, IP, Typ, Status (zielona/czerwona kropka), Akcje (Edytuj / Usuń)
-- Loading skeleton, error state z komunikatem
-- Przycisk "Dodaj urządzenie" → nawiguje do `/devices/new`
+- Tabela: Nazwa, IP, Typ, Status (zielona/czerwona kropka), Akcje
+- Loading skeleton, error state
+- Przycisk "Dodaj urządzenie" → `/devices/new`
 
-### Krok 5.2 — Strony Auth
+### Krok 5.2 — Form dodawania/edycji urządzenia
+
+**Issue:** [#16](../../issues/16)
+
+```bash
+git checkout -b feat/16-device-form
+```
+
+- Formularz z walidacją (IP format)
+- `POST` / `PUT /api/v1/devices`
+- Toast notifications sukces/błąd
+- Po dodaniu — odświeżenie listy
+
+### Krok 5.3 — Strony Auth
+
+**Issue:** [#51](../../issues/51)
 
 ```bash
 git checkout -b feat/51-auth-pages
 ```
 
-- `/login` — formularz email + hasło, `POST /api/v1/auth/login`, zapis tokenów do Zustand store
-- Zustand store z persist middleware (`localStorage`) — `accessToken`, `refreshToken`, `user`
+- `/login` — email + hasło, `POST /api/v1/auth/login`
+- Zustand store z persist middleware — `accessToken`, `refreshToken`, `user`
 - Redirect po zalogowaniu → `/devices`
 
-### Krok 5.3 — Route Protection
+### Krok 5.4 — Route Protection
+
+**Issue:** [#52](../../issues/52)
 
 ```bash
 git checkout -b feat/52-route-protection
 ```
 
 - Next.js Middleware lub `AuthGuard` w `(dashboard)/layout.tsx`
-- Niezalogowany user → redirect do `/login`
-- Axios interceptor: jeśli 401 → wywołaj `/auth/refresh` → retry
+- Niezalogowany → `/login`
+- Axios interceptor: 401 → refresh → retry
 
-📖 [TanStack Query — Getting Started](https://tanstack.com/query/latest/docs/framework/react/overview)
-📖 [Zustand — persist middleware](https://zustand.docs.pmnd.rs/integrations/persisting-store-data)
-📖 [Next.js Middleware](https://nextjs.org/docs/app/building-your-application/routing/middleware)
+### Krok 5.5 — Metrics Tab na stronie urządzenia
+
+**Issue:** [#57](../../issues/57)
+
+```bash
+git checkout -b feat/57-device-metrics-tab
+```
+
+- Backend: `GET /api/v1/devices/{id}/metrics?metric_name=cpu&time_range=1h`
+- Frontend: wykresy `recharts` dla RTT, CPU, RAM z wyborem zakresu czasu
+
+### Krok 5.6 — Testy komponentów UI
+
+**Issue:** [#18](../../issues/18)
+
+```bash
+git checkout -b test/18-ui-component-tests
+```
+
+- Testy `DeviceTable` — renderuje dane z props
+- Testy `DeviceForm` — walidacja, submit handler
+
+📖 [TanStack Query](https://tanstack.com/query/latest/docs/framework/react/overview) | [Zustand persist](https://zustand.docs.pmnd.rs/integrations/persisting-store-data) | [Next.js Middleware](https://nextjs.org/docs/app/building-your-application/routing/middleware)
 
 ---
 
 ## FAZA 6 — SOTP Agent
->
-> **Cel:** Własny lekki agent zbierający metryki systemowe. Pokazuje rozumienie push vs pull.
 
-### Krok 6.1 — Backend: Metrics Ingestion Endpoint
+> **Cel:** Lekki agent push metryk. Pokazuje rozumienie push vs pull w monitoringu.
+
+### Krok 6.1 — Metrics Ingestion Endpoint
+
+**Issue:** [#87](../../issues/87)
 
 ```bash
 git checkout -b feat/87-metrics-ingestion-endpoint
 ```
 
-Stwórz `apps/core_backend/app/api/v1/ingest.py`:
+- `app/api/v1/ingest.py` — `POST /api/v1/ingest/metrics`
+- Zapisuje do TimescaleDB (`device_metrics`)
+- Autentykacja przez API key w nagłówku (nie JWT)
 
-- `POST /api/v1/ingest/metrics` — przyjmuje JSON z metrykami agenta
-- Zapisuje do TimescaleDB (ta sama tabela `device_metrics`)
-- Autentykacja przez API key (nie JWT — agent to nie użytkownik)
+### Krok 6.2 — Python Agent
 
-### Krok 6.2 — Agent Python
+**Issue:** [#86](../../issues/86)
 
 ```bash
 git checkout -b feat/86-sotp-agent
 ```
 
-Rozbuduj `apps/sotp_agent/agent.py`:
+- `apps/sotp_agent/agent.py` — zbiera CPU, RAM, disk, load average (`psutil`)
+- Push do `POST /api/v1/ingest/metrics` co N sekund
+- Config przez env vars: `SOTP_SERVER_URL`, `SOTP_API_KEY`, `COLLECT_INTERVAL`
+- Działa jako Docker container lub systemd service
 
-- Zbiera co N sekund: CPU (`psutil.cpu_percent`), RAM (`psutil.virtual_memory`), disk (`psutil.disk_usage`), load average
-- Push do `POST /api/v1/ingest/metrics` z API key w nagłówku
-- Konfiguracja przez env vars: `SOTP_SERVER_URL`, `SOTP_API_KEY`, `COLLECT_INTERVAL`
-- Może działać jako Docker container lub systemd service
-
-📖 [psutil — dokumentacja](https://psutil.readthedocs.io/en/latest/)
-📖 [schedule library](https://schedule.readthedocs.io/en/stable/)
-📖 [systemd service file](https://www.freedesktop.org/software/systemd/man/systemd.service.html)
+📖 [psutil](https://psutil.readthedocs.io/en/latest/) | [schedule library](https://schedule.readthedocs.io/en/stable/) | [systemd service](https://www.freedesktop.org/software/systemd/man/systemd.service.html)
 
 ---
 
 ## FAZA 7 — Kubernetes
->
-> **Cel:** Cały SOTP działa na lokalnym K3d. Helm chart. Podstawy GitOps z ArgoCD.
-> **Prerequisite:** Działający `docker-compose.prod.yml` + obrazy w GHCR.
+
+> **Cel:** SOTP działa na lokalnym K3d. Helm chart. GitOps z ArgoCD.
 
 ### Krok 7.0 — docker-compose.prod.yml
+
+**Issue:** [#2](../../issues/2) (reopened)
 
 ```bash
 git checkout -b build/2-docker-compose-prod
 ```
 
-Stwórz `infrastructure/docker/docker-compose.prod.yml` — obrazy budowane z Dockerfile bez volume mounts na kod źródłowy.
+Obrazy z GHCR, bez volume mounts na kod, health checks obowiązkowe.
 
 ### Krok 7.1 — Lokalny klaster K3d
+
+**Issue:** stwórz `[BUILD] k3d local cluster setup script`
 
 ```bash
 git checkout -b build/k3d-local-cluster
 ```
 
-Stwórz `scripts/k3d-cluster.sh`:
+- `scripts/k3d-cluster.sh` — tworzy klaster z local registry
+- `Makefile`: `make k3d-up`, `make k3d-down`, `make k3d-push`
 
-- Tworzy klaster K3d z local registry
-- Konfiguruje port forwarding
-- Dodaje wpis `sotp.localhost` do `/etc/hosts`
-
-Zaktualizuj `Makefile` o: `make k3d-up`, `make k3d-down`, `make k3d-push`.
-
-📖 [k3d — Quick Start](https://k3d.io/v5.7.5/usage/commands/k3d_cluster_create/)
-📖 [Video: k3d tutorial](https://www.youtube.com/watch?v=mCesuGk-Fks)
+📖 [k3d Quick Start](https://k3d.io/v5.7.5/usage/commands/k3d_cluster_create/) | [Video: k3d](https://www.youtube.com/watch?v=mCesuGk-Fks)
 
 ### Krok 7.2 — Helm Chart
+
+**Issue:** [#75](../../issues/75)
 
 ```bash
 git checkout -b build/75-helm-chart
 ```
 
-Stwórz `infrastructure/helm/sotp/` z szablonami dla: backend, frontend, network_worker, postgres (StatefulSet), timescaledb (StatefulSet), redis, vault, prometheus, loki, grafana, traefik ingress, migrations Job.
+`infrastructure/helm/sotp/` z szablonami dla wszystkich serwisów.
+Kluczowe: `migrations-job.yaml` jako `helm hook: pre-install` — migracje Alembic PRZED startem backendu.
 
-**Kluczowe:** Migracje Alembic jako K8s Job (`migrations-job.yaml`) — musi uruchomić się PRZED startem backendu (`initContainers` lub `helm hook: pre-install`).
-
-📖 [Helm — Chart Template Guide](https://helm.sh/docs/chart_template_guide/getting_started/)
-📖 [Helm — Hooks](https://helm.sh/docs/topics/charts_hooks/)
-📖 [Video: Helm explained (TechWorld with Nana)](https://www.youtube.com/watch?v=-ykwb1d0DXU)
+📖 [Helm Chart Template Guide](https://helm.sh/docs/chart_template_guide/getting_started/) | [Helm Hooks](https://helm.sh/docs/topics/charts_hooks/) | [Video (TechWorld with Nana)](https://www.youtube.com/watch?v=-ykwb1d0DXU)
 
 ### Krok 7.3 — StatefulSets dla baz danych
 
-Postgres i TimescaleDB jako StatefulSets z PersistentVolumeClaims. Redis jako StatefulSet lub Deployment z emptyDir (dev).
+**Issue:** stwórz `[BUILD] K8s StatefulSets for PostgreSQL and TimescaleDB`
 
-📖 [K8s — StatefulSets](https://kubernetes.io/docs/concepts/workloads/controllers/statefulset/)
-📖 [K8s — Storage Classes + PVC](https://kubernetes.io/docs/concepts/storage/persistent-volumes/)
+Postgres i TimescaleDB jako StatefulSets z PVC.
 
-### Krok 7.4 — Secrets Management w K8s
+📖 [K8s StatefulSets](https://kubernetes.io/docs/concepts/workloads/controllers/statefulset/) | [PersistentVolumes](https://kubernetes.io/docs/concepts/storage/persistent-volumes/)
 
-Vault działa w K8s. Sekrety wstrzykiwane przez Vault Agent Injector (adnotacje na podach) zamiast K8s Secrets plain-text.
+### Krok 7.4 — Vault w K8s
 
-📖 [Vault — Kubernetes Auth Method](https://developer.hashicorp.com/vault/docs/auth/kubernetes)
-📖 [Vault Agent Injector](https://developer.hashicorp.com/vault/docs/platform/k8s/injector)
+**Issue:** stwórz `[BUILD] Vault Agent Injector in K8s`
+
+Sekrety przez Vault Agent Injector (adnotacje na podach) zamiast K8s Secrets plain-text.
+
+📖 [Vault Kubernetes Auth](https://developer.hashicorp.com/vault/docs/auth/kubernetes) | [Vault Agent Injector](https://developer.hashicorp.com/vault/docs/platform/k8s/injector)
 
 ### Krok 7.5 — GitOps z ArgoCD
+
+**Issue:** [#76](../../issues/76) (zamknięty — reopen lub nowy)
 
 ```bash
 git checkout -b feat/76-argocd-gitops
 ```
 
-1. Stwórz drugie repo: `sotp-k8s-config` — przenies tam Helm chart
+1. Nowe repo `sotp-k8s-config` — przenies Helm chart
 2. Zainstaluj ArgoCD na klastrze
-3. Stwórz `infrastructure/argocd/application.yaml`
-4. Zaktualizuj `deploy-prod.yml` w CI: po zbudowaniu obrazu → commit do `sotp-k8s-config` z nowym `image.tag`
+3. `infrastructure/argocd/application.yaml`
+4. CI po zbudowaniu obrazu → commit do `sotp-k8s-config` z nowym `image.tag`
 
-**Efekt:** `git push` → CI buduje obraz → aktualizuje `sotp-k8s-config` → ArgoCD wykrywa zmianę → automatyczne wdrożenie.
+**Efekt:** `git push` → CI → ArgoCD → automatyczne wdrożenie.
 
-📖 [ArgoCD — Getting Started](https://argo-cd.readthedocs.io/en/stable/getting_started/)
-📖 [Video: ArgoCD Tutorial (TechWorld with Nana)](https://www.youtube.com/watch?v=MeU5_k9ssrs)
-📖 [Killercoda — ArgoCD labs](https://killercoda.com/killer-shell-ckad)
+📖 [ArgoCD Getting Started](https://argo-cd.readthedocs.io/en/stable/getting_started/) | [Video (TechWorld with Nana)](https://www.youtube.com/watch?v=MeU5_k9ssrs) | [Killercoda ArgoCD labs](https://killercoda.com/killer-shell-ckad)
 
 ---
 
 ## FAZA 8 — Funkcjonalność Produkcyjna
->
-> **Cel:** Pełna platforma: alerty, logi, raporty, SSH konsola, audit trail.
+
+> **Cel:** Pełna platforma — alerty, audit trail, raporty, SSH konsola.
 
 ### Krok 8.1 — System Alertów
 
-- `AlertRule` model już istnieje — zaimplementuj `AlertService`
-- Celery task (`alert_tasks.py`) — co minutę ewaluuje reguły vs ostatnie metryki
-- Alertmanager webhook → endpoint `POST /api/v1/webhooks/alerts`
-- Kanały powiadomień: Email (SMTP), Slack (webhook), ogólny webhook
+**Issue:** stwórz `[FEAT] Alert evaluation service and notification channels`
 
-📖 [Prometheus Alertmanager — Configuration](https://prometheus.io/docs/alerting/latest/configuration/)
+- `AlertService` ewaluuje reguły vs ostatnie metryki (Celery task co minutę)
+- Alertmanager webhook → `POST /api/v1/webhooks/alerts`
+- Kanały: Email, Slack, webhook
+
+📖 [Prometheus Alertmanager](https://prometheus.io/docs/alerting/latest/configuration/)
 
 ### Krok 8.2 — Audit Middleware
 
-- Middleware FastAPI przechwytujące POST/PUT/DELETE
-- Pobiera `user_id` z tokenu JWT
-- Zapisuje do tabeli `audit_logs`
-- UI: strona `/logs` z filtrowaniem po akcji, użytkowniku, czasie
+**Issue:** [#77](../../issues/77)
+
+- Middleware FastAPI przechwytuje POST/PUT/DELETE
+- Pobiera `user_id` z JWT, zapisuje do `audit_logs`
+- UI: `/logs` z filtrowaniem
 
 ### Krok 8.3 — System Raportowania
 
-- `ReportService` — agreguje dane z TimescaleDB (dostępność, avg RTT, top CPU)
-- Endpoint `POST /api/v1/reports` — parametry: typ, zakres dat
-- Generuje PDF (`WeasyPrint`) lub CSV
-- UI: strona `/reports` z formularzem i pobieraniem pliku
+**Issue:** stwórz `[FEAT] Report generation API and UI`
 
-📖 [WeasyPrint docs](https://doc.courtbouillon.org/weasyprint/stable/)
+- `ReportService` — agreguje dane z TimescaleDB
+- PDF (`WeasyPrint`) lub CSV
+- UI: `/reports` z formularzem i pobieraniem
 
 ### Krok 8.4 — SSH Konsola w UI
 
-- Endpoint `POST /api/v1/devices/{id}/execute` (z whitelistą poleceń)
-- Kolejkuje zadanie Celery, czeka na wynik (polling lub WebSocket)
-- UI: zakładka "Konsola" na stronie urządzenia — textarea z outputem
+**Issue:** stwórz `[FEAT] SSH console tab on device details page`
 
-### Krok 8.5 — Backup & Disaster Recovery
+- `POST /api/v1/devices/{id}/execute` (whitelist poleceń)
+- UI: zakładka "Konsola" z outputem
+- Połączony z krok 3.3
 
-- K8s CronJob — codzienny `pg_dump` do MinIO (lokalnie) lub S3
-- `scripts/backup.sh` i `scripts/restore.sh`
-- `docs/11-DISASTER_RECOVERY.md` z przetestowaną procedurą
+### Krok 8.5 — E2E Tests
+
+**Issue:** [#62](../../issues/62)
+
+```bash
+git checkout -b test/62-e2e-tests
+```
+
+- Playwright — login flow, dodanie urządzenia, widok szczegółów
+- Uruchamiane w CI po build
 
 ---
 
-## FAZA 9 — Zaawansowane Funkcje *(Beyond Faza 5)*
->
-> **Cel:** Flagowe funkcje wyróżniające projekt. Wybierz 1-2, nie musisz robić wszystkich.
+## FAZA 9 — Zaawansowane *(wybierz 1-2)*
 
-### 9.1 — Linkerd Service Mesh (mTLS między serwisami)
+> **Cel:** Flagowe funkcje wyróżniające projekt na tle innych.
 
-Zainstaluj Linkerd na klastrze. Wstrzyknij proxy do podów. Efekt: automatyczne mTLS, "Golden Metrics" (RPS, latency, success rate) dla każdego połączenia.
+### 9.1 — Linkerd Service Mesh (mTLS)
 
-📖 [Linkerd — Getting Started](https://linkerd.io/2.14/getting-started/)
+Automatyczne mTLS między serwisami. Golden Metrics dla każdego połączenia.
+📖 [Linkerd Getting Started](https://linkerd.io/2.14/getting-started/)
 
-### 9.2 — Closed-Loop Automation (Auto-remediacja)
+### 9.2 — Advanced JWT (Blacklisting, Rotation)
 
-1. Alertmanager wysyła webhook do `POST /api/v1/webhooks/remediate`
-2. Backend waliduje alert i kolejkuje task Celery
-3. Task używa Netmiko do automatycznej akcji (restart interfejsu, clear ARP, itp.)
-**Efekt:** System nie tylko alarmuje — sam naprawia.
+**Issue:** [#61](../../issues/61) — token blacklisting przez Redis, refresh token rotation.
 
-### 9.3 — ML/AI: Predykcja Anomalii
+### 9.3 — Closed-Loop Automation (Auto-remediacja)
 
-- `TimescaleDB Toolkit` + `Prophet` (Facebook)
-- Celery task `predict_trends()` — generuje predykcje na podstawie danych historycznych
-- Alert gdy wartość przekroczy przewidywany zakres (anomalia)
-**Efekt:** Monitoring reaktywny → proaktywny.
+Alertmanager → webhook → Celery task → Netmiko naprawia problem automatycznie.
 
-### 9.4 — Network Config Backup (GitOps dla sieci)
+### 9.4 — ML/AI: Predykcja Anomalii
 
-- Netmiko pobiera `running-config` z urządzeń
-- Celery task zapisuje do repozytorium Git
-- Alert przy drifcie konfiguracji
+TimescaleDB Toolkit + Prophet. Celery task `predict_trends()`. Monitoring reaktywny → proaktywny.
 
 ### 9.5 — Containerlab: Realistyczne testy kolektorów
 
-- `sotp-test-environment` repo z `topology.yml` (wirtualne routery Arista cEOS)
-- CI uruchamia Containerlab → testy SNMP/SSH na prawdziwym OS routera
-**Efekt:** 100% realistyczne testy bez sprzętu.
+**Issue:** [#59](../../issues/59) — wirtualne routery Arista cEOS w CI.
+📖 [Containerlab](https://containerlab.dev/quickstart/)
 
-📖 [Containerlab — Getting Started](https://containerlab.dev/quickstart/)
+### 9.6 — TextFSM + SSH Parser
 
-### 9.6 — Agent MQTT (IoT)
-
-Dodaj `apps/sotp_agent/mqtt_collector.py` — subskrybuje tematy MQTT (czujniki temp/wilgotności), zapisuje do TimescaleDB. Pokazuje że SOTP to universalna platforma telemetryczna.
+**Issue:** [#60](../../issues/60) — parsowanie output SSH do strukturalnego JSON.
 
 ---
 
-## Kolejność absolutna — TL;DR
+## Kolejność — TL;DR
 
 ```
-TERAZ (Faza 0):
-  0.1 Napraw testy + zunifikuj nazewnictwo
-  0.2 Przenieś Celery do network_worker w docker-compose
-  0.3 Przenieś DevicePut do schemas/device.py
+TERAZ:
+  Faza 1: #47 JWT → #48 RBAC → #53 testy auth → #17 testy CRUD → #44 pagination
 
-NASTĘPNIE — po jednym na raz:
-  1.1 → 1.2 → 1.3   JWT + RBAC + testy
-  2.1                Vault integration
-  4.1                Prometheus (2 linijki kodu, duży efekt !)
-  4.2                Loki
-  3.1 → 3.2          ICMP fix + SNMP dopracowanie
-  5.1 → 5.2 → 5.3    Frontend minimum
+NASTĘPNIE:
+  Faza 2: #49 Vault
+  Faza 4: #63 Prometheus fix (2 linijki!) → #72 Loki → #73+#74 Tempo
+  Faza 3: ICMP fix → #54 SNMP → #55 SSH
 
 POTEM:
-  4.3 Tempo (tracing)
-  4.4 Dashboards as code
-  4.5 Traefik
-  6.1 → 6.2 SOTP Agent
-  3.3 SSH Executor
+  Faza 5: #15 devices table → #16 form → #51 auth pages → #52 route protection
+  Faza 4: dashboards as code → #82 Traefik
+  Faza 6: #87 ingest endpoint → #86 agent
 
-KUBERNETES (Faza 7):
-  7.0 docker-compose.prod.yml
-  7.1 k3d lokalny klaster
-  7.2 Helm chart
-  7.3 StatefulSets
-  7.4 Vault w K8s
-  7.5 ArgoCD (GitOps)
+KUBERNETES:
+  Faza 7: #2 docker-compose.prod → k3d → #75 Helm → StatefulSets → Vault K8s → #76 ArgoCD
 
-ADVANCED (Faza 8-9):
-  8.x Funkcje produkcyjne (alerty, raporty, SSH konsola)
-  9.x Wybierz 1-2: Linkerd / Auto-remediacja / ML / Containerlab
+ADVANCED:
+  Faza 8: alerty → #77 audit → raporty → SSH konsola → #62 E2E
+  Faza 9: wybierz 1-2 z #61, #59, #60, Linkerd, ML
 ```
 
 ---
 
-## Zasady pracy (bez zmian, dla przypomnienia)
+## Zasady pracy
 
-- Każdy krok = osobna branch + PR
-- Branch naming: `feat/47-jwt-auth`, `fix/celery-in-wrong-service`, `chore/unify-naming`
-- Commit convention: patrz `.github/COMMIT_COVENCTIONS.md`
-- Przed merge: CI musi być zielone
-- Po każdej fazie: zaktualizuj `README.md` i odpowiedni plik w `docs/`
-- Skonsultuj się z Claudem przed każdą fazą — opisz co chcesz zrobić, dostaniesz feedback i kod
-
----
-
-## Różnice względem poprzedniego planu (v1 → v2)
-
-| Zmiana | Dlaczego |
-|---|---|
-| K8s to Faza 7 (nie "osobny temat") | Kacper potwierdził że K8s jest częścią tego projektu |
-| Faza 0 zawiera konkretne bugi do naprawienia | Znamy dokładny stan kodu po refactorze |
-| Docker Compose do Fazy 6 włącznie | Realistyczne dla solo dewelopera |
-| SOTP Agent jako osobna faza (6) | Ważny dla SRE — push vs pull w monitoringu |
-| Beyond Faza 5 włączone jako Faza 9 | Długoterminowa wizja z oryginalnego dokumentu |
-| Audit Middleware jako osobny krok | Ważne dla SRE — accountability trail |
-| Tempo/OpenTelemetry jako krok 4.3 | Pełny stos PLT = wyróżnik na CV |
-| Linkerd w Fazie 9 (nie 5) | Zaawansowane — po K8s jest działający |
+- Każdy krok = osobna branch + PR do `develop`
+- Branch naming: `feat/47-jwt-auth`, `fix/63-prometheus-target`, `test/53-auth-tests`
+- Commit convention: `.github/COMMIT_COVENCTIONS.md`
+- Przed merge: CI zielone
+- Po każdej fazie: zaktualizuj `README.md`
 
 ---
 
-*Ostatnia aktualizacja: 2026-03-16 | Wersja: 2.0 | Oparty na: SOTP_Master_Document_v3_5.md + Beyond_Faza_5.md*
+*Ostatnia aktualizacja: 2026-03-16 | Wersja: 3.0*
+*Faza 0 (Cleanup) — ukończona ✅*

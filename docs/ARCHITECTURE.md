@@ -53,7 +53,6 @@ The system is designed as a multi-layered, service-oriented architecture, optimi
 
 ```
 
-
 ## 2. Key Technology Choices & Rationale
 
 * **Containerization (Docker & Docker Compose):** The entire application stack is containerized. This ensures consistency across all environments (development, testing, production) and simplifies deployment.
@@ -63,8 +62,8 @@ The system is designed as a multi-layered, service-oriented architecture, optimi
 * **Frontend (Next.js):** A Next.js (React) application provides a modern, server-rendered user interface. This choice allows for excellent performance, SEO capabilities, and a rich user experience.
 
 * **Databases:**
-    * **PostgreSQL** is used for storing relational, inventory-style data (users, devices, settings). It is a robust and reliable relational database.
-    * **TimescaleDB** (a PostgreSQL extension) is used for all time-series data (metrics from collectors). This provides massive performance gains for analytical queries over time, which is critical for a monitoring platform.
+  * **PostgreSQL** is used for storing relational, inventory-style data (users, devices, settings). It is a robust and reliable relational database.
+  * **TimescaleDB** (a PostgreSQL extension) is used for all time-series data (metrics from collectors). This provides massive performance gains for analytical queries over time, which is critical for a monitoring platform.
 
 * **Task Queuing (Celery & Redis):** Celery, with Redis as its message broker, is used to run all data collection tasks asynchronously in the background. This prevents the API from being blocked by long-running tasks and ensures the UI remains responsive.
 
