@@ -1,16 +1,8 @@
-from typing import Annotated, Literal, Optional
-
 from app.utils.databases import create_postgres, create_redis, create_timescaledb
-from fastapi import (
-    Depends,
-    FastAPI,
-    Request,
-)
+from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from prometheus_fastapi_instrumentator import Instrumentator
-from pydantic import BaseModel
-from sqlalchemy import delete, select, text, update
-from sqlalchemy.exc import SQLAlchemyError
+from sqlalchemy import text
 from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker
 
 
@@ -35,18 +27,6 @@ async def lifespan(app: FastAPI):
     await app.state.timescaledb.dispose()
     await app.state.redis.close()
 
-
-def session_dep(which: Literal["pg", "ts"]):
-    async def _get(request: Request):
-        maker = request.app.state.sessions[which]
-        async with maker() as session:
-            yield session
-
-    return _get
-
-
-SessionPG = Annotated[AsyncSession, Depends(session_dep("pg"))]
-SessionTS = Annotated[AsyncSession, Depends(session_dep("ts"))]
 
 app = FastAPI(lifespan=lifespan, debug=True)
 Instrumentator().instrument(app).expose(app)
