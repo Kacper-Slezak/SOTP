@@ -28,9 +28,11 @@ async def login(payload: LoginRequest, session: SessionPG):
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid email or password"
         )
-    access_token = create_access_token(data={"sub": str(user.id)})
     refresh_token = create_refresh_token(data={"sub": str(user.id)})
 
+    access_token = create_access_token(
+        data={"sub": str(user.id), "role": user.role.value}
+    )
     return {"access_token": access_token, "refresh_token": refresh_token}
 
 
@@ -75,6 +77,8 @@ async def refresh(payload: RefreshRequest, session: SessionPG):
         )
     if token_data.get("type") != "refresh":
         raise HTTPException(status_code=401, detail="Invalid token type")
-    new_access_token = create_access_token(data={"sub": str(user.id)})
+    new_access_token = create_access_token(
+        data={"sub": str(user.id), "role": user.role.value}
+    )
 
     return {"access_token": new_access_token, "token_type": "bearer"}
