@@ -57,5 +57,4 @@ def test_operator_cannot_delete_device():
 
 
 def test_admin_cannot_be_tested_without_db_mock():
-    # Ten zostawiamy na później
     pass
