@@ -1,7 +1,6 @@
 from app.api.dependencies import get_current_user
+from app.models.user import User
 from fastapi import APIRouter, Depends
-
-from apps.core_backend.app.models.user import User
 
 router = APIRouter(prefix="/api/v1/users", tags=["users"])
 

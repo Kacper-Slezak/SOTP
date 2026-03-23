@@ -27,34 +27,37 @@ admin_user = User(
 )
 
 
-def test_readonly_cannot_post_device():
-    app.dependency_overrides[get_current_user] = lambda: readonly_user
-
-    client = TestClient(app)
-
-    response = client.post("/api/v1/devices", json={"name": "Test Device"})
-    assert response.status_code == 403
-
-
 @pytest.fixture(autouse=True)
 def clear_overrides():
     yield
     app.dependency_overrides.clear()
 
 
+def test_readonly_cannot_post_device():
+    app.dependency_overrides[get_current_user] = lambda: readonly_user
+
+    # Używamy context managera (with), aby wymusić startup aplikacji
+    with TestClient(app) as client:
+        response = client.post(
+            "/api/v1/devices", json={"name": "Test Device", "ip_address": "192.168.1.1"}
+        )
+
+    assert response.status_code == 403
+
+
 def test_readonly_cannot_delete_device():
     app.dependency_overrides[get_current_user] = lambda: readonly_user
-    client = TestClient(app)
-    response = client.delete("/api/v1/devices/1")
+
+    with TestClient(app) as client:
+        response = client.delete("/api/v1/devices/1")
+
     assert response.status_code == 403
 
 
 def test_operator_cannot_delete_device():
     app.dependency_overrides[get_current_user] = lambda: operator_user
-    client = TestClient(app)
-    response = client.delete("/api/v1/devices/1")
+
+    with TestClient(app) as client:
+        response = client.delete("/api/v1/devices/1")
+
     assert response.status_code == 403
-
-
-def test_admin_cannot_be_tested_without_db_mock():
-    pass
