@@ -58,7 +58,7 @@ class DeviceService:
         stmt = (
             update(Device)
             .where(Device.id == device_id, Device.deleted_at.is_(None))
-            .values(deleted_at=datetime.now(timezone.utc))
+            .values(deleted_at=datetime.now(timezone.utc).replace(tzinfo=None))
         )
         result = await self.session.execute(stmt)
         if result.rowcount == 0:

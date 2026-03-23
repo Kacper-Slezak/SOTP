@@ -1,12 +1,13 @@
 import asyncio
 import os
+import uuid
 from datetime import datetime, timedelta, timezone
 
-import jose
 import pytest
 from app.core.config import Config
 from app.main import app
 from fastapi.testclient import TestClient
+from jose import jwt
 from sqlalchemy import text
 
 # 1. Define the CI Skip Flag
@@ -19,7 +20,7 @@ skip_in_ci = pytest.mark.skipif(
 # Apply the skip flag to the entire file (optional, but cleaner than decorating every function)
 pytestmark = skip_in_ci
 
-EXPIRED_TOKEN = jose.jwt.encode(
+EXPIRED_TOKEN = jwt.encode(
     {
         "sub": "1",
         "type": "access",
@@ -31,20 +32,23 @@ EXPIRED_TOKEN = jose.jwt.encode(
 
 
 @pytest.fixture(autouse=True)
-async def clean_db():
-    """Kept async because your SQLAlchemy engine (create_postgres) appears to be async."""
-    from app.utils.databases import create_postgres
+def clean_db():
+    async def _clean():
+        from app.utils.databases import create_postgres
 
-    engine = create_postgres()
-    async with engine.begin() as conn:
-        await conn.execute(text("TRUNCATE TABLE users RESTART IDENTITY CASCADE"))
-    await engine.dispose()
+        engine = create_postgres()
+        async with engine.begin() as conn:
+            await conn.execute(text("TRUNCATE TABLE users RESTART IDENTITY CASCADE"))
+        await engine.dispose()
+
+    asyncio.run(_clean())
 
 
 @pytest.fixture
 def client():
     """Provides a synchronous test client."""
-    return TestClient(app)
+    with TestClient(app) as c:
+        yield c
 
 
 def create_and_elevate_user(client: TestClient, email: str, role: str) -> str:
@@ -230,10 +234,14 @@ def test_protected_endpoint_with_expired_token(client):
 
 def test_rbac_delete_device_admin(client):
     admin_token = create_and_elevate_user(client, "admin@example.com", "ADMIN")
+
+    valid_id = int("1")
+
     response = client.delete(
-        "/api/v1/devices/1", headers={"Authorization": f"Bearer {admin_token}"}
+        f"/api/v1/devices/{valid_id}",
+        headers={"Authorization": f"Bearer {admin_token}"},
     )
-    # The crucial check here is that it's NOT a 403 Forbidden.
+    assert response.status_code in [200, 204, 404]
     assert response.status_code != 403
 
 
