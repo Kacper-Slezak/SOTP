@@ -347,7 +347,7 @@ The `DevicesTable` component is scaffolded but commented out while the API integ
 
 ---
 
-### 📋 Up Next (Planned Phases)
+### Up Next (Planned Phases)
 
 | Phase | Description | Key Items |
 |---|---|---|
@@ -384,7 +384,7 @@ See [`docs/CONTRIBUTING.md`](docs/CONTRIBUTING.md) for the full workflow.
 
 ## License
 
-Distributed under the GNU General Public License v3.0. See [`LICENSE`](LICENSE) for details.
+Distributed under the MIT License. See [`LICENSE`](LICENSE) for details.
 
 <p align="right">(<a href="#readme-top">back to top</a>)</p>
 
