@@ -1,204 +1,203 @@
-# SOTP — Roadmapa Projektu v3.0
->
-> **Cel:** Portfolio-ready platforma monitoringu infrastruktury sieciowej — solo.
-> **Kontekst:** SRE intern, projekt do CV, K8s jest częścią tego projektu.
-> **Zasada:** Każdy krok = osobna branch + PR. Każdy krok ma issue na GitHubie.
+# SOTP — Project Roadmap v3.0
 
----
+> **Goal:** Portfolio-ready network infrastructure monitoring platform — solo project.
+> **Context:** SRE Intern CV project; Kubernetes (K8s) is a core component.
+> **Rule:** Every step = separate branch + PR. Every step must have a dedicated GitHub issue.
 
-## Stan Obecny (23.03.2026):
+-----
 
-Wszystkie zadania cleanup/stabilizacji zakończone:
+## Current Status (March 23, 2026)
 
-- `apps/core_backend/` — czysty `main.py`, `DeviceService` używany przez router, `DevicePut` w `schemas/devices.py`
-- `apps/network_worker/` — izolowany serwis Celery, naprawiony bug `include=`, `celery-worker`/`celery-beat` zbudowane z `network_worker`
-- CI/CD — `ci.yml` z quality + security + test + build + Discord notifications, wszystkie ścieżki spójne (`apps/core_backend`, `apps/web_frontend`, `apps/network_worker`)
-- Docker Compose — Prometheus, Grafana, Vault, Redis, TimescaleDB, PostgreSQL, `celery-worker` i `celery-beat` z poprawnym working_dir
-- Testy — `test_soft_delete.py` przepisany na `DeviceService`, `test_icmp_all.py` usunięty z `core_backend`
+All cleanup/stabilization tasks are **completed**:
 
-Zadania fazy 1 zakończone:
+* `apps/core_backend/` — Clean `main.py`, `DeviceService` utilized by the router, `DevicePut` in `schemas/devices.py`.
+* `apps/network_worker/` — Isolated Celery service, `include=` bug fixed, `celery-worker`/`celery-beat` built natively from `network_worker`.
+* **CI/CD** — `ci.yml` pipeline with quality + security + test + build + Discord notifications; all paths are consistent (`apps/core_backend`, `apps/web_frontend`, `apps/network_worker`).
+* **Docker Compose** — Prometheus, Grafana, Vault, Redis, TimescaleDB, PostgreSQL, `celery-worker`, and `celery-beat` configured with the correct `working_dir`.
+* **Testing** — `test_soft_delete.py` rewritten to use `DeviceService`, `test_icmp_all.py` removed from `core_backend`.
 
-- **JWT Authentication**
-- **RBAC**
+Phase 1 tasks **completed**:
 
-W trakcie:
+* **JWT Authentication**
+* **RBAC (Role-Based Access Control)**
 
-- **Test Auth**
+**In progress:**
 
----
+* **Auth Testing**
 
-## FAZA 1 — Backend: Auth & Security
+-----
 
-> **Cel:** Żaden endpoint nie jest publiczny. JWT + RBAC działające end-to-end.
+## PHASE 1 — Backend: Auth & Security
 
-### Krok 1.1 — JWT Authentication
+> **Goal:** No public endpoints. End-to-end JWT + RBAC implementation.
 
-**Issue:** [#47](../../issues/47)
+### Step 1.1 — JWT Authentication
+
+**Issue:** [\#47](https://www.google.com/search?q=../../issues/47)
 
 ```bash
 git checkout -b feat/47-jwt-authentication
 ```
 
-Co zaimplementować w `apps/core_backend/`:
+What to implement in `apps/core_backend/`:
 
-- `app/core/security.py` — `create_access_token`, `create_refresh_token`, `decode_token` (`python-jose`)
-- `app/api/v1/auth.py` — `POST /api/v1/auth/register`, `/login`, `/refresh`
-- `app/api/dependencies.py` — dependency `get_current_user` sprawdzająca Bearer token
-- `app/schemas/auth.py` — `TokenResponse`, `LoginRequest`, `RegisterRequest`
-- Hasła przez `passlib[bcrypt]`
-- Zabezpiecz `/api/v1/devices` przez `Depends(get_current_user)`
+* `app/core/security.py` — `create_access_token`, `create_refresh_token`, `decode_token` (using `python-jose`).
+* `app/api/v1/auth.py` — `POST /api/v1/auth/register`, `/login`, `/refresh`.
+* `app/api/dependencies.py` — `get_current_user` dependency validating the Bearer token.
+* `app/schemas/auth.py` — `TokenResponse`, `LoginRequest`, `RegisterRequest`.
+* Passwords hashed via `passlib[bcrypt]`.
+* Secure `/api/v1/devices` using `Depends(get_current_user)`.
 
 📖 [FastAPI — OAuth2 with JWT](https://fastapi.tiangolo.com/tutorial/security/oauth2-jwt/) | [python-jose](https://python-jose.readthedocs.io/en/latest/) | [Video (ArjanCodes)](https://www.youtube.com/watch?v=5GxQ1rLTwaU)
 
-### Krok 1.2 — RBAC
+### Step 1.2 — RBAC
 
-**Issue:** [#48](../../issues/48)
+**Issue:** [\#48](https://www.google.com/search?q=../../issues/48)
 
 ```bash
 git checkout -b feat/48-rbac
 ```
 
-- `app/api/dependencies.py` — dependency `require_role(allowed_roles: list[UserRole])`
-- `GET /devices` → ADMIN, OPERATOR, READONLY
-- `POST /devices` → ADMIN
-- `PUT /devices/{id}` → ADMIN, OPERATOR
-- `DELETE /devices/{id}` → ADMIN
-- `GET /api/v1/users/me` — zwraca aktualnego usera z rolą
+* `app/api/dependencies.py` — `require_role(allowed_roles: list[UserRole])` dependency.
+* `GET /devices` → ADMIN, OPERATOR, READONLY.
+* `POST /devices` → ADMIN.
+* `PUT /devices/{id}` → ADMIN, OPERATOR.
+* `DELETE /devices/{id}` → ADMIN.
+* `GET /api/v1/users/me` — Returns the current user and their role.
 
 📖 [FastAPI — Dependencies in depth](https://fastapi.tiangolo.com/tutorial/dependencies/)
 
-### Krok 1.3 — Testy Auth
+### Step 1.3 — Auth Tests
 
-**Issue:** [#53](../../issues/53)
+**Issue:** [\#53](https://www.google.com/search?q=../../issues/53)
 
 ```bash
 git checkout -b test/53-auth-integration-tests
 ```
 
-Testy: rejestracja, logowanie, odświeżanie tokena, 401 bez tokena, 403 za mała rola.
+Tests to cover: Registration, login, token refresh, `401 Unauthorized` without a token, and `403 Forbidden` for insufficient roles.
 
 📖 [FastAPI Testing](https://fastapi.tiangolo.com/tutorial/testing/) | [pytest-asyncio](https://pytest-asyncio.readthedocs.io/en/latest/)
 
-### Krok 1.4 — Testy CRUD API
+### Step 1.4 — CRUD API Tests
 
-**Issue:** [#17](../../issues/17)
+**Issue:** [\#17](https://www.google.com/search?q=../../issues/17)
 
 ```bash
 git checkout -b test/17-device-crud-tests
 ```
 
-- Unit testy `DeviceService.create`, `get_by_id`, `get_all`, `update` — mock `AsyncSession`
-- API testy przez `httpx.AsyncClient` dla każdego endpointu
-- Pokrycie > 80%
+* Unit tests for `DeviceService.create`, `get_by_id`, `get_all`, `update` — mocking `AsyncSession`.
+* API integration tests via `httpx.AsyncClient` for every endpoint.
+* Target coverage \> 80%.
 
-### Krok 1.5 — Pagination, Sorting, Filtering
+### Step 1.5 — Pagination, Sorting, Filtering
 
-**Issue:** [#44](../../issues/44)
+**Issue:** [\#44](https://www.google.com/search?q=../../issues/44)
 
 ```bash
 git checkout -b feat/44-device-list-pagination
 ```
 
-- `DeviceService.get_all()` przyjmuje `limit`, `offset`, `sort_by`, `sort_order`, `is_active`, `device_type`, `vendor`
-- Response: `{ "items": [...], "total_count": ..., "limit": ..., "offset": ... }`
+* `DeviceService.get_all()` must accept `limit`, `offset`, `sort_by`, `sort_order`, `is_active`, `device_type`, `vendor`.
+* Expected API response structure: `{ "items": [...], "total_count": ..., "limit": ..., "offset": ... }`.
 
----
+-----
 
-## FAZA 2 — Backend: Vault Integration
+## PHASE 2 — Backend: Vault Integration
 
-> **Cel:** Credentials urządzeń (SNMP/SSH) w Vault, nie w bazie plain-text.
+> **Goal:** Store device credentials (SNMP/SSH) safely in Vault, not plain-text in the database.
 
-### Krok 2.1 — VaultService
+### Step 2.1 — VaultService
 
-**Issue:** [#49](../../issues/49)
+**Issue:** [\#49](https://www.google.com/search?q=../../issues/49)
 
 ```bash
 git checkout -b feat/49-vault-service
 ```
 
-- `app/services/vault_service.py` — `VaultService` z `set_device_credentials` i `get_device_credentials`
-- Modyfikacja `POST /devices` i `PUT /devices` — przyjmują opcjonalne `snmp_community`, `ssh_password`, zapisują przez Vault
-- Vault dev mode już działa w docker-compose
+* `app/services/vault_service.py` — `VaultService` exposing `set_device_credentials` and `get_device_credentials`.
+* Modify `POST /devices` and `PUT /devices` to accept optional `snmp_community` and `ssh_password`, saving them directly via Vault.
+* Vault dev mode is already operational in `docker-compose`.
 
 📖 [hvac — Python Vault client](https://hvac.readthedocs.io/en/stable/) | [Vault KV v2](https://developer.hashicorp.com/vault/docs/secrets/kv/kv-v2) | [Video (TechWorld with Nana)](https://www.youtube.com/watch?v=ci_0TrDN8C0)
 
----
+-----
 
-## FAZA 3 — Network Worker: Dopracowanie Kolektorów
+## PHASE 3 — Network Worker: Collector Refinement
 
-> **Cel:** `network_worker` jest kompletnym, izolowanym serwisem. ICMP + SNMP + SSH działają.
+> **Goal:** Ensure `network_worker` is a fully isolated, standalone service. ICMP, SNMP, and SSH execution must work flawlessly.
 
-### Krok 3.1 — Dopracuj ICMP Collector
+### Step 3.1 — Refine ICMP Collector
 
-**Issue:** brak — stwórz przez `gh issue create` z tytułem `[FIX] ICMP device_id not propagated to PingResult`
+**Issue:** *None — create via `gh issue create` with title `[FIX] ICMP device_id not propagated to PingResult`*
 
 ```bash
 git checkout -b fix/icmp-device-id-propagation
 ```
 
-- `device_icmp` nie przekazuje `device_id` do `insert_ping_result` — napraw
-- `_async_insert_ping_result` nie ustawia `device_id` w `PingResult` — napraw
-- Dodaj `tenacity` retry logic (3 próby, exponential backoff)
+* `device_icmp` is not passing `device_id` to `insert_ping_result` — fix this.
+* `_async_insert_ping_result` is not setting `device_id` inside `PingResult` — fix this.
+* Implement `tenacity` retry logic (3 attempts, exponential backoff).
 
 📖 [tenacity — retry library](https://tenacity.readthedocs.io/en/latest/)
 
-### Krok 3.2 — SNMP Collector: CPU/RAM
+### Step 3.2 — SNMP Collector: CPU/RAM
 
-**Issue:** [#54](../../issues/54)
+**Issue:** [\#54](https://www.google.com/search?q=../../issues/54)
 
 ```bash
 git checkout -b feat/54-snmp-cpu-ram
 ```
 
-- Pobieranie credentials z Vault zamiast hardcoded `Config`
-- OIDy: CPU `1.3.6.1.4.1.2021.11.11.0`, RAM total `1.3.6.1.4.1.2021.4.5.0`, available `1.3.6.1.4.1.2021.4.6.0`
+* Fetch credentials dynamically from Vault instead of using a hardcoded `Config`.
+* OIDs to track: CPU `1.3.6.1.4.1.2021.11.11.0`, RAM Total `1.3.6.1.4.1.2021.4.5.0`, RAM Available `1.3.6.1.4.1.2021.4.6.0`.
 
 📖 [pysnmp](https://pysnmp.readthedocs.io/en/latest/) | [SNMP OID reference](https://www.oid-info.com/)
 
-### Krok 3.3 — SSH Executor
+### Step 3.3 — SSH Executor
 
-**Issue:** [#55](../../issues/55)
+**Issue:** [\#55](https://www.google.com/search?q=../../issues/55)
 
 ```bash
 git checkout -b feat/55-ssh-executor
 ```
 
-- `apps/network_worker/src/app/tasks/ssh_tasks.py`
-- Celery task `execute_ssh_command(device_id, command)` — `netmiko`
-- Whitelist dozwolonych komend
-- Credentials z Vault
+* Location: `apps/network_worker/src/app/tasks/ssh_tasks.py`.
+* Create a Celery task `execute_ssh_command(device_id, command)` using `netmiko`.
+* Implement a strict whitelist of allowed commands.
+* Fetch device credentials securely from Vault.
 
 📖 [netmiko](https://github.com/ktbyers/netmiko) | [ntc-templates](https://github.com/networktocode/ntc-templates)
 
-### Krok 3.4 — Testy kolektorów
+### Step 3.4 — Collector Testing
 
-**Issue:** [#59](../../issues/59)
+**Issue:** [\#59](https://www.google.com/search?q=../../issues/59)
 
 ```bash
 git checkout -b test/59-snmp-ssh-integration-tests
 ```
 
-- Testy SNMP z `snmpsim` lub mockami
-- Testy SSH z mock serverem
-- Muszą działać w CI
+* SNMP integration tests using `snmpsim` or mocks.
+* SSH integration tests via a mock server.
+* Must be able to execute successfully within the CI pipeline.
 
----
+-----
 
-## FAZA 4 — Observability Stack
+## PHASE 4 — Observability Stack
 
-> **Cel:** Pełny stos PLT (Prometheus + Loki + Tempo) lokalnie.
+> **Goal:** Run the complete PLT stack (Prometheus + Loki + Tempo) locally for full visibility.
 
-### Krok 4.1 — Prometheus: metryki FastAPI
+### Step 4.1 — Prometheus: FastAPI Metrics
 
-**Issue:** [#63](../../issues/63)
+**Issue:** [\#63](https://www.google.com/search?q=../../issues/63)
 
 ```bash
 git checkout -b fix/63-prometheus-target
 ```
 
-`Instrumentator().instrument(app).expose(app)` jest już w `main.py` ✅
-
-Tylko napraw `infrastructure/prometheus/prometheus.yml`:
+`Instrumentator().instrument(app).expose(app)` is already configured in `main.py` ✅.
+You just need to fix `infrastructure/prometheus/prometheus.yml`:
 
 ```yaml
 - job_name: 'backend'
@@ -206,379 +205,376 @@ Tylko napraw `infrastructure/prometheus/prometheus.yml`:
     - targets: ['backend:8000']
 ```
 
-Weryfikacja: `http://localhost:9090/targets` → `backend:8000` UP.
+**Verification:** Check `http://localhost:9090/targets` → `backend:8000` should be UP.
 
 📖 [prometheus-fastapi-instrumentator](https://github.com/trallnag/prometheus-fastapi-instrumentator) | [PromQL Tutorial](https://promlabs.com/promql-tutorial/)
 
-### Krok 4.2 — Loki + Promtail
+### Step 4.2 — Loki + Promtail
 
-**Issue:** [#72](../../issues/72)
+**Issue:** [\#72](https://www.google.com/search?q=../../issues/72)
 
 ```bash
 git checkout -b feat/72-loki-promtail
 ```
 
-Dodaj do `docker-compose.dev.yml`:
+Add to `docker-compose.dev.yml`:
 
-- Serwis `loki` (`grafana/loki:latest`, port 3100)
-- Serwis `promtail` — Docker socket, zbiera logi ze wszystkich kontenerów
-- Datasource Loki w Grafanie
+* `loki` service (`grafana/loki:latest`, port 3100).
+* `promtail` service — mount the Docker socket to collect logs from all containers.
+* Add Loki as a native Datasource inside Grafana.
 
 📖 [Loki Docker Compose](https://grafana.com/docs/loki/latest/setup/install/docker/) | [Video (TechWorld with Nana)](https://www.youtube.com/watch?v=h_GGd7HfKQ8)
 
-### Krok 4.3 — Grafana Tempo + OpenTelemetry
+### Step 4.3 — Grafana Tempo + OpenTelemetry
 
-**Issues:** [#73](../../issues/73) + [#74](../../issues/74)
+**Issues:** [\#73](https://www.google.com/search?q=../../issues/73) & [\#74](https://www.google.com/search?q=../../issues/74)
 
 ```bash
 git checkout -b feat/73-74-tempo-opentelemetry
 ```
 
-**Infrastruktura:** `tempo` service w docker-compose, datasource w Grafanie.
+**Infrastructure:** Add `tempo` service to `docker-compose`, add datasource to Grafana.
+**Backend Instrumentation:**
 
-**Instrumentacja backendu:**
-
-- `requirements.txt`: `opentelemetry-distro`, `opentelemetry-exporter-otlp`, `opentelemetry-instrumentation-fastapi`, `opentelemetry-instrumentation-sqlalchemy`
-- `app/core/observability.py` — inicjalizuje OTLP exporter do Tempo
-- Wywołaj przy starcie w `main.py`
+* Add to `requirements.txt`: `opentelemetry-distro`, `opentelemetry-exporter-otlp`, `opentelemetry-instrumentation-fastapi`, `opentelemetry-instrumentation-sqlalchemy`.
+* `app/core/observability.py` — Initialize the OTLP exporter pointing to Tempo.
+* Call the initializer on startup in `main.py`.
 
 📖 [OpenTelemetry Python](https://opentelemetry.io/docs/languages/python/getting-started/) | [Grafana Tempo](https://grafana.com/docs/tempo/latest/getting-started/) | [Video (ByteByteGo)](https://www.youtube.com/watch?v=LAgI8vHKeeg)
 
-### Krok 4.4 — Grafana Dashboards jako kod
+### Step 4.4 — Grafana Dashboards as Code
 
-**Issue:** brak — stwórz przez `gh issue create` z tytułem `[INFRA] Grafana dashboards as provisioned JSON`
+**Issue:** *None — create via `gh issue create` with title `[INFRA] Grafana dashboards as provisioned JSON`*
 
 ```bash
 git checkout -b feat/grafana-dashboards-as-code
 ```
 
-- `network-overview.json` — devices up/down, avg RTT, % reachable
-- `device-details.json` — template variable `$device`, RTT, CPU, RAM
+* `network-overview.json` — Devices up/down, avg RTT, % reachable.
+* `device-details.json` — Template variable `$device`, showing specific RTT, CPU, RAM.
 
 📖 [Grafana Dashboard JSON](https://grafana.com/docs/grafana/latest/dashboards/build-dashboards/view-dashboard-json-model/) | [Grafana Provisioning](https://grafana.com/docs/grafana/latest/administration/provisioning/#dashboards)
 
-### Krok 4.5 — Traefik Reverse Proxy
+### Step 4.5 — Traefik Reverse Proxy
 
-**Issue:** [#82](../../issues/82)
+**Issue:** [\#82](https://www.google.com/search?q=../../issues/82)
 
 ```bash
 git checkout -b feat/82-traefik-reverse-proxy
 ```
 
-- `sotp.localhost/` → Frontend
-- `sotp.localhost/api` → Backend
-- Rozwiązuje CORS
+* `sotp.localhost/` → Routes to Frontend.
+* `sotp.localhost/api` → Routes to Backend.
+* This architecture inherently solves frontend-backend CORS issues.
 
 📖 [Traefik Docker Provider](https://doc.traefik.io/traefik/providers/docker/) | [Video (TechWorld with Nana)](https://www.youtube.com/watch?v=C6IL8tjwC5E)
 
----
+-----
 
-## FAZA 5 — Frontend: Minimum Viable UI
+## PHASE 5 — Frontend: Minimum Viable UI
 
-> **Cel:** Projekt nie wygląda jak backend-only. Opisz Claudowi co chcesz — dostaniesz komponent.
+> **Goal:** Ensure the project isn't strictly backend-only. Utilize LLMs to accelerate component drafting.
 
-### Krok 5.1 — Devices Table podłączona do API
+### Step 5.1 — Devices Table Connected to API
 
-**Issue:** [#15](../../issues/15)
+**Issue:** [\#15](https://www.google.com/search?q=../../issues/15)
 
 ```bash
 git checkout -b feat/15-devices-table-api
 ```
 
-- React Query `useQuery` → `GET /api/v1/devices`
-- Tabela: Nazwa, IP, Typ, Status (zielona/czerwona kropka), Akcje
-- Loading skeleton, error state
-- Przycisk "Dodaj urządzenie" → `/devices/new`
+* Use React Query `useQuery` → `GET /api/v1/devices`.
+* Table Columns: Name, IP, Type, Status (green/red indicator dot), Actions.
+* Implement loading skeletons and error states.
+* "Add Device" button routing to `/devices/new`.
 
-### Krok 5.2 — Form dodawania/edycji urządzenia
+### Step 5.2 — Device Add/Edit Form
 
-**Issue:** [#16](../../issues/16)
+**Issue:** [\#16](https://www.google.com/search?q=../../issues/16)
 
 ```bash
 git checkout -b feat/16-device-form
 ```
 
-- Formularz z walidacją (IP format)
-- `POST` / `PUT /api/v1/devices`
-- Toast notifications sukces/błąd
-- Po dodaniu — odświeżenie listy
+* Form featuring strict validation (e.g., proper IP formatting).
+* Handles `POST` / `PUT` via `/api/v1/devices`.
+* Toast notifications for success or failure.
+* Trigger an automatic list refresh upon successful addition.
 
-### Krok 5.3 — Strony Auth
+### Step 5.3 — Auth Pages
 
-**Issue:** [#51](../../issues/51)
+**Issue:** [\#51](https://www.google.com/search?q=../../issues/51)
 
 ```bash
 git checkout -b feat/51-auth-pages
 ```
 
-- `/login` — email + hasło, `POST /api/v1/auth/login`
-- Zustand store z persist middleware — `accessToken`, `refreshToken`, `user`
-- Redirect po zalogowaniu → `/devices`
+* `/login` page — Email + Password layout, triggering `POST /api/v1/auth/login`.
+* Implement a Zustand store with the persist middleware holding: `accessToken`, `refreshToken`, `user`.
+* Automatic redirect to `/devices` upon successful authentication.
 
-### Krok 5.4 — Route Protection
+### Step 5.4 — Route Protection
 
-**Issue:** [#52](../../issues/52)
+**Issue:** [\#52](https://www.google.com/search?q=../../issues/52)
 
 ```bash
 git checkout -b feat/52-route-protection
 ```
 
-- Next.js Middleware lub `AuthGuard` w `(dashboard)/layout.tsx`
-- Niezalogowany → `/login`
-- Axios interceptor: 401 → refresh → retry
+* Utilize Next.js Middleware or an `AuthGuard` wrapper inside `(dashboard)/layout.tsx`.
+* Unauthorized users are redirected to `/login`.
+* Set up an Axios interceptor: `401 Unauthorized` → attempt token refresh → retry original request.
 
-### Krok 5.5 — Metrics Tab na stronie urządzenia
+### Step 5.5 — Device Page Metrics Tab
 
-**Issue:** [#57](../../issues/57)
+**Issue:** [\#57](https://www.google.com/search?q=../../issues/57)
 
 ```bash
 git checkout -b feat/57-device-metrics-tab
 ```
 
-- Backend: `GET /api/v1/devices/{id}/metrics?metric_name=cpu&time_range=1h`
-- Frontend: wykresy `recharts` dla RTT, CPU, RAM z wyborem zakresu czasu
+* **Backend:** Endpoint `GET /api/v1/devices/{id}/metrics?metric_name=cpu&time_range=1h`.
+* **Frontend:** `recharts` visualizations for RTT, CPU, and RAM with a time-range selector.
 
-### Krok 5.6 — Testy komponentów UI
+### Step 5.6 — UI Component Tests
 
-**Issue:** [#18](../../issues/18)
+**Issue:** [\#18](https://www.google.com/search?q=../../issues/18)
 
 ```bash
 git checkout -b test/18-ui-component-tests
 ```
 
-- Testy `DeviceTable` — renderuje dane z props
-- Testy `DeviceForm` — walidacja, submit handler
+* `DeviceTable` tests — Ensure it properly renders data supplied via props.
+* `DeviceForm` tests — Verify validation triggers and submit handler behavior.
 
 📖 [TanStack Query](https://tanstack.com/query/latest/docs/framework/react/overview) | [Zustand persist](https://zustand.docs.pmnd.rs/integrations/persisting-store-data) | [Next.js Middleware](https://nextjs.org/docs/app/building-your-application/routing/middleware)
 
----
+-----
 
-## FAZA 6 — SOTP Agent
+## PHASE 6 — SOTP Agent
 
-> **Cel:** Lekki agent push metryk. Pokazuje rozumienie push vs pull w monitoringu.
+> **Goal:** Build a lightweight metric push agent to demonstrate understanding of Push vs. Pull monitoring models.
 
-### Krok 6.1 — Metrics Ingestion Endpoint
+### Step 6.1 — Metrics Ingestion Endpoint
 
-**Issue:** [#87](../../issues/87)
+**Issue:** [\#87](https://www.google.com/search?q=../../issues/87)
 
 ```bash
 git checkout -b feat/87-metrics-ingestion-endpoint
 ```
 
-- `app/api/v1/ingest.py` — `POST /api/v1/ingest/metrics`
-- Zapisuje do TimescaleDB (`device_metrics`)
-- Autentykacja przez API key w nagłówku (nie JWT)
+* `app/api/v1/ingest.py` — `POST /api/v1/ingest/metrics`.
+* Persists data natively to TimescaleDB (`device_metrics` table).
+* Secured via static API key in the headers (no JWT overhead required here).
 
-### Krok 6.2 — Python Agent
+### Step 6.2 — Python Agent
 
-**Issue:** [#86](../../issues/86)
+**Issue:** [\#86](https://www.google.com/search?q=../../issues/86)
 
 ```bash
 git checkout -b feat/86-sotp-agent
 ```
 
-- `apps/sotp_agent/agent.py` — zbiera CPU, RAM, disk, load average (`psutil`)
-- Push do `POST /api/v1/ingest/metrics` co N sekund
-- Config przez env vars: `SOTP_SERVER_URL`, `SOTP_API_KEY`, `COLLECT_INTERVAL`
-- Działa jako Docker container lub systemd service
+* `apps/sotp_agent/agent.py` — Gathers CPU, RAM, disk space, and load averages (using `psutil`).
+* Pushes payload to `POST /api/v1/ingest/metrics` at an N-second interval.
+* Configured via environment variables: `SOTP_SERVER_URL`, `SOTP_API_KEY`, `COLLECT_INTERVAL`.
+* Packaged to run easily as either a Docker container or a systemd service.
 
 📖 [psutil](https://psutil.readthedocs.io/en/latest/) | [schedule library](https://schedule.readthedocs.io/en/stable/) | [systemd service](https://www.freedesktop.org/software/systemd/man/systemd.service.html)
 
----
+-----
 
-## FAZA 7 — Kubernetes
+## PHASE 7 — Kubernetes
 
-> **Cel:** SOTP działa na lokalnym K3d. Helm chart. GitOps z ArgoCD.
+> **Goal:** SOTP runs smoothly on a local K3d cluster. Helm chart implementation. GitOps utilizing ArgoCD.
 
-### Krok 7.0 — docker-compose.prod.yml
+### Step 7.0 — docker-compose.prod.yml
 
-**Issue:** [#2](../../issues/2) (reopened)
+**Issue:** [\#2](https://www.google.com/search?q=../../issues/2) (reopened)
 
 ```bash
 git checkout -b build/2-docker-compose-prod
 ```
 
-Obrazy z GHCR, bez volume mounts na kod, health checks obowiązkowe.
+Configure to pull images from GHCR, strip out all local code volume mounts, and enforce mandatory health checks.
 
-### Krok 7.1 — Lokalny klaster K3d
+### Step 7.1 — Local K3d Cluster
 
-**Issue:** stwórz `[BUILD] k3d local cluster setup script`
+**Issue:** *Create `[BUILD] k3d local cluster setup script`*
 
 ```bash
 git checkout -b build/k3d-local-cluster
 ```
 
-- `scripts/k3d-cluster.sh` — tworzy klaster z local registry
-- `Makefile`: `make k3d-up`, `make k3d-down`, `make k3d-push`
+* `scripts/k3d-cluster.sh` — Script to bootstrap the cluster alongside a local image registry.
+* `Makefile` shortcuts: `make k3d-up`, `make k3d-down`, `make k3d-push`.
 
 📖 [k3d Quick Start](https://k3d.io/v5.7.5/usage/commands/k3d_cluster_create/) | [Video: k3d](https://www.youtube.com/watch?v=mCesuGk-Fks)
 
-### Krok 7.2 — Helm Chart
+### Step 7.2 — Helm Chart
 
-**Issue:** [#75](../../issues/75)
+**Issue:** [\#75](https://www.google.com/search?q=../../issues/75)
 
 ```bash
 git checkout -b build/75-helm-chart
 ```
 
-`infrastructure/helm/sotp/` z szablonami dla wszystkich serwisów.
-Kluczowe: `migrations-job.yaml` jako `helm hook: pre-install` — migracje Alembic PRZED startem backendu.
+* Build `infrastructure/helm/sotp/` containing templates for all microservices.
+* **Crucial implementation:** `migrations-job.yaml` must be set as a `helm hook: pre-install` to ensure Alembic migrations execute BEFORE the backend deployments spin up.
 
 📖 [Helm Chart Template Guide](https://helm.sh/docs/chart_template_guide/getting_started/) | [Helm Hooks](https://helm.sh/docs/topics/charts_hooks/) | [Video (TechWorld with Nana)](https://www.youtube.com/watch?v=-ykwb1d0DXU)
 
-### Krok 7.3 — StatefulSets dla baz danych
+### Step 7.3 — Database StatefulSets
 
-**Issue:** stwórz `[BUILD] K8s StatefulSets for PostgreSQL and TimescaleDB`
-
-Postgres i TimescaleDB jako StatefulSets z PVC.
+**Issue:** *Create `[BUILD] K8s StatefulSets for PostgreSQL and TimescaleDB`*
+Deploy PostgreSQL and TimescaleDB properly as `StatefulSets` backed by Persistent Volume Claims (PVCs).
 
 📖 [K8s StatefulSets](https://kubernetes.io/docs/concepts/workloads/controllers/statefulset/) | [PersistentVolumes](https://kubernetes.io/docs/concepts/storage/persistent-volumes/)
 
-### Krok 7.4 — Vault w K8s
+### Step 7.4 — Vault in K8s
 
-**Issue:** stwórz `[BUILD] Vault Agent Injector in K8s`
-
-Sekrety przez Vault Agent Injector (adnotacje na podach) zamiast K8s Secrets plain-text.
+**Issue:** *Create `[BUILD] Vault Agent Injector in K8s`*
+Mount secrets natively into pods utilizing the Vault Agent Injector (via pod annotations) instead of relying on plain-text K8s Secrets.
 
 📖 [Vault Kubernetes Auth](https://developer.hashicorp.com/vault/docs/auth/kubernetes) | [Vault Agent Injector](https://developer.hashicorp.com/vault/docs/platform/k8s/injector)
 
-### Krok 7.5 — GitOps z ArgoCD
+### Step 7.5 — GitOps with ArgoCD
 
-**Issue:** [#76](../../issues/76) (zamknięty — reopen lub nowy)
+**Issue:** [\#76](https://www.google.com/search?q=../../issues/76) *(closed — reopen or recreate)*
 
 ```bash
 git checkout -b feat/76-argocd-gitops
 ```
 
-1. Nowe repo `sotp-k8s-config` — przenies Helm chart
-2. Zainstaluj ArgoCD na klastrze
-3. `infrastructure/argocd/application.yaml`
-4. CI po zbudowaniu obrazu → commit do `sotp-k8s-config` z nowym `image.tag`
+1. Initialize a new repository: `sotp-k8s-config` and move the Helm chart there.
+2. Install ArgoCD on the K3d cluster.
+3. Deploy `infrastructure/argocd/application.yaml`.
+4. Configure the CI pipeline so that after a successful image build, it automatically pushes a commit updating the `image.tag` inside `sotp-k8s-config`.
 
-**Efekt:** `git push` → CI → ArgoCD → automatyczne wdrożenie.
+**Resulting Workflow:** `git push` → CI Pipeline Builds → Commits to Config Repo → ArgoCD detects change → Automated cluster deployment.
 
 📖 [ArgoCD Getting Started](https://argo-cd.readthedocs.io/en/stable/getting_started/) | [Video (TechWorld with Nana)](https://www.youtube.com/watch?v=MeU5_k9ssrs) | [Killercoda ArgoCD labs](https://killercoda.com/killer-shell-ckad)
 
----
+-----
 
-## FAZA 8 — Funkcjonalność Produkcyjna
+## PHASE 8 — Production Functionality
 
-> **Cel:** Pełna platforma — alerty, audit trail, raporty, SSH konsola.
+> **Goal:** Polish the system into a complete platform — alerting, audit trails, reporting, and interactive SSH capabilities.
 
-### Krok 8.1 — System Alertów
+### Step 8.1 — Alert System
 
-**Issue:** stwórz `[FEAT] Alert evaluation service and notification channels`
+**Issue:** *Create `[FEAT] Alert evaluation service and notification channels`*
 
-- `AlertService` ewaluuje reguły vs ostatnie metryki (Celery task co minutę)
-- Alertmanager webhook → `POST /api/v1/webhooks/alerts`
-- Kanały: Email, Slack, webhook
+* `AlertService` periodically evaluates custom rules against the latest polled metrics (via a Celery task every 1 minute).
+* Alertmanager webhook target → `POST /api/v1/webhooks/alerts`.
+* Supported Notification Channels: Email, Slack, generic webhook.
 
 📖 [Prometheus Alertmanager](https://prometheus.io/docs/alerting/latest/configuration/)
 
-### Krok 8.2 — Audit Middleware
+### Step 8.2 — Audit Middleware
 
-**Issue:** [#77](../../issues/77)
+**Issue:** [\#77](https://www.google.com/search?q=../../issues/77)
 
-- Middleware FastAPI przechwytuje POST/PUT/DELETE
-- Pobiera `user_id` z JWT, zapisuje do `audit_logs`
-- UI: `/logs` z filtrowaniem
+* FastAPI middleware to intercept all `POST` / `PUT` / `DELETE` requests.
+* Extracts the `user_id` from the JWT and records the action into `audit_logs`.
+* **UI Integration:** `/logs` view with actionable filtering.
 
-### Krok 8.3 — System Raportowania
+### Step 8.3 — Reporting System
 
-**Issue:** stwórz `[FEAT] Report generation API and UI`
+**Issue:** *Create `[FEAT] Report generation API and UI`*
 
-- `ReportService` — agreguje dane z TimescaleDB
-- PDF (`WeasyPrint`) lub CSV
-- UI: `/reports` z formularzem i pobieraniem
+* `ReportService` to intelligently aggregate historical data from TimescaleDB.
+* Export options: PDF (using `WeasyPrint`) or raw CSV.
+* **UI Integration:** `/reports` page featuring an interactive generation form and download links.
 
-### Krok 8.4 — SSH Konsola w UI
+### Step 8.4 — In-App SSH Console
 
-**Issue:** stwórz `[FEAT] SSH console tab on device details page`
+**Issue:** *Create `[FEAT] SSH console tab on device details page`*
 
-- `POST /api/v1/devices/{id}/execute` (whitelist poleceń)
-- UI: zakładka "Konsola" z outputem
-- Połączony z krok 3.3
+* Backend endpoint `POST /api/v1/devices/{id}/execute` (strictly enforcing command whitelists).
+* **UI Integration:** "Console" tab displaying near real-time stdout/stderr output.
+* Directly links to backend logic established in Step 3.3.
 
-### Krok 8.5 — E2E Tests
+### Step 8.5 — End-to-End (E2E) Testing
 
-**Issue:** [#62](../../issues/62)
+**Issue:** [\#62](https://www.google.com/search?q=../../issues/62)
 
 ```bash
 git checkout -b test/62-e2e-tests
 ```
 
-- Playwright — login flow, dodanie urządzenia, widok szczegółów
-- Uruchamiane w CI po build
+* Implement `Playwright` tests covering: The login flow, device creation, and successful navigation to the device details view.
+* Automate test execution within the CI pipeline post-build.
 
----
+-----
 
-## FAZA 9 — Zaawansowane *(wybierz 1-2)*
+## PHASE 9 — Advanced Topics *(Choose 1-2)*
 
-> **Cel:** Flagowe funkcje wyróżniające projekt na tle innych.
+> **Goal:** Develop flagship features that make the project stand out technically.
 
 ### 9.1 — Linkerd Service Mesh (mTLS)
 
-Automatyczne mTLS między serwisami. Golden Metrics dla każdego połączenia.
+Inject an automatic mTLS layer between all microservices. Out-of-the-box Golden Metrics (Latency, Error Rate, Traffic) for inter-service communication.
 📖 [Linkerd Getting Started](https://linkerd.io/2.14/getting-started/)
 
-### 9.2 — Advanced JWT (Blacklisting, Rotation)
+### 9.2 — Advanced JWT Management
 
-**Issue:** [#61](../../issues/61) — token blacklisting przez Redis, refresh token rotation.
+**Issue:** [\#61](https://www.google.com/search?q=../../issues/61) — Implement strict token blacklisting via Redis and refresh token rotation logic.
 
-### 9.3 — Closed-Loop Automation (Auto-remediacja)
+### 9.3 — Closed-Loop Automation (Auto-remediation)
 
-Alertmanager → webhook → Celery task → Netmiko naprawia problem automatycznie.
+Architect a flow where Alertmanager triggers a webhook → kicks off a Celery task → Netmiko logs in and executes a script to automatically resolve the recognized network issue.
 
-### 9.4 — ML/AI: Predykcja Anomalii
+### 9.4 — ML/AI: Anomaly Prediction
 
-TimescaleDB Toolkit + Prophet. Celery task `predict_trends()`. Monitoring reaktywny → proaktywny.
+Incorporate TimescaleDB Toolkit + Facebook's Prophet framework. Create a `predict_trends()` Celery task to shift the monitoring paradigm from reactive to proactive.
 
-### 9.5 — Containerlab: Realistyczne testy kolektorów
+### 9.5 — Containerlab: Realistic Collector Tests
 
-**Issue:** [#59](../../issues/59) — wirtualne routery Arista cEOS w CI.
+**Issue:** [\#59](https://www.google.com/search?q=../../issues/59) — Spin up virtual Arista cEOS network routers directly within the CI pipeline to test data collection against actual NOS behavior.
 📖 [Containerlab](https://containerlab.dev/quickstart/)
 
 ### 9.6 — TextFSM + SSH Parser
 
-**Issue:** [#60](../../issues/60) — parsowanie output SSH do strukturalnego JSON.
+**Issue:** [\#60](https://www.google.com/search?q=../../issues/60) — Parse unstructured raw CLI output from SSH sessions into strictly formatted JSON objects for data modeling.
 
----
+-----
 
-## Kolejność — TL;DR
+## Execution Order — TL;DR
 
-```
-TERAZ:
-  Faza 1: #47 JWT → #48 RBAC → #53 testy auth → #17 testy CRUD → #44 pagination
+```text
+NOW:
+  Phase 1: #47 JWT → #48 RBAC → #53 Auth Tests → #17 CRUD Tests → #44 Pagination
 
-NASTĘPNIE:
-  Faza 2: #49 Vault
-  Faza 4: #63 Prometheus fix (2 linijki!) → #72 Loki → #73+#74 Tempo
-  Faza 3: ICMP fix → #54 SNMP → #55 SSH
+NEXT:
+  Phase 2: #49 Vault
+  Phase 4: #63 Prometheus fix (just 2 lines!) → #72 Loki → #73+#74 Tempo
+  Phase 3: ICMP fix → #54 SNMP → #55 SSH
 
-POTEM:
-  Faza 5: #15 devices table → #16 form → #51 auth pages → #52 route protection
-  Faza 4: dashboards as code → #82 Traefik
-  Faza 6: #87 ingest endpoint → #86 agent
+THEN:
+  Phase 5: #15 Devices Table → #16 UI Form → #51 Auth Pages → #52 Route Protection
+  Phase 4: Dashboards as Code → #82 Traefik
+  Phase 6: #87 Ingestion Endpoint → #86 SOTP Agent
 
 KUBERNETES:
-  Faza 7: #2 docker-compose.prod → k3d → #75 Helm → StatefulSets → Vault K8s → #76 ArgoCD
+  Phase 7: #2 docker-compose.prod → K3d → #75 Helm → StatefulSets → Vault K8s → #76 ArgoCD
 
 ADVANCED:
-  Faza 8: alerty → #77 audit → raporty → SSH konsola → #62 E2E
-  Faza 9: wybierz 1-2 z #61, #59, #60, Linkerd, ML
+  Phase 8: Alerts → #77 Audit → Reports → SSH Console → #62 E2E Tests
+  Phase 9: Pick 1-2 items from #61, #59, #60, Linkerd, ML
 ```
 
----
+-----
 
-## Zasady pracy
+## Working Rules
 
-- Każdy krok = osobna branch + PR do `develop`
-- Branch naming: `feat/47-jwt-auth`, `fix/63-prometheus-target`, `test/53-auth-tests`
-- Commit convention: `.github/COMMIT_COVENCTIONS.md`
-- Przed merge: CI zielone
-- Po każdej fazie: zaktualizuj `README.md`
+* **1 Step = 1 Branch + 1 PR** to the `develop` branch.
+* **Branch Naming Convention:** `feat/47-jwt-auth`, `fix/63-prometheus-target`, `test/53-auth-tests`.
+* **Commit Convention:** Strictly adhere to `.github/COMMIT_COVENCTIONS.md`.
+* **Merge Requirements:** The CI pipeline must be fully green before any merge.
+* **Documentation:** After completing each phase, update the `README.md` to reflect the new state.
 
----
+-----
 
-*Ostatnia aktualizacja: 2026-03-16 | Wersja: 3.0*
-*Faza 0 (Cleanup) — ukończona ✅*
+*Last updated: 2026-03-23 | Version: 3.0*
+*Phase 0 (Cleanup) — completed ✅*
