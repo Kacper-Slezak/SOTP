@@ -6,51 +6,49 @@ This document describes the high-level architecture of the System Observability 
 
 The system is designed as a multi-layered, service-oriented architecture, optimized for scalability and maintainability. The diagram below illustrates the flow of data and interaction between components.
 
-```
-
+```mermaid
 ┌─────────────────────────────────────────────────────────────┐
-│                    USER INTERFACE LAYER                      │
+│                    USER INTERFACE LAYER                     │
 │  React/Next.js Frontend + Grafana Dashboards                │
 └────────────────────┬────────────────────────────────────────┘
 │
 ┌────────────────────▼────────────────────────────────────────┐
-│                   API GATEWAY LAYER                          │
+│                   API GATEWAY LAYER                         │
 │  Traefik (Load Balancer + SSL) → FastAPI (REST + WebSocket) │
 └────────────────────┬────────────────────────────────────────┘
 │
 ┌────────────────────▼────────────────────────────────────────┐
-│                  APPLICATION LAYER                           │
-│  ┌──────────────┐  ┌──────────────┐  ┌──────────────┐      │
-│  │   Inventory  │  │  Auth/RBAC   │  │   Alerting   │      │
-│  │   Service    │  │   Service    │  │   Service    │      │
-│  └──────────────┘  └──────────────┘  └──────────────┘      │
+│                  APPLICATION LAYER                          │
+│  ┌──────────────┐  ┌──────────────┐  ┌──────────────┐       │
+│  │   Inventory  │  │  Auth/RBAC   │  │   Alerting   │       │
+│  │   Service    │  │   Service    │  │   Service    │       │
+│  └──────────────┘  └──────────────┘  └──────────────┘       │
 └────────────────────┬────────────────────────────────────────┘
 │
 ┌────────────────────▼────────────────────────────────────────┐
-│                   CACHE & QUEUE LAYER                        │
+│                   CACHE & QUEUE LAYER                       │
 │  Redis (Cache + Session) + Celery (Task Queue)              │
 └────────────────────┬────────────────────────────────────────┘
 │
 ┌────────────────────▼────────────────────────────────────────┐
-│                  COLLECTOR WORKERS                           │
-│  ┌──────────┐ ┌──────────┐ ┌──────────┐ ┌──────────┐       │
-│  │   SNMP   │ │   ICMP   │ │   SSH    │ │  Syslog  │       │
-│  │ Collector│ │ Collector│ │ Collector│ │ Collector│       │
-│  └──────────┘ └──────────┘ └──────────┘ └──────────┘       │
+│                  COLLECTOR WORKERS                          │
+│  ┌──────────┐ ┌──────────┐ ┌──────────┐ ┌──────────┐        │
+│  │   SNMP   │ │   ICMP   │ │   SSH    │ │  Syslog  │        │
+│  │ Collector│ │ Collector│ │ Collector│ │ Collector│        │
+│  └──────────┘ └──────────┘ └──────────┘ └──────────┘        │
 └────────────────────┬────────────────────────────────────────┘
-│
+                     │
 ┌────────────────────▼────────────────────────────────────────┐
-│                   DATA LAYER                                 │
-│  ┌─────────────────┐  ┌─────────────────┐                  │
-│  │  PostgreSQL     │  │  TimescaleDB    │                  │
-│  │  (Inventory)    │  │  (Time-Series)  │                  │
-│  └─────────────────┘  └─────────────────┘                  │
-│  ┌─────────────────┐  ┌─────────────────┐                  │
-│  │  Loki           │  │  Vault          │                  │
-│  │  (Logs)         │  │  (Secrets)      │                  │
-│  └─────────────────┘  └─────────────────┘                  │
+│                   DATA LAYER                                │
+│  ┌─────────────────┐  ┌─────────────────┐                   │
+│  │  PostgreSQL     │  │  TimescaleDB    │                   │
+│  │  (Inventory)    │  │  (Time-Series)  │                   │
+│  └─────────────────┘  └─────────────────┘                   │
+│  ┌─────────────────┐  ┌─────────────────┐                   │
+│  │  Loki           │  │  Vault          │                   │
+│  │  (Logs)         │  │  (Secrets)      │                   │
+│  └─────────────────┘  └─────────────────┘                   │
 └─────────────────────────────────────────────────────────────┘
-
 ```
 
 ## 2. Key Technology Choices & Rationale
