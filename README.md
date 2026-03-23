@@ -67,35 +67,35 @@ The project intentionally covers a wide surface area: async Python microservices
 
 ```
 ┌─────────────────────────────────────────────────────────────┐
-│                    USER INTERFACE LAYER                      │
+│                    USER INTERFACE LAYER                     │
 │         Next.js 15 (App Router) + Tailwind CSS              │
 └────────────────────┬────────────────────────────────────────┘
                      │
 ┌────────────────────▼────────────────────────────────────────┐
-│                    API GATEWAY LAYER                         │
+│                    API GATEWAY LAYER                        │
 │              FastAPI (REST) + JWT Auth + RBAC               │
 └────────────────────┬────────────────────────────────────────┘
                      │
 ┌────────────────────▼────────────────────────────────────────┐
-│                  TASK QUEUE LAYER                            │
+│                  TASK QUEUE LAYER                           │
 │            Redis (broker) + Celery (workers + beat)         │
 └────────────────────┬────────────────────────────────────────┘
                      │
 ┌────────────────────▼────────────────────────────────────────┐
-│                NETWORK WORKER SERVICE                        │
-│  ┌──────────┐  ┌──────────┐  ┌──────────┐  ┌──────────┐   │
-│  │   ICMP   │  │   SNMP   │  │   SSH    │  │ Syslog   │   │
-│  │ Collector│  │ Collector│  │ Executor │  │(planned) │   │
-│  └──────────┘  └──────────┘  └──────────┘  └──────────┘   │
+│                NETWORK WORKER SERVICE                       │
+│  ┌──────────┐  ┌──────────┐  ┌──────────┐  ┌──────────┐     │
+│  │   ICMP   │  │   SNMP   │  │   SSH    │  │ Syslog   │     │
+│  │ Collector│  │ Collector│  │ Executor │  │(planned) │     │
+│  └──────────┘  └──────────┘  └──────────┘  └──────────┘     │
 └────────────────────┬────────────────────────────────────────┘
                      │
 ┌────────────────────▼────────────────────────────────────────┐
-│                    DATA LAYER                                │
-│  ┌──────────────┐  ┌──────────────┐  ┌──────────────┐      │
-│  │  PostgreSQL  │  │ TimescaleDB  │  │    Vault     │      │
-│  │ (inventory,  │  │ (metrics,    │  │  (secrets)   │      │
-│  │  users, RBAC)│  │  ping results│  │              │      │
-│  └──────────────┘  └──────────────┘  └──────────────┘      │
+│                    DATA LAYER                               │
+│  ┌──────────────┐  ┌──────────────┐  ┌──────────────┐       │
+│  │  PostgreSQL  │  │ TimescaleDB  │  │    Vault     │       │
+│  │ (inventory,  │  │ (metrics,    │  │  (secrets)   │       │  
+│  │  users, RBAC)│  │  ping results│  │              │       │
+│  └──────────────┘  └──────────────┘  └──────────────┘       │
 └─────────────────────────────────────────────────────────────┘
 ```
 
