@@ -36,7 +36,7 @@ async def login(payload: LoginRequest, session: SessionPG):
     return {"access_token": access_token, "refresh_token": refresh_token}
 
 
-@router.post("/register")
+@router.post("/register", status_code=201)
 async def register(payload: RegisterRequest, session: SessionPG):
     result = await session.execute(select(User).where(User.email == payload.email))
     email_exists = result.scalar_one_or_none()
