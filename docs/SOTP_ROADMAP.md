@@ -6,7 +6,7 @@
 
 ---
 
-## Stan Obecny ✅ (marzec 2026)
+## Stan Obecny (23.03.2026):
 
 Wszystkie zadania cleanup/stabilizacji zakończone:
 
@@ -15,6 +15,15 @@ Wszystkie zadania cleanup/stabilizacji zakończone:
 - CI/CD — `ci.yml` z quality + security + test + build + Discord notifications, wszystkie ścieżki spójne (`apps/core_backend`, `apps/web_frontend`, `apps/network_worker`)
 - Docker Compose — Prometheus, Grafana, Vault, Redis, TimescaleDB, PostgreSQL, `celery-worker` i `celery-beat` z poprawnym working_dir
 - Testy — `test_soft_delete.py` przepisany na `DeviceService`, `test_icmp_all.py` usunięty z `core_backend`
+
+Zadania fazy 1 zakończone:
+
+- **JWT Authentication**
+- **RBAC**
+
+W trakcie:
+
+- **Test Auth**
 
 ---
 
