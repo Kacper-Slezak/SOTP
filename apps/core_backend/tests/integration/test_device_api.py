@@ -16,6 +16,24 @@ from httpx import ASGITransport, AsyncClient
 
 
 @asynccontextmanager
+async def mock_session_maker():
+    yield AsyncMock()
+
+
+@asynccontextmanager
+async def _noop_lifespan(app: FastAPI) -> AsyncGenerator:
+    """Not connect with any database."""
+    app.state.sessions = {
+        "pg": mock_session_maker,
+        "ts": mock_session_maker,
+    }
+    yield
+
+
+_test_app = FastAPI(lifespan=_noop_lifespan)
+
+
+@asynccontextmanager
 async def _noop_lifespan(app: FastAPI) -> AsyncGenerator:
     """Not connect with any database."""
     yield
