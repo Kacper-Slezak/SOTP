@@ -40,7 +40,6 @@ export default function NewDevicePage() {
             setIpError("Please insert right IPv4 address");
             return;
         }
-
         mutation.mutate(formData);
     };
 
