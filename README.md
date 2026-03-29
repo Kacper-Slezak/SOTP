@@ -93,7 +93,7 @@ The project intentionally covers a wide surface area: async Python microservices
 │                    DATA LAYER                               │
 │  ┌──────────────┐  ┌──────────────┐  ┌──────────────┐       │
 │  │  PostgreSQL  │  │ TimescaleDB  │  │    Vault     │       │
-│  │ (inventory,  │  │ (metrics,    │  │  (secrets)   │       │  
+│  │ (inventory,  │  │ (metrics,    │  │  (secrets)   │       │
 │  │  users, RBAC)│  │  ping results│  │              │       │
 │  └──────────────┘  └──────────────┘  └──────────────┘       │
 └─────────────────────────────────────────────────────────────┘
