@@ -34,7 +34,6 @@ export default function NewDevicePage() {
 
     const handleSubmit = (e: React.FormEvent) => {
         e.preventDefault();
-
         setIpError(null);
 
         if (!isValidIP(formData.ip_address)) {
