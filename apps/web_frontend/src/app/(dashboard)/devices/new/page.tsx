@@ -22,6 +22,8 @@ export default function NewDevicePage() {
         is_active: true,
     });
 
+    const [ipError, setIpError] = useState<string | null>(null);
+
     const mutation = useMutation({
         mutationFn: createDevice,
         onSuccess: () => {
@@ -32,12 +34,23 @@ export default function NewDevicePage() {
 
     const handleSubmit = (e: React.FormEvent) => {
         e.preventDefault();
+        setIpError(null);
+
+        if (!isValidIP(formData.ip_address)) {
+            setIpError("Please insert right IPv4 address");
+            return;
+        }
         mutation.mutate(formData);
     };
 
     const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
         const {name, value} = e.target;
         setFormData((prev) => ({...prev, [name]: value}));
+    };
+
+    const isValidIP = (ip: string) => {
+        const regex = /^(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)$/;
+        return regex.test(ip);
     };
 
     return (
@@ -53,7 +66,7 @@ export default function NewDevicePage() {
                 <form onSubmit={handleSubmit} className="space-y-4">
 
                     <div className="grid grid-cols-2 gap-4">
-                        {/* Nazwa */}
+                        {/* Name */}
                         <div>
                             <label htmlFor="name" className="block text-sm font-medium mb-1">Nazwa urządzenia</label>
                             <input
@@ -69,20 +82,24 @@ export default function NewDevicePage() {
                             />
                         </div>
 
-                        {/* Adres IP */}
+                        {/* IP address */}
                         <div>
-                            <label htmlFor="ip_address" className="block text-sm font-medium mb-1">Adres IP</label>
+                            <label htmlFor="ip_address" className="block text-sm font-medium mb-1">IP Address</label>
                             <input
                                 id="ip_address"
                                 required
                                 type="text"
                                 name="ip_address"
                                 value={formData.ip_address}
-                                onChange={handleChange}
+                                onChange={(e) => {
+                                    setIpError(null);
+                                    handleChange(e);
+                                }}
                                 placeholder="np. 192.168.1.1"
                                 autoComplete="off"
                                 className="w-full border rounded-md p-2"
                             />
+                            {ipError && <p className="text-red-500 text-xs mt-1">{ipError}</p>}
                         </div>
 
                         {/* Producent (Vendor) */}
@@ -118,7 +135,7 @@ export default function NewDevicePage() {
                             />
                         </div>
 
-                        {/* Wersja OS */}
+                        {/* OS version */}
                         <div>
                             <label htmlFor="os_version" className="block text-sm font-medium mb-1">Wersja OS</label>
                             <input
@@ -134,7 +151,7 @@ export default function NewDevicePage() {
                             />
                         </div>
 
-                        {/* Lokalizacja */}
+                        {/* Localization */}
                         <div>
                             <label htmlFor="location" className="block text-sm font-medium mb-1">Lokalizacja</label>
                             <input
@@ -150,7 +167,7 @@ export default function NewDevicePage() {
                             />
                         </div>
 
-                        {/* Typ */}
+                        {/* Type */}
                         <div>
                             <label htmlFor="device_type" className="block text-sm font-medium mb-1">Typ</label>
                             <select
