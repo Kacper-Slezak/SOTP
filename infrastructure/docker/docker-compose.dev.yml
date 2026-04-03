@@ -106,7 +106,7 @@ services:
     build:
       context: ../../apps/network_worker
       dockerfile: Dockerfile
-    working_dir: /src
+    working_dir: /workspace/apps/network_worker/src
     command: celery -A app.tasks.celery_app worker --loglevel=info
     volumes:
       - ../..:/workspace
@@ -133,7 +133,7 @@ services:
     build:
       context: ../../apps/network_worker
       dockerfile: Dockerfile
-    working_dir: /src
+    working_dir: /workspace/apps/network_worker/src
     command: celery -A app.tasks.celery_app beat --loglevel=info
     volumes:
       - ../..:/workspace

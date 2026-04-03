@@ -18,7 +18,7 @@ python-jose[cryptography]>=3.4.0
 bcrypt==3.2.2
 passlib[bcrypt]==1.7.4
 icmplib==3.0.4
-pysnmp==4.4.12
+pysnmp>=5.0.0
 netmiko==4.3.0
 celery[redis]==5.3.4
 hvac>=2.3.0
