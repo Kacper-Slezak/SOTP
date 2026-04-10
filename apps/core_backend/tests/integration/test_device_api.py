@@ -23,19 +23,6 @@ async def mock_session_maker():
 @asynccontextmanager
 async def _noop_lifespan(app: FastAPI) -> AsyncGenerator:
     """Not connect with any database."""
-    app.state.sessions = {
-        "pg": mock_session_maker,
-        "ts": mock_session_maker,
-    }
-    yield
-
-
-_test_app = FastAPI(lifespan=_noop_lifespan)
-
-
-@asynccontextmanager
-async def _noop_lifespan(app: FastAPI) -> AsyncGenerator:
-    """Not connect with any database."""
     yield
 
 
@@ -140,28 +127,28 @@ class TestListDevices:
     @pytest.mark.asyncio
     async def test_200_for_readonly(self, client):
         svc = MagicMock(spec=["get_all"])
-        svc.get_all = AsyncMock(return_value=[_device()])
+        svc.get_all = AsyncMock(return_value=([_device()], 1))
         _as(READONLY)
         _svc(svc)
         r = await client.get("/api/v1/devices/")
         assert r.status_code == 200
-        assert r.json()[0]["ip_address"] == "192.168.1.1"
+        assert r.json()["items"][0]["ip_address"] == "192.168.1.1"
 
     @pytest.mark.asyncio
     async def test_empty_list(self, client):
         svc = MagicMock(spec=["get_all"])
-        svc.get_all = AsyncMock(return_value=[])
+        svc.get_all = AsyncMock(return_value=([], 0))
         _as(READONLY)
         _svc(svc)
         r = await client.get("/api/v1/devices/")
         assert r.status_code == 200
-        assert r.json() == []
+        assert r.json()["items"] == []
 
     @pytest.mark.asyncio
     async def test_all_roles_allowed(self, client):
         for user in [ADMIN, OPERATOR, READONLY, AUDITOR]:
             svc = MagicMock(spec=["get_all"])
-            svc.get_all = AsyncMock(return_value=[])
+            svc.get_all = AsyncMock(return_value=([], 0))
             _as(user)
             _svc(svc)
             r = await client.get("/api/v1/devices/")
