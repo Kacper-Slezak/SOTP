@@ -30,6 +30,10 @@ async def _noop_lifespan(app: FastAPI) -> AsyncGenerator:
 
 
 _test_app = FastAPI(lifespan=_noop_lifespan)
+_test_app.state.sessions = {
+    "pg": mock_session_maker,
+    "ts": mock_session_maker,
+}
 _test_app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"],
@@ -105,10 +109,11 @@ async def _clean():
 
 @pytest_asyncio.fixture
 async def client():
-    async with AsyncClient(
-        transport=ASGITransport(app=_test_app), base_url="http://test"
-    ) as ac:
-        yield ac
+    async with _test_app:
+        async with AsyncClient(
+            transport=ASGITransport(app=_test_app), base_url="http://test"
+        ) as ac:
+            yield ac
 
 
 def _as(user: User):
