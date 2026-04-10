@@ -159,6 +159,9 @@ class TestListDevices:
 
     @pytest.mark.asyncio
     async def test_no_auth_returns_401(self, client):
+        svc = MagicMock(spec=["get_all"])
+        svc.get_all = AsyncMock(return_value=([], 0))
+        _svc(svc)
         r = await client.get("/api/v1/devices/")
         assert r.status_code == 401
 
@@ -246,7 +249,10 @@ class TestCreateDevice:
 
     @pytest.mark.asyncio
     async def test_missing_fields_422(self, client):
+        svc = MagicMock(spec=["create"])
+        svc.create = AsyncMock()
         _as(ADMIN)
+        _svc(svc)
         r = await client.post("/api/v1/devices/", json={"name": "only"})
         assert r.status_code == 422
 
@@ -353,5 +359,8 @@ class TestDeleteDevice:
 
     @pytest.mark.asyncio
     async def test_no_auth_401(self, client):
+        svc = MagicMock(spec=["soft_delete"])
+        svc.soft_delete = AsyncMock()
+        _svc(svc)
         r = await client.delete("/api/v1/devices/1")
         assert r.status_code == 401
