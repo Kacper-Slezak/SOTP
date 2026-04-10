@@ -1,6 +1,6 @@
 from datetime import datetime, timedelta, timezone
 
-import passlib.hash
+import bcrypt
 from app.core.config import Config
 from jose import jwt
 
@@ -12,12 +12,12 @@ REFRESH_TOKEN_EXPIRE_DAYS = Config.REFRESH_TOKEN_EXPIRE_DAYS
 
 def hash_password(password: str) -> str:
     """Hash the password using bcrypt algorithm."""
-    return passlib.hash.bcrypt.hash(password)
+    return bcrypt.hashpw(password.encode(), bcrypt.gensalt()).decode()
 
 
 def verify_password(password: str, hashed_password: str) -> bool:
     """Verify the password against the hashed password."""
-    return passlib.hash.bcrypt.verify(password, hashed_password)
+    return bcrypt.checkpw(password.encode(), hashed_password.encode())
 
 
 def create_access_token(data: dict) -> str:
