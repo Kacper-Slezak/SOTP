@@ -22,7 +22,10 @@ async def mock_session_maker():
 
 @asynccontextmanager
 async def _noop_lifespan(app: FastAPI) -> AsyncGenerator:
-    """Not connect with any database."""
+    app.state.sessions = {
+        "pg": mock_session_maker,
+        "ts": mock_session_maker,
+    }
     yield
 
 

@@ -68,6 +68,7 @@ def _make_session(
     session.commit = AsyncMock()
     session.refresh = AsyncMock()
     session.rollback = AsyncMock()
+    session.scalar = AsyncMock(return_value=2)
     return session
 
 
@@ -82,28 +83,25 @@ class TestGetAll:
         d1 = _make_device(id=1)
         d2 = _make_device(id=2, name="Switch-01", ip_address="10.0.0.2")
         session = _make_session(scalars_all=[d1, d2])
-
         service = DeviceService(session)
-        result = await service.get_all()
-
+        result, total = await service.get_all()  # rozpakuj tuple
         assert result == [d1, d2]
-        session.execute.assert_awaited_once()
+        assert total == 2
 
     @pytest.mark.asyncio
     async def test_returns_empty_list_when_no_devices(self):
         session = _make_session(scalars_all=[])
         service = DeviceService(session)
-        result = await service.get_all()
+        result, total = await service.get_all()
         assert result == []
+        assert total == 0
 
     @pytest.mark.asyncio
     async def test_excludes_soft_deleted_devices(self):
-        """get_all must filter by deleted_at IS NULL — we verify the query is executed."""
         session = _make_session(scalars_all=[])
         service = DeviceService(session)
         await service.get_all()
-        # The query itself carries the filter; just assert execute was called
-        session.execute.assert_awaited_once()
+        session.execute.assert_awaited()
 
 
 # ===========================================================================
