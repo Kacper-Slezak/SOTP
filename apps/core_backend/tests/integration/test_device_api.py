@@ -20,16 +20,7 @@ async def mock_session_maker():
     yield AsyncMock()
 
 
-@asynccontextmanager
-async def _noop_lifespan(app: FastAPI) -> AsyncGenerator:
-    app.state.sessions = {
-        "pg": mock_session_maker,
-        "ts": mock_session_maker,
-    }
-    yield
-
-
-_test_app = FastAPI(lifespan=_noop_lifespan)
+_test_app = FastAPI()
 _test_app.state.sessions = {
     "pg": mock_session_maker,
     "ts": mock_session_maker,
@@ -109,11 +100,10 @@ async def _clean():
 
 @pytest_asyncio.fixture
 async def client():
-    async with _test_app:
-        async with AsyncClient(
-            transport=ASGITransport(app=_test_app), base_url="http://test"
-        ) as ac:
-            yield ac
+    async with AsyncClient(
+        transport=ASGITransport(app=_test_app), base_url="http://test"
+    ) as ac:
+        yield ac
 
 
 def _as(user: User):
