@@ -53,12 +53,14 @@ Frontend MVP done:
 ## PHASE 1 — Backend: Auth & Security ✅ COMPLETED
 
 ### Step 1.1 — JWT Authentication ✅
+
 * `app/core/security.py` — `create_access_token`, `create_refresh_token`, `decode_access_token` (python-jose + direct bcrypt).
 * `app/api/v1/auth.py` — `POST /api/v1/auth/register`, `/login`, `/refresh`.
 * `app/api/dependencies.py` — `get_current_user` dependency validating the Bearer token.
 * `app/schemas/auth.py` — `TokenResponse`, `LoginRequest`, `RegisterRequest`, `RefreshRequest`.
 
 ### Step 1.2 — RBAC ✅
+
 * `require_role(allowed_roles)` dependency in `app/api/dependencies.py`.
 * `GET /devices` → ADMIN, OPERATOR, READONLY, AUDITOR.
 * `POST /devices` → ADMIN only.
@@ -67,16 +69,19 @@ Frontend MVP done:
 * `GET /api/v1/users/me` — returns current user and role.
 
 ### Step 1.3 — Auth Tests ✅
+
 * `tests/integration/test_auth.py` — registration, login, token refresh, `401` without token, `403` for wrong role.
 * `tests/unit/test_rbac.py` — dependency-override pattern, 4 tests.
 * **Resolved:** `passlib 1.7.4` + `bcrypt 4.x` incompatibility fixed by importing `bcrypt` directly in `security.py` instead of using `passlib.hash.bcrypt`.
 
 ### Step 1.4 — CRUD API Tests ✅
+
 * `tests/integration/test_device_api.py` — full API tests via `httpx.AsyncClient` for `GET /`, `GET /{id}`, `POST /`, `PUT /{id}`, `DELETE /{id}` — all roles, all error paths (404, 409, 422, 401).
 * `tests/unit/test_device_service.py` — unit tests for `DeviceService.get_all`, `get_by_id`, `create`, `update`, `soft_delete` with mocked `AsyncSession`.
 * `tests/unit/test_soft_delete.py` — focused soft-delete tests.
 
 ### Step 1.5 — Pagination, Sorting, Filtering ✅
+
 * `DeviceService.get_all()` — `limit`, `offset`, `sort_by`, `sort_order`, `is_active`, `device_type`, `vendor`.
 * `PaginatedResponse[DeviceOut]` schema — `{ items, total_count, limit, offset }`.
 * Sortable fields whitelist: `id`, `name`, `ip_address`, `created_at`.
@@ -379,6 +384,7 @@ git checkout -b feat/76-argocd-gitops
 ## PHASE 8 — Production Functionality
 
 ### Step 8.1 — Alert System
+
 * `AlertService` evaluates rules against latest metrics (Celery task every 1 min).
 * Notification channels: Email, Slack, webhook.
 
@@ -390,11 +396,13 @@ git checkout -b feat/76-argocd-gitops
 * `/logs` view with filtering.
 
 ### Step 8.3 — Reporting System
+
 * `ReportService` aggregates TimescaleDB data.
 * Export: PDF (`WeasyPrint`) or CSV.
 * `/reports` page with generation form and download links.
 
 ### Step 8.4 — In-App SSH Console
+
 * `POST /api/v1/devices/{id}/execute` with command whitelist.
 * "Console" tab showing near-real-time stdout/stderr.
 
@@ -414,6 +422,7 @@ git checkout -b test/62-e2e-tests
 ## PHASE 9 — Advanced Topics *(Choose 1–2)*
 
 ### 9.1 — Linkerd Service Mesh (mTLS)
+
 Automatic mTLS between all microservices. Golden metrics (latency, error rate, traffic) for free.
 
 ### 9.2 — Advanced JWT Management
@@ -421,9 +430,11 @@ Automatic mTLS between all microservices. Golden metrics (latency, error rate, t
 **Issue:** [#61](../../issues/61) — Token blacklisting via Redis + refresh token rotation.
 
 ### 9.3 — Closed-Loop Automation
+
 Alertmanager webhook → Celery task → Netmiko auto-remediation.
 
 ### 9.4 — ML/AI: Anomaly Prediction
+
 TimescaleDB Toolkit + Facebook Prophet — `predict_trends()` Celery task for proactive monitoring.
 
 ### 9.5 — Containerlab: Realistic Collector Tests
