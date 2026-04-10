@@ -1,9 +1,15 @@
 from datetime import datetime, timezone
+from enum import Enum
 
 from app.models.device import Device
 from fastapi import HTTPException
 from sqlalchemy import asc, desc, func, select, update
 from sqlalchemy.ext.asyncio import AsyncSession
+
+
+class SortOrder(str, Enum):
+    asc = "asc"
+    desc = "desc"
 
 
 class DeviceService:
@@ -15,7 +21,7 @@ class DeviceService:
         limit: int = 10,
         offset: int = 0,
         sort_by: str = "id",
-        sort_order: str = "asc",
+        sort_order: SortOrder = SortOrder.asc,
         is_active: bool | None = None,
         device_type: str | None = None,
         vendor: str | None = None,
@@ -35,6 +41,9 @@ class DeviceService:
             )
             or 0
         )
+        SORTABLE_FIELDS = {"id", "name", "ip_address", "created_at"}
+        if sort_by not in SORTABLE_FIELDS:
+            sort_by = "id"
         column = getattr(Device, sort_by)
         order = asc(column) if sort_order == "asc" else desc(column)
         result = await self.session.execute(
