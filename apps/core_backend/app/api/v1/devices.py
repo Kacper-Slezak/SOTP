@@ -1,9 +1,9 @@
 from app.api.dependencies import get_current_user, require_role
 from app.db.deps import SessionPG
 from app.models.user import User, UserRole
-from app.schemas.devices import DevicePut
-from app.services.device_services import DeviceService
-from fastapi import APIRouter, Depends, Response
+from app.schemas.devices import DeviceOut, DevicePut, PaginatedResponse
+from app.services.device_services import DeviceService, SortOrder
+from fastapi import APIRouter, Depends, Query, Response
 
 router = APIRouter(prefix="/api/v1/devices", tags=["devices"])
 
@@ -13,8 +13,15 @@ def get_device_service(session: SessionPG) -> DeviceService:
     return DeviceService(session)
 
 
-@router.get("/")
+@router.get("/", response_model=PaginatedResponse[DeviceOut])
 async def list_devices(
+    limit: int = Query(default=10, ge=1, le=100),
+    offset: int = Query(default=0, ge=0),
+    sort_by: str = Query(default="id"),
+    sort_order: SortOrder = Query(default=SortOrder.asc),
+    is_active: bool | None = Query(default=None),
+    device_type: str | None = Query(default=None),
+    vendor: str | None = Query(default=None),
     service: DeviceService = Depends(get_device_service),
     _: User = Depends(
         require_role(
@@ -22,7 +29,16 @@ async def list_devices(
         )
     ),
 ):
-    return await service.get_all()
+    items, total = await service.get_all(
+        limit=limit,
+        offset=offset,
+        sort_by=sort_by,
+        sort_order=sort_order,
+        is_active=is_active,
+        device_type=device_type,
+        vendor=vendor,
+    )
+    return PaginatedResponse(items=items, total_count=total, limit=limit, offset=offset)
 
 
 @router.post("/", status_code=201)
