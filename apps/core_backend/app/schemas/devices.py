@@ -12,6 +12,21 @@ class PaginatedResponse(BaseModel, Generic[T]):
     offset: int
 
 
+class DeviceCredentialsIn(BaseModel):
+    """
+    Optional credentials sent with a device create/update request.
+    Each non-None field is stored as a separate Vault secret.
+
+    Vault paths produced:
+      snmp_community  →  secret/data/devices/{id}/snmp
+      ssh_password    →  secret/data/devices/{id}/ssh
+    """
+
+    snmp_community: Optional[str] = None
+    ssh_username: Optional[str] = None
+    ssh_password: Optional[str] = None
+
+
 class DeviceOut(BaseModel):
     id: int
     name: str
@@ -38,3 +53,4 @@ class DevicePut(BaseModel):
     snmp_config: Optional[dict[str, Any]] = None
     ssh_config: Optional[dict[str, Any]] = None
     api_config: Optional[dict[str, Any]] = None
+    credentials: Optional[DeviceCredentialsIn] = None
