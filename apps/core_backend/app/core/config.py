@@ -27,8 +27,8 @@ class Config:
     REDIS_URL = f"redis://{REDIS_HOST}:{REDIS_PORT}/{REDIS_DB}"
 
     # Vault
-    VAULT_URL = os.getenv("VAULT_URL", "http://vault:8200")
-    VAULT_TOKEN = os.getenv("VAULT_TOKEN", "fake-token")
+    VAULT_ADDR = os.getenv("VAULT_ADDR", "http://vault:8200")
+    VAULT_TOKEN = os.getenv("VAULT_TOKEN", "dev-token")
 
     # Tokens
 
