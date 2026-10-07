@@ -9,15 +9,14 @@ from app.tasks.monitoring_tasks import (
 from sqlalchemy.exc import SQLAlchemyError
 
 # =================================================================
-# Test 1: Testowanie zadania 'device_icmp' (Synchroniczne)
+# Test 1: Testing 'device_icmp' task (Synchronous)
 # =================================================================
 
 
-# Usunęliśmy 'new_callable=AsyncMock' - używamy domyślnego (synchronicznego) mocka
 @patch("app.tasks.monitoring_tasks.insert_ping_result")
 @patch("app.tasks.monitoring_tasks.ping")
 def test_device_icmp_success_up(mock_ping, mock_insert):
-    """Testuje udany ping (status UP)."""
+    """Test successful ping (UP status)."""
     mock_host = MagicMock()
     mock_host.is_alive = True
     mock_host.avg_rtt = 12.5
@@ -25,7 +24,6 @@ def test_device_icmp_success_up(mock_ping, mock_insert):
     mock_host.packet_loss = 0.0
     mock_ping.return_value = mock_host
 
-    # Usunęliśmy 'await' - wywołujemy jak zwykłą funkcję
     result = device_icmp(device_address="8.8.8.8")
 
     mock_ping.assert_called_once_with(
@@ -41,7 +39,7 @@ def test_device_icmp_success_up(mock_ping, mock_insert):
 @patch("app.tasks.monitoring_tasks.insert_ping_result")
 @patch("app.tasks.monitoring_tasks.ping")
 def test_device_icmp_success_down(mock_ping, mock_insert):
-    """Testuje nieudany ping (urządzenie nie odpowiada - DOWN)."""
+    """Test unsuccessful ping (device unreachable - DOWN)."""
     mock_host = MagicMock()
     mock_host.is_alive = False
     mock_ping.return_value = mock_host
@@ -65,12 +63,12 @@ def test_device_icmp_bad_ip_format(mock_ping):
 
 
 # =================================================================
-# Test 2: Testowanie Dyspozytora 'schedule_all_pings'
+# Test 2: Testing Dispatcher 'schedule_all_pings'
 # =================================================================
 
 
 class MockDevice:
-    """Prosta klasa udająca model urządzenia z bazy danych."""
+    """Mock device model for database query results."""
 
     def __init__(self, id, ip_address, is_active):
         self.id = id
@@ -88,7 +86,7 @@ MOCK_DEVICES_LIST = [
 @patch("app.tasks.monitoring_tasks.device_icmp.delay")
 @patch("app.tasks.monitoring_tasks.get_all_devices")
 def test_schedule_pings_active_only(mock_get_all_devices, mock_delay):
-    """Testuje, czy domyślnie dodawane do kolejki są TYLKO aktywne urządzenia."""
+    """Test that by default ONLY active devices are queued."""
     mock_get_all_devices.return_value = MOCK_DEVICES_LIST
 
     result = schedule_all_pings(only_active=True)
@@ -100,7 +98,7 @@ def test_schedule_pings_active_only(mock_get_all_devices, mock_delay):
 @patch("app.tasks.monitoring_tasks.device_icmp.delay")
 @patch("app.tasks.monitoring_tasks.get_all_devices")
 def test_schedule_pings_all_devices(mock_get_all_devices, mock_delay):
-    """Testuje wymuszenie skanowania wszystkich (nawet nieaktywnych) urządzeń."""
+    """Test forced polling of all devices (including inactive)."""
     mock_get_all_devices.return_value = MOCK_DEVICES_LIST
 
     result = schedule_all_pings(only_active=False)
@@ -112,7 +110,7 @@ def test_schedule_pings_all_devices(mock_get_all_devices, mock_delay):
 @patch("app.tasks.monitoring_tasks.device_icmp.delay")
 @patch("app.tasks.monitoring_tasks.get_all_devices")
 def test_schedule_pings_no_devices_found(mock_get_all_devices, mock_delay):
-    """Testuje, co się stanie, gdy baza jest pusta."""
+    """Test scenario when database has no devices."""
     mock_get_all_devices.return_value = []
 
     result = schedule_all_pings()
@@ -123,7 +121,7 @@ def test_schedule_pings_no_devices_found(mock_get_all_devices, mock_delay):
 
 @patch("app.tasks.monitoring_tasks.get_all_devices")
 def test_schedule_pings_database_error(mock_get_all_devices):
-    """Testuje bezpieczną obsługę błędów bazy danych (np. brak połączenia)."""
+    """Test safe handling of database connection errors."""
     mock_get_all_devices.side_effect = SQLAlchemyError("Simulated connection error")
 
     result = schedule_all_pings()

@@ -30,15 +30,15 @@ if config.config_file_name is not None:
 postgres_metadata = MetaData()
 timescale_metadata = MetaData()
 
-# <<<--- POPRAWKA NR 2: Zdefiniuj listę modeli dla timescale
+# Define list of models for timescale
 timescale_tables = {DeviceMetric.__tablename__, PingResult.__tablename__}
 
 for table_name, table_obj in Base.metadata.tables.items():
     if table_name in timescale_tables:
-        # Kopiuj modele TimescaleDB do timescale_metadata
+        # Copy TimescaleDB models to timescale_metadata
         table_obj.to_metadata(timescale_metadata)
     else:
-        # Kopiuj wszystkie pozostałe modele do postgres_metadata
+        # Copy all other models to postgres_metadata
         table_obj.to_metadata(postgres_metadata)
 
 

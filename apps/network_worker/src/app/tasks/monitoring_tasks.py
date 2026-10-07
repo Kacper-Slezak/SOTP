@@ -6,7 +6,7 @@ import ipaddress
 from app.db.postgres_session import get_postgres_session
 from app.db.timescaleDB_session import get_timescale_session
 
-# --- Importy modeli i sesji DB
+# --- DB model and session imports
 from app.models import PingResult, device
 from celery import shared_task
 from celery.exceptions import MaxRetriesExceededError, TimeoutError
@@ -32,7 +32,7 @@ async def _async_insert_ping_result(
             )
             session.add(new_ping)
         except Exception as e:
-            print(f"Błąd zapisu wyników ICMP dla {ip_address}: {e}")
+            print(f"Error saving ICMP results for {ip_address}: {e}")
 
 
 def insert_ping_result(
@@ -66,12 +66,12 @@ def device_icmp(self, device_address: str):
                 "status": "ERROR",
                 "reason": f"Invalid IP address: {device_address}",
             }
-        # 1. Wykonanie Pingu (ICMP)
+        # 1. Execute Ping (ICMP)
         host = ping(
             device_address, count=PING_COUNT, timeout=PING_TIMEOUT, privileged=False
         )
 
-        # 2. Zapis Wyników (do TimescaleDB)
+        # 2. Save Results (to TimescaleDB)
         insert_ping_result(
             ip_address=host.address,
             is_alive=host.is_alive,
@@ -79,7 +79,7 @@ def device_icmp(self, device_address: str):
             packet_loss_percent=host.packet_loss,
         )
 
-        # 3. Zwrócenie wyniku
+        # 3. Return result
         if host.is_alive:
             return {
                 "status": "UP",
@@ -93,7 +93,7 @@ def device_icmp(self, device_address: str):
     except SQLAlchemyError as db_err:
         return {"status": "ERROR", "reason": f"Database error: {str(db_err)}"}
     except Exception as e:
-        # Tuta wpadnie np. błąd "Name lookup failed" z icmplib przy złym formacie IP
+        # Handles errors such as "Name lookup failed" from icmplib on invalid IP formats
         return {"status": "ERROR", "reason": f"General error: {str(e)}"}
 
 
@@ -101,10 +101,10 @@ def device_icmp(self, device_address: str):
 def schedule_all_pings(only_active: bool = True):
     count = 0
     try:
-        # POPRAWKA: Używamy asyncio.run() aby pobrać faktyczną listę zamiast obietnicy!
+        # FIX: Use asyncio.run() to fetch actual list instead of coroutine
         devices = asyncio.run(get_all_devices())
 
-        # POPRAWKA: Jeśli baza jest pusta, od razu zwracamy odpowiedni komunikat
+        # FIX: Return early if database contains no devices
         if not devices:
             return "No devices found."
 

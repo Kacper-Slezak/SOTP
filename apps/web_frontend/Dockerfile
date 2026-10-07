@@ -1,21 +1,21 @@
-# Etap 1: Instalacja zależności
+# Stage 1: Dependency installation
 FROM node:20-slim as deps
 WORKDIR /app
 COPY package.json package-lock.json ./
 RUN npm install
 
 
-# Etap 2: Budowanie aplikacji
+# Stage 2: Application build
 FROM node:20-slim as builder
 WORKDIR /app
 COPY --from=deps /app/node_modules ./node_modules
 COPY . .
 RUN npm run build
 
-# Etap 3: Finalny obraz produkcyjny (dla dev będzie inaczej)
+# Stage 3: Final production image
 FROM node:20-slim
 WORKDIR /app
-# W trybie dev, Next.js uruchamia się inaczej, ale Dockerfile jest potrzebny
+# Production container entrypoint
 COPY package.json package-lock.json ./
 RUN npm install --only=production
 COPY --from=builder /app/.next ./.next

@@ -1,8 +1,8 @@
-# Ignoruj wirtualne środowisko
+# Ignore virtual environments
 venv/
 .venv/
 
-# Ignoruj pliki cache Pythona i narzędzi
+# Ignore Python and tooling cache files
 __pycache__/
 .pytest_cache/
 .mypy_cache/
@@ -10,6 +10,6 @@ __pycache__/
 htmlcov/
 .coverage
 
-# Ignoruj pliki IDE
+# Ignore IDE files
 .idea/
 .vscode/

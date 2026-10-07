@@ -2,7 +2,7 @@ from sqlalchemy import Column, DateTime, Float, Integer, String, func
 
 from .base import Base
 
-# Usunięto import ForeignKey, ponieważ nie jest już potrzebny
+# ForeignKey import removed as it is no longer required
 # from sqlalchemy import ForeignKey
 
 
@@ -11,8 +11,8 @@ class DeviceMetric(Base):
 
     time = Column(DateTime(timezone=True), primary_key=True, default=func.now())
 
-    # TA LINIA ZOSTAŁA ZMIENIONA:
-    device_id = Column(Integer, primary_key=True)  # Usunięto ForeignKey("devices.id")
+    # Standalone foreign reference in hypertable:
+    device_id = Column(Integer, primary_key=True)  # ForeignKey("devices.id") removed
 
     metric_name = Column(
         String, primary_key=True

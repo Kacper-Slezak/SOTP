@@ -1,7 +1,7 @@
-# NOWY PLIK: infrastructure/docker/docker-compose.devops.override.yml
+# File: infrastructure/docker/docker-compose.devops.override.yml
 services:
   backend:
     volumes:
-      # Ta linijka NADPISUJE oryginalne volumes i montuje CAŁY projekt
+      # Override original volumes to mount the entire project workspace
       - ../..:/workspace
     working_dir: /workspace

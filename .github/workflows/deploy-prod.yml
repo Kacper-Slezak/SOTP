@@ -1,20 +1,20 @@
 # .github/workflows/deploy-prod.yml - Build & Package Release
 #
-# ⚠️ UWAGA: Ten workflow NIE deployuje na serwer (jeszcze nie mamy infrastruktury)
-# Cel: Zbudować i opublikować obraz Docker dla przyszłego użycia
+# ⚠️ NOTE: This workflow does NOT deploy to a server (infrastructure not provisioned yet)
+# Purpose: Build and publish Docker image for future deployment
 #
-# Uruchamia się TYLKO gdy utworzysz tag: git tag v1.0.0 && git push origin v1.0.0
+# Triggers ONLY when a tag is pushed: git tag v1.0.0 && git push origin v1.0.0
 
 name: 📦 Build Release
 
 on:
   push:
     tags:
-      - 'v*' # v1.0.0, v1.1.0, itp.
+      - 'v*' # v1.0.0, v1.1.0, etc.
 
 permissions:
   contents: read
-  packages: write  # Potrzebne do pushowania do GitHub Container Registry
+  packages: write  # Required for pushing to GitHub Container Registry
 
 env:
   REGISTRY: ghcr.io
@@ -22,7 +22,7 @@ env:
 
 jobs:
   # ===================================================================
-  # JOB 1: BUILD & PUBLISH - Zbuduj i wypchnij obraz Docker
+  # JOB 1: BUILD & PUBLISH - Build and push Docker image
   # ===================================================================
   build_and_publish:
     name: 🐳 Build & Publish Docker Image
@@ -36,7 +36,7 @@ jobs:
       - name: 🏷️ Extract Version from Tag
         id: version
         run: |
-          # Z taga v1.2.0 wyciągamy 1.2.0
+          # Extract 1.2.0 from tag v1.2.0
           VERSION=${GITHUB_REF#refs/tags/v}
           echo "VERSION=$VERSION" >> $GITHUB_OUTPUT
           echo "📦 Building version: $VERSION"
@@ -55,7 +55,7 @@ jobs:
         uses: docker/build-push-action@v5
         with:
           context: .
-          push: true  # Pushuj do GitHub Container Registry
+          push: true  # Push to GitHub Container Registry
           tags: |
             ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:latest
             ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ steps.version.outputs.VERSION }}
@@ -84,7 +84,7 @@ jobs:
           echo "==================================="
 
   # ===================================================================
-  # JOB 2: CREATE RELEASE NOTES - Stwórz release notes na GitHubie
+  # JOB 2: CREATE RELEASE NOTES - Create GitHub Release
   # ===================================================================
   create_release:
     name: 📝 Create GitHub Release
@@ -96,7 +96,7 @@ jobs:
       - name: 📥 Checkout Code
         uses: actions/checkout@v4
         with:
-          fetch-depth: 0  # Pobierz całą historię (dla changelog)
+          fetch-depth: 0  # Fetch complete history for changelog generation
 
       - name: 🏷️ Extract Version
         id: version
@@ -107,7 +107,7 @@ jobs:
       - name: 📝 Generate Changelog
         id: changelog
         run: |
-          # Znajdź poprzedni tag
+          # Find previous tag
           PREVIOUS_TAG=$(git describe --tags --abbrev=0 HEAD^ 2>/dev/null || echo "")
 
           if [ -z "$PREVIOUS_TAG" ]; then
@@ -116,14 +116,14 @@ jobs:
           else
             echo "Generating changelog from $PREVIOUS_TAG to ${{ github.ref_name }}"
 
-            # Generuj changelog z commitów
+            # Generate changelog from commits
             CHANGELOG=$(git log ${PREVIOUS_TAG}..HEAD --pretty=format:"- %s (%h)" --no-merges)
 
-            # Dodaj header
+            # Add header
             CHANGELOG="## Changes since ${PREVIOUS_TAG}"$'\n\n'"${CHANGELOG}"
           fi
 
-          # Zapisz do pliku (GitHub Actions ma problem z multi-line w GITHUB_OUTPUT)
+          # Write to file (GitHub Actions multi-line handling)
           echo "$CHANGELOG" > changelog.txt
 
       - name: 🚀 Create GitHub Release
@@ -134,12 +134,12 @@ jobs:
           body_path: changelog.txt
           draft: false
           prerelease: false
-          generate_release_notes: true  # GitHub automatycznie doda release notes
+          generate_release_notes: true  # GitHub automatically adds release notes
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
   # ===================================================================
-  # JOB 3: NOTIFY - Powiadomienie na Discord
+  # JOB 3: NOTIFY - Discord Notification
   # ===================================================================
   notify:
     name: 📢 Notify Release Status
@@ -157,23 +157,23 @@ jobs:
       webhook_url: ${{ secrets.DISCORD_WEBHOOK_URL }}
 
 # ===================================================================
-# 📚 JAK TEGO UŻYWAĆ?
+# 📚 HOW TO USE THIS WORKFLOW
 # ===================================================================
 #
-# 1. Zakończ pracę nad wersją 1.0.0
-# 2. Utwórz tag:
+# 1. Complete work on version 1.0.0
+# 2. Create tag:
 #    git tag v1.0.0 -m "Release version 1.0.0"
 #    git push origin v1.0.0
 #
-# 3. Workflow automatycznie:
-#    ✅ Zbuduje obraz Docker
-#    ✅ Wypchnął do GitHub Container Registry
-#    ✅ Utworzy Release na GitHubie
-#    ✅ Wyśle powiadomienie na Discord
+# 3. Workflow automatically:
+#    ✅ Builds Docker image
+#    ✅ Pushes to GitHub Container Registry
+#    ✅ Creates Release on GitHub
+#    ✅ Sends Discord notification
 #
-# 4. W przyszłości gdy będziesz miał serwer produkcyjny:
-#    - Dodaj job "deploy" z SSH deployment
-#    - Dodaj smoke tests
-#    - Będzie gotowy do użycia!
+# 4. In the future with a production server:
+#    - Add "deploy" job with SSH deployment
+#    - Add smoke tests
+#    - Ready to use!
 #
 # ===================================================================

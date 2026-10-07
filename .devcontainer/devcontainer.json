@@ -1,26 +1,26 @@
 {
     "name": "SOTP Backend Dev",
 
-    // Wskazujemy na nasz istniejący plik docker-compose dla developmentu
+    // Point to existing docker-compose file for development
     "dockerComposeFile": [
         "../infrastructure/docker/docker-compose.dev.yml"
     ],
 
-    // Określamy, do której usługi z pliku compose ma podłączyć się VS Code
+    // Specify which compose service VS Code connects to
     "service": "backend",
 
-    // Ścieżka do folderu z kodem WEWNĄTRZ kontenera (monorepo apps/core_backend)
+    // Path to workspace directory INSIDE the container (monorepo apps/core_backend)
     "workspaceFolder": "/workspace/apps/core_backend",
 
-    // Automatycznie instaluje Gita wewnątrz kontenera
+    // Automatically install Git inside the container
     "features": {
         "ghcr.io/devcontainers/features/git:1": {}
     },
 
-    // Personalizacja środowiska wewnątrz VS Code
+    // Environment customization inside VS Code
     "customizations": {
         "vscode": {
-            // Nowoczesne ustawienia VS Code (Ruff zastępuje pylint, black i isort)
+            // Modern VS Code settings (Ruff replaces pylint, black, and isort)
             "settings": {
                 "python.defaultInterpreterPath": "/usr/local/bin/python",
                 "editor.formatOnSave": true,
@@ -33,7 +33,7 @@
                     }
                 }
             },
-            // Lista rozszerzeń specyficznych dla backendu
+            // Backend-specific extension list
             "extensions": [
                 "ms-python.python",
                 "ms-python.vscode-pylance",
@@ -48,6 +48,6 @@
         }
     },
 
-    // Komenda do wykonania po stworzeniu kontenera
+    // Command to execute after container creation
     "postCreateCommand": "pip install -r requirements.txt"
 }

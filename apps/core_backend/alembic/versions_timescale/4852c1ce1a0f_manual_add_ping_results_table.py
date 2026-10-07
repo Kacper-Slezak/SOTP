@@ -14,13 +14,13 @@ from alembic import op
 # revision identifiers, used by Alembic.
 revision: str = "4852c1ce1a0f"
 down_revision: str | None = "0001_init_timescale"
-# POPRAWKA BŁĘDU: Zmieniono ('timescale',) na None
+# Fix: Changed ('timescale',) to None
 branch_labels: str | Sequence[str] | None = None
 depends_on: str | Sequence[str] | None = None
 
 
 def upgrade() -> None:
-    # ### Początek ręcznie dodanego kodu ###
+    # ### Start of manually added code ###
     op.create_table(
         "ping_results",
         sa.Column("timestamp", sa.DateTime(), nullable=False),
@@ -39,14 +39,14 @@ def upgrade() -> None:
         op.f("ix_ping_results_is_alive"), "ping_results", ["is_alive"], unique=False
     )
 
-    # RĘCZNIE DODANY KROK DLA HYPERTABLE
+    # Manually added step for hypertable
     op.execute("SELECT create_hypertable('ping_results', 'timestamp');")
-    # ### Koniec ręcznie dodanego kodu ###
+    # ### End of manually added code ###
 
 
 def downgrade() -> None:
-    # ### Początek ręcznie dodanego kodu ###
+    # ### Start of manually added code ###
     op.drop_index(op.f("ix_ping_results_is_alive"), table_name="ping_results")
     op.drop_index(op.f("ix_ping_results_device_id"), table_name="ping_results")
     op.drop_table("ping_results")
-    # ### Koniec ręcznie dodanego kodu ###
+    # ### End of manually added code ###

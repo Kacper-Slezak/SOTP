@@ -4,7 +4,7 @@ import datetime
 import pysnmp.hlapi.v3arch.asyncio as snmp
 from app.core.config import Config
 
-# Importy z Twojego Workera (ścieżki app.db i app.models)
+# Worker imports (app.db and app.models paths)
 from app.db.postgres_session import get_postgres_session
 from app.db.timescaleDB_session import get_timescale_session
 from app.models.device import Device
@@ -58,14 +58,12 @@ def snmp_get_all(target):
 
 
 async def get_active_devices():
-    # Zobacz, jak czysto to teraz wygląda!
     async with get_postgres_session() as session:
         result = await session.execute(select(Device).where(Device.is_active is True))
         return result.scalars().all()
 
 
 async def save_metrics(device_id: int, data: dict):
-    # Używamy Twojego context managera
     async with get_timescale_session() as session:
         now = datetime.datetime.utcnow()
         for metric_name, value in data.items():
@@ -81,12 +79,11 @@ async def save_metrics(device_id: int, data: dict):
                 pass
 
 
-# --- ZADANIA CELERY ---
+# --- CELERY TASKS ---
 
 
 @shared_task(name="snmp.collect_single_device")
 def collect_device_snmp(device_id, ip_address):
-    # Zwróć uwagę - teraz podajemy TYLKO ip_address!
     data = snmp_get_all(ip_address)
     if data:
         asyncio.run(save_metrics(device_id, data))
@@ -97,7 +94,6 @@ def schedule_all_snmp():
     try:
         devices = asyncio.run(get_active_devices())
         for dev in devices:
-            # Dyspozytor wysyła workerom tylko ID i IP
             collect_device_snmp.delay(dev.id, dev.ip_address)
     except Exception as e:
-        print(f"Błąd Dyspozytora SNMP: {str(e)}")
+        print(f"SNMP Dispatcher error: {str(e)}")
