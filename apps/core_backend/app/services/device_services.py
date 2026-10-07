@@ -1,4 +1,4 @@
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from enum import Enum
 
 from app.models.device import Device
@@ -93,7 +93,7 @@ class DeviceService:
         stmt = (
             update(Device)
             .where(Device.id == device_id, Device.deleted_at.is_(None))
-            .values(deleted_at=datetime.now(timezone.utc).replace(tzinfo=None))
+            .values(deleted_at=datetime.now(UTC).replace(tzinfo=None))
         )
         result = await self.session.execute(stmt)
         if result.rowcount == 0:

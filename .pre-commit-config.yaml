@@ -7,11 +7,9 @@ repos:
     -   id: check-added-large-files
     -   id: check-yaml
         args: [--allow-multiple-documents]
--   repo: https://github.com/psf/black
-    rev: 25.9.0
+-   repo: https://github.com/astral-sh/ruff-pre-commit
+    rev: v0.9.10
     hooks:
-    -   id: black
--   repo: https://github.com/pycqa/isort
-    rev: 7.0.0
-    hooks:
-    -   id: isort
+    -   id: ruff
+        args: [--fix]
+    -   id: ruff-format

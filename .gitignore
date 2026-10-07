@@ -1,8 +1,8 @@
 # ####################
-# # ZALEŻNOŚCI (Globalne dla wszystkich folderów)
+# DEPENDENCIES (Global across all directories)
 # ####################
 
-# Python (Wirtualne środowiska i paczki)
+# Python (Virtual environments and packages)
 venv/
 .venv/
 env/
@@ -17,7 +17,7 @@ __pycache__/
 *.egg
 MANIFEST
 
-# Node.js (Frontend i narzędzia JS)
+# Node.js (Frontend and JS tooling)
 node_modules/
 .pnp
 .pnp.js
@@ -27,18 +27,18 @@ yarn-error.log*
 pnpm-debug.log*
 
 # ####################
-# # BUILD I CACHE (Frontend & Backend)
+# BUILD & CACHE (Frontend & Backend)
 # ####################
 
 # Next.js
 .next/
 out/
 
-# Ogólne foldery buildu
+# General build directories
 build/
 dist/
 
-# Cache narzędzi Python
+# Python tooling cache
 .pytest_cache/
 .mypy_cache/
 .ruff_cache/
@@ -47,20 +47,20 @@ htmlcov/
 .tox/
 
 # ####################
-# # ŚRODOWISKO I SEKRETY
+# ENVIRONMENT & SECRETS
 # ####################
 
-# Pliki .env w KAŻDYM folderze
+# .env files across all directories
 .env
 .env.*
 !.env.example
 
-# Logi systemowe
+# System logs
 *.log
 logs/
 
 # ####################
-# # SYSTEM I IDE
+# SYSTEM & IDE
 # ####################
 
 # macOS / Windows
@@ -70,10 +70,17 @@ Desktop.ini
 
 # IDE (VSCode, JetBrains)
 .idea/
-.vscode/
+.vscode/*
+!.vscode/settings.json
+!.vscode/tasks.json
+!.vscode/launch.json
+!.vscode/extensions.json
 *.swp
 *.swo
 *.suo
 *.user
 
+# Junk and temporary artifacts
+errors.txt
+issues.json
 docs/SOTP_ROADMAP-Polish.md

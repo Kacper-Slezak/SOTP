@@ -37,7 +37,7 @@ export default function NewDevicePage() {
         setIpError(null);
 
         if (!isValidIP(formData.ip_address)) {
-            setIpError("Please insert right IPv4 address");
+            setIpError("Please enter a valid IPv4 address");
             return;
         }
         mutation.mutate(formData);
@@ -56,9 +56,9 @@ export default function NewDevicePage() {
     return (
         <div className="p-6 max-w-2xl mx-auto">
             <div className="flex items-center justify-between mb-6">
-                <h1 className="text-2xl font-bold">Dodaj nowe urządzenie</h1>
+                <h1 className="text-2xl font-bold">Add New Device</h1>
                 <Button variant="outline" onClick={() => router.push("/devices")}>
-                    Anuluj
+                    Cancel
                 </Button>
             </div>
 
@@ -68,7 +68,7 @@ export default function NewDevicePage() {
                     <div className="grid grid-cols-2 gap-4">
                         {/* Name */}
                         <div>
-                            <label htmlFor="name" className="block text-sm font-medium mb-1">Nazwa urządzenia</label>
+                            <label htmlFor="name" className="block text-sm font-medium mb-1">Device Name</label>
                             <input
                                 id="name"
                                 required
@@ -76,7 +76,7 @@ export default function NewDevicePage() {
                                 name="name"
                                 value={formData.name}
                                 onChange={handleChange}
-                                placeholder="np. Router Główny"
+                                placeholder="e.g. Core Router"
                                 autoComplete="off"
                                 className="w-full border rounded-md p-2"
                             />
@@ -95,17 +95,16 @@ export default function NewDevicePage() {
                                     setIpError(null);
                                     handleChange(e);
                                 }}
-                                placeholder="np. 192.168.1.1"
+                                placeholder="e.g. 192.168.1.1"
                                 autoComplete="off"
                                 className="w-full border rounded-md p-2"
                             />
                             {ipError && <p className="text-red-500 text-xs mt-1">{ipError}</p>}
                         </div>
 
-                        {/* Producent (Vendor) */}
+                        {/* Vendor */}
                         <div>
-                            <label htmlFor="vendor" className="block text-sm font-medium mb-1">Producent
-                                (Vendor)</label>
+                            <label htmlFor="vendor" className="block text-sm font-medium mb-1">Vendor</label>
                             <input
                                 id="vendor"
                                 required
@@ -113,7 +112,7 @@ export default function NewDevicePage() {
                                 name="vendor"
                                 value={formData.vendor}
                                 onChange={handleChange}
-                                placeholder="np. Cisco"
+                                placeholder="e.g. Cisco"
                                 autoComplete="off"
                                 className="w-full border rounded-md p-2"
                             />
@@ -129,7 +128,7 @@ export default function NewDevicePage() {
                                 name="model"
                                 value={formData.model}
                                 onChange={handleChange}
-                                placeholder="np. Catalyst 9300"
+                                placeholder="e.g. Catalyst 9300"
                                 autoComplete="off"
                                 className="w-full border rounded-md p-2"
                             />
@@ -137,7 +136,7 @@ export default function NewDevicePage() {
 
                         {/* OS version */}
                         <div>
-                            <label htmlFor="os_version" className="block text-sm font-medium mb-1">Wersja OS</label>
+                            <label htmlFor="os_version" className="block text-sm font-medium mb-1">OS Version</label>
                             <input
                                 id="os_version"
                                 required
@@ -145,15 +144,15 @@ export default function NewDevicePage() {
                                 name="os_version"
                                 value={formData.os_version}
                                 onChange={handleChange}
-                                placeholder="np. IOS XE 17.3.1"
+                                placeholder="e.g. IOS XE 17.3.1"
                                 autoComplete="off"
                                 className="w-full border rounded-md p-2"
                             />
                         </div>
 
-                        {/* Localization */}
+                        {/* Location */}
                         <div>
-                            <label htmlFor="location" className="block text-sm font-medium mb-1">Lokalizacja</label>
+                            <label htmlFor="location" className="block text-sm font-medium mb-1">Location</label>
                             <input
                                 id="location"
                                 required
@@ -161,7 +160,7 @@ export default function NewDevicePage() {
                                 name="location"
                                 value={formData.location}
                                 onChange={handleChange}
-                                placeholder="np. Serwerownia A"
+                                placeholder="e.g. Server Room A"
                                 autoComplete="off"
                                 className="w-full border rounded-md p-2"
                             />
@@ -169,7 +168,7 @@ export default function NewDevicePage() {
 
                         {/* Type */}
                         <div>
-                            <label htmlFor="device_type" className="block text-sm font-medium mb-1">Typ</label>
+                            <label htmlFor="device_type" className="block text-sm font-medium mb-1">Device Type</label>
                             <select
                                 id="device_type"
                                 required
@@ -179,10 +178,10 @@ export default function NewDevicePage() {
                                 autoComplete="off"
                                 className="w-full border rounded-md p-2"
                             >
-                                <option value="" disabled>Wybierz typ...</option>
+                                <option value="" disabled>Select type...</option>
                                 <option value="router">Router</option>
                                 <option value="switch">Switch</option>
-                                <option value="server">Serwer</option>
+                                <option value="server">Server</option>
                                 <option value="firewall">Firewall</option>
                             </select>
                         </div>
@@ -190,14 +189,14 @@ export default function NewDevicePage() {
 
                     {mutation.isError && (
                         <p className="text-red-500 text-sm mt-2">
-                            Wystąpił błąd: {(mutation.error as Error).message}
+                            An error occurred: {(mutation.error as Error).message}
                         </p>
                     )}
 
                     <div className="pt-4 flex justify-end">
                         <Button type="submit" disabled={mutation.isPending}>
                             {mutation.isPending && <Loader2 className="mr-2 h-4 w-4 animate-spin"/>}
-                            Zapisz urządzenie
+                            Save Device
                         </Button>
                     </div>
                 </form>

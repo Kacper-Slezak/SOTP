@@ -36,7 +36,7 @@ def clear_overrides():
 def test_readonly_cannot_post_device():
     app.dependency_overrides[get_current_user] = lambda: readonly_user
 
-    # Używamy context managera (with), aby wymusić startup aplikacji
+    # Use context manager (with) to trigger application startup
     with TestClient(app) as client:
         response = client.post(
             "/api/v1/devices", json={"name": "Test Device", "ip_address": "192.168.1.1"}

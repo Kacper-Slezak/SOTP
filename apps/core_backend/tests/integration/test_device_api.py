@@ -1,6 +1,5 @@
 from contextlib import asynccontextmanager
-from datetime import datetime, timezone
-from typing import AsyncGenerator
+from datetime import UTC, datetime
 from unittest.mock import AsyncMock, MagicMock
 
 import pytest
@@ -36,24 +35,24 @@ _test_app.include_router(users_router)
 
 
 def _device(**kw) -> Device:
-    base = dict(
-        id=1,
-        name="Router-01",
-        ip_address="192.168.1.1",
-        device_type="router",
-        vendor="Cisco",
-        model="ISR 4331",
-        os_version="IOS-XE 17.6",
-        location="Server Room A",
-        is_active=True,
-        deleted_at=None,
-        created_by_id=None,
-        snmp_config=None,
-        ssh_config=None,
-        api_config=None,
-        created_at=datetime.now(timezone.utc),
-        updated_at=datetime.now(timezone.utc),
-    )
+    base = {
+        "id": 1,
+        "name": "Router-01",
+        "ip_address": "192.168.1.1",
+        "device_type": "router",
+        "vendor": "Cisco",
+        "model": "ISR 4331",
+        "os_version": "IOS-XE 17.6",
+        "location": "Server Room A",
+        "is_active": True,
+        "deleted_at": None,
+        "created_by_id": None,
+        "snmp_config": None,
+        "ssh_config": None,
+        "api_config": None,
+        "created_at": datetime.now(UTC),
+        "updated_at": datetime.now(UTC),
+    }
     base.update(kw)
     return Device(**base)
 
@@ -66,7 +65,7 @@ def _user(role: UserRole, uid: int = 1) -> User:
         role=role,
         is_active=True,
         password_hash="x",
-        created_at=datetime.now(timezone.utc),
+        created_at=datetime.now(UTC),
     )
 
 
@@ -75,16 +74,16 @@ OPERATOR = _user(UserRole.OPERATOR, 2)
 READONLY = _user(UserRole.READONLY, 3)
 AUDITOR = _user(UserRole.AUDITOR, 4)
 
-VALID = dict(
-    name="Router-01",
-    ip_address="192.168.1.1",
-    device_type="router",
-    vendor="Cisco",
-    model="ISR 4331",
-    os_version="IOS-XE 17.6",
-    location="Server Room A",
-    is_active=True,
-)
+VALID = {
+    "name": "Router-01",
+    "ip_address": "192.168.1.1",
+    "device_type": "router",
+    "vendor": "Cisco",
+    "model": "ISR 4331",
+    "os_version": "IOS-XE 17.6",
+    "location": "Server Room A",
+    "is_active": True,
+}
 
 
 # ---------------------------------------------------------------------------

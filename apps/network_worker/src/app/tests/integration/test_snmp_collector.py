@@ -1,11 +1,8 @@
-import asyncio
 from contextlib import asynccontextmanager
 from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
 from app.tasks.snmp_collector import (
-    OIDS,
-    collect_device_snmp,
     get_active_devices,
     save_metrics,
     schedule_all_snmp,
@@ -18,7 +15,6 @@ from app.tasks.snmp_collector import (
 
 
 class TestSNMPLogic:
-
     @patch("app.tasks.snmp_collector.snmp")
     @patch("app.tasks.snmp_collector.Config")
     def test_snmp_get_all_success(self, mock_config, mock_snmp):
@@ -57,7 +53,6 @@ class TestSNMPLogic:
 
 
 class TestSNMPDatabaseAndCelery:
-
     @pytest.mark.asyncio
     @patch("app.tasks.snmp_collector.get_postgres_session")
     async def test_get_active_devices(self, mock_get_pg_session):

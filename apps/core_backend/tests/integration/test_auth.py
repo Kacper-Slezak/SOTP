@@ -1,7 +1,6 @@
 import asyncio
 import os
-import uuid
-from datetime import datetime, timedelta, timezone
+from datetime import UTC, datetime, timedelta
 
 import pytest
 from app.core.config import Config
@@ -24,7 +23,7 @@ EXPIRED_TOKEN = jwt.encode(
     {
         "sub": "1",
         "type": "access",
-        "exp": datetime.now(timezone.utc) - timedelta(minutes=1),
+        "exp": datetime.now(UTC) - timedelta(minutes=1),
     },
     Config.SECRET_KEY,
     algorithm=Config.ALGORITHM,

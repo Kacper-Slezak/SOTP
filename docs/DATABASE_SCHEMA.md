@@ -1,8 +1,8 @@
-# Dokumentacja Schematu Bazy Danych
+# Database Schema Documentation
 
-System SOTP wykorzystuje PostgreSQL do danych relacyjnych oraz TimescaleDB do danych telemetrycznych.
+The SOTP system utilizes PostgreSQL for relational inventory data and TimescaleDB for time-series telemetry data.
 
-## Diagram ERD
+## ERD Diagram
 
 ```mermaid
 erDiagram
@@ -35,8 +35,8 @@ erDiagram
 
 ```
 
-## Opis Tabel
+## Table Descriptions
 
-* **users**: Przechowuje konta użytkowników wraz z ich rolami (RBAC).
-* **devices**: Inwentarz urządzeń sieciowych (routery, switche, serwery).
-* **device_metrics**: Tabela TimescaleDB (hypertable) przechowująca historię wydajności (CPU, RAM).
+* **users**: Stores user accounts along with role-based access control roles (RBAC).
+* **devices**: Network device inventory (routers, switches, servers, firewalls).
+* **device_metrics**: TimescaleDB hypertable storing historical performance metrics (CPU, RAM, RTT, etc.).

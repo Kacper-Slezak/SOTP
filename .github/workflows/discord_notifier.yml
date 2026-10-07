@@ -22,21 +22,21 @@ jobs:
         run: |
           # 1. Check for the "no tests found" warning first
           if [ "${{ inputs.pytest_exit_code }}" == "5" ]; then
-            echo "TITLE=CI Pipeline OSTRZEŻENIE" >> $GITHUB_OUTPUT
+            echo "TITLE=CI Pipeline WARNING" >> $GITHUB_OUTPUT
             echo "COLOR=16705372" >> $GITHUB_OUTPUT # Yellow
-            echo "DESCRIPTION=Pipeline CI dla **${{ inputs.environment }}** zakończony, ale **nie znaleziono żadnych testów backendu**. Należy je dodać." >> $GITHUB_OUTPUT
+            echo "DESCRIPTION=CI pipeline for **${{ inputs.environment }}** completed, but **no backend tests were found**. Please add tests." >> $GITHUB_OUTPUT
             echo "EMOJI=⚠️" >> $GITHUB_OUTPUT
           # 2. Check for overall success
           elif [ "${{ inputs.status }}" == "success" ]; then
-            echo "TITLE=CI Pipeline SUKCES" >> $GITHUB_OUTPUT
+            echo "TITLE=CI Pipeline SUCCESS" >> $GITHUB_OUTPUT
             echo "COLOR=3066993" >> $GITHUB_OUTPUT # Green
-            echo "DESCRIPTION=Wszystkie kroki CI (Lint, Test, Build) dla **${{ inputs.environment }}** zakończyły się pomyślnie." >> $GITHUB_OUTPUT
+            echo "DESCRIPTION=All CI steps (Lint, Test, Build) for **${{ inputs.environment }}** completed successfully." >> $GITHUB_OUTPUT
             echo "EMOJI=✅" >> $GITHUB_OUTPUT
           # 3. If it's not a warning and not a success, it's a failure
           else
-            echo "TITLE=CI Pipeline BŁĄD" >> $GITHUB_OUTPUT
+            echo "TITLE=CI Pipeline FAILED" >> $GITHUB_OUTPUT
             echo "COLOR=15158332" >> $GITHUB_OUTPUT # Red
-            echo "DESCRIPTION=Pipeline CI dla **${{ inputs.environment }}** ZAWIÓDŁ! 🚨 Wymagana interwencja." >> $GITHUB_OUTPUT
+            echo "DESCRIPTION=CI pipeline for **${{ inputs.environment }}** FAILED! 🚨 Action required." >> $GITHUB_OUTPUT
             echo "EMOJI=❌" >> $GITHUB_OUTPUT
           fi
 
@@ -50,11 +50,11 @@ jobs:
                      "description": "${{ steps.vars.outputs.DESCRIPTION }}",
                      "color": ${{ steps.vars.outputs.COLOR }},
                      "fields": [
-                       { "name": "Środowisko", "value": "${{ inputs.environment }}", "inline": true },
+                       { "name": "Environment", "value": "${{ inputs.environment }}", "inline": true },
                        { "name": "Commit", "value": "[`${{ inputs.commit_sha }}`](${{ github.server_url }}/${{ github.repository }}/commit/${{ inputs.commit_sha }})", "inline": true },
-                       { "name": "Wykonawca", "value": "${{ inputs.actor }}", "inline": true },
+                       { "name": "Triggered by", "value": "${{ inputs.actor }}", "inline": true },
                        { "name": "Repository", "value": "[${{ github.repository }}](${{ github.server_url }}/${{ github.repository }})", "inline": false },
-                       { "name": "Workflow Run", "value": "[Zobacz szczegóły](${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }})", "inline": false }
+                       { "name": "Workflow Run", "value": "[View details](${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }})", "inline": false }
                      ],
                      "timestamp": "'"$(date -u +%Y-%m-%dT%H:%M:%S.000Z)"'",
                      "footer": { "text": "GitHub Actions", "icon_url": "https://github.githubassets.com/images/modules/logos_page/GitHub-Mark.png" }

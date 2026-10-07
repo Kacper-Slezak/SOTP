@@ -1,4 +1,3 @@
-from app.api.dependencies import get_current_user
 from app.core.security import (
     create_access_token,
     create_refresh_token,
@@ -12,9 +11,8 @@ from app.schemas.auth import (
     LoginRequest,
     RefreshRequest,
     RegisterRequest,
-    TokenResponse,
 )
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, HTTPException, status
 from sqlalchemy import select
 
 router = APIRouter(prefix="/api/v1/auth", tags=["auth"])
@@ -69,7 +67,9 @@ async def refresh(payload: RefreshRequest, session: SessionPG):
                 status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid refresh token"
             )
     except ValueError as e:
-        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail=str(e))
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED, detail=str(e)
+        ) from e
     user = await session.get(User, int(user_id))
     if not user or not user.is_active:
         raise HTTPException(

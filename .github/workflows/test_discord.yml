@@ -3,7 +3,7 @@
 name: 🧪 Discord Notifier Test
 
 on:
-  # Ręczne uruchomienie z zakładki Actions
+  # Manual trigger from Actions tab
   workflow_dispatch:
     inputs:
       test_type:
@@ -16,14 +16,14 @@ on:
           - success
           - failure
 
-  # Automatyczne uruchomienie przy push taga test-*
+  # Automatic run on push of test-* tags
   push:
     tags:
       - 'test-*'
 
 jobs:
   # ===================================================================
-  # JOB 1: Symulacja SUKCESU
+  # JOB 1: Simulate SUCCESS
   # ===================================================================
   simulate_success:
     name: ✅ Simulating Successful Job
@@ -49,7 +49,7 @@ jobs:
           echo "==================================="
 
   # ===================================================================
-  # JOB 2: Symulacja PORAŻKI
+  # JOB 2: Simulate FAILURE
   # ===================================================================
   simulate_failure:
     name: ❌ Simulating Failed Job
@@ -75,14 +75,14 @@ jobs:
           echo "==================================="
           echo "🚨 Deployment FAILED!"
           echo "==================================="
-          exit 1  # To spowoduje błąd
+          exit 1  # This triggers a failure
 
   # ===================================================================
-  # JOB 3: Powiadomienie o SUKCESIE
+  # JOB 3: SUCCESS Notification
   # ===================================================================
   notify_success:
     name: 📢 Success Notification
-    # ❌ NIE DODAWAJ runs-on tutaj!
+    # ❌ DO NOT add runs-on here!
     needs: simulate_success
     if: success() && (github.event.inputs.test_type == 'success' || github.event.inputs.test_type == 'both' || github.event_name == 'push')
     uses: ./.github/workflows/discord_notifier.yml
@@ -95,11 +95,11 @@ jobs:
       webhook_url: ${{ secrets.DISCORD_WEBHOOK_URL }}
 
   # ===================================================================
-  # JOB 4: Powiadomienie o PORAŻCE
+  # JOB 4: FAILURE Notification
   # ===================================================================
   notify_failure:
     name: 📢 Failure Notification
-    # ❌ NIE DODAWAJ runs-on tutaj!
+    # ❌ DO NOT add runs-on here!
     needs: simulate_failure
     if: failure() && (github.event.inputs.test_type == 'failure' || github.event.inputs.test_type == 'both' || github.event_name == 'push')
     uses: ./.github/workflows/discord_notifier.yml
@@ -112,7 +112,7 @@ jobs:
       webhook_url: ${{ secrets.DISCORD_WEBHOOK_URL }}
 
   # ===================================================================
-  # JOB 5: Podsumowanie testu
+  # JOB 5: Test Summary
   # ===================================================================
   test_summary:
     name: 📊 Test Summary

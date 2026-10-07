@@ -3,8 +3,8 @@ Unit tests for DeviceService.
 All database interactions are mocked — no real DB required.
 """
 
-from datetime import datetime, timezone
-from unittest.mock import AsyncMock, MagicMock, patch
+from datetime import UTC, datetime
+from unittest.mock import AsyncMock, MagicMock
 
 import pytest
 from app.models.device import Device
@@ -18,20 +18,20 @@ from sqlalchemy.exc import SQLAlchemyError
 
 
 def _make_device(**kwargs) -> Device:
-    defaults = dict(
-        id=1,
-        name="Router-01",
-        ip_address="192.168.1.1",
-        device_type="router",
-        vendor="Cisco",
-        model="ISR 4331",
-        os_version="IOS-XE 17.6",
-        location="Server Room A",
-        is_active=True,
-        deleted_at=None,
-        created_at=datetime.now(timezone.utc),
-        updated_at=datetime.now(timezone.utc),
-    )
+    defaults = {
+        "id": 1,
+        "name": "Router-01",
+        "ip_address": "192.168.1.1",
+        "device_type": "router",
+        "vendor": "Cisco",
+        "model": "ISR 4331",
+        "os_version": "IOS-XE 17.6",
+        "location": "Server Room A",
+        "is_active": True,
+        "deleted_at": None,
+        "created_at": datetime.now(UTC),
+        "updated_at": datetime.now(UTC),
+    }
     defaults.update(kwargs)
     device = Device(**defaults)
     return device
@@ -132,7 +132,7 @@ class TestGetById:
 
     @pytest.mark.asyncio
     async def test_raises_404_for_soft_deleted_device(self):
-        deleted = _make_device(deleted_at=datetime.now(timezone.utc))
+        deleted = _make_device(deleted_at=datetime.now(UTC))
         session = _make_session(get_result=deleted)
         service = DeviceService(session)
 
@@ -151,7 +151,6 @@ class TestCreate:
     async def test_creates_device_successfully(self):
         session = _make_session(scalar_result=None)  # no IP conflict
 
-        created = _make_device()
         session.refresh = AsyncMock(side_effect=lambda d: setattr(d, "id", 1))
 
         service = DeviceService(session)

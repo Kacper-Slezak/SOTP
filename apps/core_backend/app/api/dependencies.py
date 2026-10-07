@@ -33,7 +33,7 @@ async def get_current_user(session: SessionPG, token: str = Depends(oauth2_schem
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail=str(e),
             headers={"WWW-Authenticate": "Bearer"},
-        )
+        ) from e
 
 
 def require_role(allowed_roles: list[UserRole]):

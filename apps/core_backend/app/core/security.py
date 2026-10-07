@@ -1,4 +1,4 @@
-from datetime import datetime, timedelta, timezone
+from datetime import UTC, datetime, timedelta
 
 import bcrypt
 from app.core.config import Config
@@ -21,7 +21,7 @@ def verify_password(password: str, hashed_password: str) -> bool:
 
 
 def create_access_token(data: dict) -> str:
-    exp = datetime.now(timezone.utc) + timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES)
+    exp = datetime.now(UTC) + timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES)
     payload = data.copy()
     payload.update({"exp": exp, "type": "access"})
 
@@ -34,9 +34,9 @@ def decode_access_token(token: str) -> dict:
         payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
         return payload
     except jwt.ExpiredSignatureError:
-        raise ValueError("Token has expired")
+        raise ValueError("Token has expired") from None
     except jwt.JWTError:
-        raise ValueError("Invalid token")
+        raise ValueError("Invalid token") from None
 
 
 def create_refresh_token(data: dict) -> str:

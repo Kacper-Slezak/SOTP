@@ -1,9 +1,8 @@
 import enum
 
 from sqlalchemy import Boolean as Bool
-from sqlalchemy import Column, DateTime
+from sqlalchemy import Column, DateTime, Integer, String, func
 from sqlalchemy import Enum as SQLEnum
-from sqlalchemy import Integer, String, func
 from sqlalchemy.orm import relationship
 
 from .base import Base
