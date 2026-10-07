@@ -1,5 +1,5 @@
 import asyncio
-from datetime import datetime, timedelta, timezone
+from datetime import UTC, datetime, timedelta
 
 from backend.app.models.device import Device
 from backend.app.models.metric import DeviceMetric
@@ -133,11 +133,11 @@ async def seed_data():
 
         if existing_metrics:
             print(
-                f"Metrics for Core-Router-01 already exist. Skipping metrics insertion."
+                "Metrics for Core-Router-01 already exist. Skipping metrics insertion."
             )
         else:
             metric_data = []
-            now = datetime.now(timezone.utc)
+            now = datetime.now(UTC)
 
             # Generate 2 hours of fake CPU utilization data (every 5 minutes)
             for i in range(24):  # 24 x 5 mins = 120 mins (2 hours)
@@ -175,9 +175,9 @@ async def seed_data():
                 )
 
         print("\n Seeding complete!")
-        print(f"\n Default credentials:")
-        print(f"   Email: admin@sotp.local")
-        print(f"   Password: admin123")
+        print("\n Default credentials:")
+        print("   Email: admin@sotp.local")
+        print("   Password: admin123")
 
 
 async def main():
@@ -195,12 +195,14 @@ if __name__ == "__main__":
     try:
         asyncio.run(main())
     except ImportError:
-        print("\ ERROR: This script requires the backend dependencies to be installed.")
+        print(
+            r"\ ERROR: This script requires the backend dependencies to be installed."
+        )
         print(
             "   Try running 'pip install -r backend/requirements.txt' in your environment or use 'make test' for container execution."
         )
     except Exception as e:
-        print(f"\ A critical error occurred during seeding: {e}")
+        print(rf"\ A critical error occurred during seeding: {e}")
         print(
             "   Ensure your Docker containers (postgres, timescale) are running and healthy. You can run: 'make dev'"
         )
