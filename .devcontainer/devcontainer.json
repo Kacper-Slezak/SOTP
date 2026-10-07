@@ -9,37 +9,45 @@
     // Określamy, do której usługi z pliku compose ma podłączyć się VS Code
     "service": "backend",
 
-    // Ścieżka do folderu z kodem WEWNĄTRZ kontenera
-    "workspaceFolder": "/workspace/backend",
+    // Ścieżka do folderu z kodem WEWNĄTRZ kontenera (monorepo apps/core_backend)
+    "workspaceFolder": "/workspace/apps/core_backend",
 
-    // NOWA SEKCJA: Automatycznie instaluje Gita wewnątrz kontenera
+    // Automatycznie instaluje Gita wewnątrz kontenera
     "features": {
         "ghcr.io/devcontainers/features/git:1": {}
     },
 
-
     // Personalizacja środowiska wewnątrz VS Code
     "customizations": {
         "vscode": {
-            // Ustawienia, które zostaną zastosowane w VS Code wewnątrz kontenera
+            // Nowoczesne ustawienia VS Code (Ruff zastępuje pylint, black i isort)
             "settings": {
                 "python.defaultInterpreterPath": "/usr/local/bin/python",
-                "python.linting.pylintEnabled": true,
-                "python.linting.enabled": true
+                "editor.formatOnSave": true,
+                "[python]": {
+                    "editor.defaultFormatter": "charliermarsh.ruff",
+                    "editor.formatOnSave": true,
+                    "editor.codeActionsOnSave": {
+                        "source.fixAll.ruff": "explicit",
+                        "source.organizeImports.ruff": "explicit"
+                    }
+                }
             },
-            // Lista rozszerzeń, które zostaną automatycznie zainstalowane w kontenerze
+            // Lista rozszerzeń specyficznych dla backendu
             "extensions": [
                 "ms-python.python",
-                "ms-python.black-formatter",
-                "ms-python.isort",
+                "ms-python.vscode-pylance",
+                "ms-python.debugpy",
+                "charliermarsh.ruff",
+                "tamasfe.even-better-toml",
                 "ms-azuretools.vscode-docker",
                 "mtxr.sqltools",
-                "mtxr.sqltools-driver-pg"
+                "mtxr.sqltools-driver-pg",
+                "humao.rest-client"
             ]
         }
     },
 
-    // Komenda do wykonania po stworzeniu kontenera.
-    // Zapewnia, że wszystkie zależności są zainstalowane.
+    // Komenda do wykonania po stworzeniu kontenera
     "postCreateCommand": "pip install -r requirements.txt"
 }

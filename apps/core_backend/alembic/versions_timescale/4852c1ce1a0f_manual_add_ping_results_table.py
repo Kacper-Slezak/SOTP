@@ -6,17 +6,17 @@ Create Date: 2025-11-02 17:40:32.123456
 
 """
 
-from typing import Sequence, Union
+from collections.abc import Sequence
 
 import sqlalchemy as sa
 from alembic import op
 
 # revision identifiers, used by Alembic.
 revision: str = "4852c1ce1a0f"
-down_revision: Union[str, None] = "0001_init_timescale"
+down_revision: str | None = "0001_init_timescale"
 # POPRAWKA BŁĘDU: Zmieniono ('timescale',) na None
-branch_labels: Union[str, Sequence[str], None] = None
-depends_on: Union[str, Sequence[str], None] = None
+branch_labels: str | Sequence[str] | None = None
+depends_on: str | Sequence[str] | None = None
 
 
 def upgrade() -> None:

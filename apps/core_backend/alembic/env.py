@@ -1,6 +1,5 @@
 # backend/alembic/env.py
 
-import os
 from logging.config import fileConfig
 
 from alembic import context
@@ -9,14 +8,11 @@ from alembic import context
 from app.core.config import Config
 
 # Import all models
-from app.models.alert import Alert, AlertRule
-from app.models.audit_log import AuditLog
 from app.models.base import Base  # Keep this base
-from app.models.device import Credential, Device
 from app.models.metric import DeviceMetric  # TimescaleDB model
 from app.models.PingResult import PingResult
-from app.models.user import User
 from sqlalchemy import (  # Use create_engine for sync connection in migrations
+    MetaData,
     create_engine,
     pool,
 )
@@ -26,8 +22,6 @@ config = context.config
 
 if config.config_file_name is not None:
     fileConfig(config.config_file_name)
-
-from sqlalchemy import MetaData  # <-- Import MetaData
 
 # --- Define which models go to which database ---
 

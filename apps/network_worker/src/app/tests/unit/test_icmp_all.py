@@ -1,6 +1,5 @@
 from unittest.mock import MagicMock, patch
 
-import pytest
 from app.tasks.monitoring_tasks import (
     PING_COUNT,
     PING_TIMEOUT,
@@ -56,7 +55,6 @@ def test_device_icmp_success_down(mock_ping, mock_insert):
 
 @patch("app.tasks.monitoring_tasks.ping")
 def test_device_icmp_bad_ip_format(mock_ping):
-
     mock_ping.side_effect = Exception("Bad IP format / Name lookup failed")
     result = device_icmp(device_address="google.com")
 

@@ -16,51 +16,107 @@
   // Set the user inside the container
   "remoteUser": "root",
 
-  // Ensure Git is available
+  // Devcontainer features for complete DevOps toolchain (K8s, Terraform, Security)
   "features": {
-    "ghcr.io/devcontainers/features/git:1": {}
+    "ghcr.io/devcontainers/features/git:1": {},
+    "ghcr.io/devcontainers/features/kubectl-helm-minikube:1": {
+      "minikube": "none"
+    },
+    "ghcr.io/devcontainers/features/terraform:1": {
+      "tflint": "latest"
+    },
+    "ghcr.io/devcontainers-contrib/features/k3d:2": {},
+    "ghcr.io/devcontainers-contrib/features/trivy:2": {}
   },
 
   // VS Code extensions and settings
   "customizations": {
     "vscode": {
       "extensions": [
-        // Python development
+        // Python (P1)
         "ms-python.python",
         "ms-python.vscode-pylance",
-        "ms-python.black-formatter",
-        "ms-python.isort",
+        "ms-python.debugpy",
         "charliermarsh.ruff",
+        "tamasfe.even-better-toml",
 
-        // Docker support
+        // Frontend
+        "dbaeumer.vscode-eslint",
+        "esbenp.prettier-vscode",
+        "bradlc.vscode-tailwindcss",
+        "vitest.explorer",
+        "ms-playwright.playwright",
+
+        // Containers and CI (P2)
         "ms-azuretools.vscode-docker",
+        "exiasr.hadolint",
+        "github.vscode-github-actions",
+        "aquasecurityofficial.trivy-vulnerability-scanner",
+        "timonwong.shellcheck",
 
-        // Database tools
-        "mtxr.sqltools",
-        "mtxr.sqltools-driver-pg",
-
-        // YAML support for docker-compose
+        // Kubernetes (P3–P4)
+        "ms-kubernetes-tools.vscode-kubernetes-tools",
         "redhat.vscode-yaml",
 
-        // Optional but recommended
-        "github.copilot",
+        // Terraform (P6)
+        "hashicorp.terraform",
+
+        // Data and API
+        "mtxr.sqltools",
+        "mtxr.sqltools-driver-pg",
+        "humao.rest-client",
+
+        // Docs and Architecture
+        "davidanson.vscode-markdownlint",
+        "bierner.markdown-mermaid",
+
+        // Git and Collaboration
+        "github.vscode-pull-request-github",
         "eamodio.gitlens"
       ],
       "settings": {
         // Python settings
         "python.defaultInterpreterPath": "/usr/local/bin/python",
-        "python.linting.enabled": true,
-        "python.linting.pylintEnabled": false,
-        "python.formatting.provider": "black",
+        "python.analysis.autoSearchPaths": true,
+        "python.analysis.extraPaths": [
+          "/workspace/apps/core_backend",
+          "/workspace/apps/network_worker/src"
+        ],
 
         // Editor settings
         "editor.formatOnSave": true,
-        "editor.codeActionsOnSave": {
-          "source.organizeImports": "explicit"
-        },
         "[python]": {
-          "editor.defaultFormatter": "ms-python.black-formatter",
+          "editor.defaultFormatter": "charliermarsh.ruff",
+          "editor.formatOnSave": true,
+          "editor.codeActionsOnSave": {
+            "source.fixAll.ruff": "explicit",
+            "source.organizeImports.ruff": "explicit"
+          },
           "editor.tabSize": 4
+        },
+        "[javascript]": {
+          "editor.defaultFormatter": "esbenp.prettier-vscode",
+          "editor.tabSize": 2
+        },
+        "[javascriptreact]": {
+          "editor.defaultFormatter": "esbenp.prettier-vscode",
+          "editor.tabSize": 2
+        },
+        "[typescript]": {
+          "editor.defaultFormatter": "esbenp.prettier-vscode",
+          "editor.tabSize": 2
+        },
+        "[typescriptreact]": {
+          "editor.defaultFormatter": "esbenp.prettier-vscode",
+          "editor.tabSize": 2
+        },
+        "[json]": {
+          "editor.defaultFormatter": "esbenp.prettier-vscode",
+          "editor.tabSize": 2
+        },
+        "[yaml]": {
+          "editor.defaultFormatter": "redhat.vscode-yaml",
+          "editor.tabSize": 2
         },
 
         // Files to exclude from explorer
@@ -68,7 +124,10 @@
           "**/__pycache__": true,
           "**/*.pyc": true,
           "**/.pytest_cache": true,
-          "**/node_modules": true
+          "**/.ruff_cache": true,
+          "**/.coverage": true,
+          "**/node_modules": true,
+          "**/.next": true
         },
 
         // Terminal settings
@@ -112,7 +171,7 @@
   },
 
   // Commands to run after the container is created
-  "postCreateCommand": "cd /workspace/backend && pip install -e . && echo '✅ Dev container ready!'",
+  "postCreateCommand": "pip install -r apps/core_backend/requirements.txt && pip install -r apps/network_worker/requirements.txt && (cd apps/web_frontend && npm install) && echo '✅ Dev container ready!'",
 
   // Shutdown behavior
   "shutdownAction": "stopCompose",

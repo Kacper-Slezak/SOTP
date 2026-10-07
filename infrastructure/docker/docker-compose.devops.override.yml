@@ -4,4 +4,4 @@ services:
     volumes:
       # Ta linijka NADPISUJE oryginalne volumes i montuje CAŁY projekt
       - ../..:/workspace
-    working_dir: /workspace/backend
+    working_dir: /workspace

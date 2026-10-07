@@ -1,0 +1,136 @@
+{
+  "version": "0.2.0",
+  "configurations": [
+    {
+      "name": "FastAPI: Core Backend (Uvicorn)",
+      "type": "debugpy",
+      "request": "launch",
+      "module": "uvicorn",
+      "args": [
+        "app.main:app",
+        "--reload",
+        "--host",
+        "0.0.0.0",
+        "--port",
+        "8000"
+      ],
+      "cwd": "${workspaceFolder}/apps/core_backend",
+      "env": {
+        "PYTHONPATH": "${workspaceFolder}/apps/core_backend"
+      },
+      "jinja": true,
+      "justMyCode": true
+    },
+    {
+      "name": "Celery: Network Worker",
+      "type": "debugpy",
+      "request": "launch",
+      "module": "celery",
+      "args": [
+        "-A",
+        "app.tasks.celery_app",
+        "worker",
+        "--loglevel=info",
+        "--pool=solo"
+      ],
+      "cwd": "${workspaceFolder}/apps/network_worker/src",
+      "env": {
+        "PYTHONPATH": "${workspaceFolder}/apps/network_worker/src"
+      },
+      "justMyCode": true
+    },
+    {
+      "name": "Celery: Beat Scheduler",
+      "type": "debugpy",
+      "request": "launch",
+      "module": "celery",
+      "args": [
+        "-A",
+        "app.tasks.celery_app",
+        "beat",
+        "--loglevel=info"
+      ],
+      "cwd": "${workspaceFolder}/apps/network_worker/src",
+      "env": {
+        "PYTHONPATH": "${workspaceFolder}/apps/network_worker/src"
+      },
+      "justMyCode": true
+    },
+    {
+      "name": "Pytest: Core Backend",
+      "type": "debugpy",
+      "request": "launch",
+      "module": "pytest",
+      "args": [
+        "tests",
+        "-v"
+      ],
+      "cwd": "${workspaceFolder}/apps/core_backend",
+      "env": {
+        "PYTHONPATH": "${workspaceFolder}/apps/core_backend"
+      },
+      "console": "integratedTerminal",
+      "justMyCode": false
+    },
+    {
+      "name": "Pytest: Network Worker",
+      "type": "debugpy",
+      "request": "launch",
+      "module": "pytest",
+      "args": [
+        "app/tests",
+        "-v"
+      ],
+      "cwd": "${workspaceFolder}/apps/network_worker/src",
+      "env": {
+        "PYTHONPATH": "${workspaceFolder}/apps/network_worker/src"
+      },
+      "console": "integratedTerminal",
+      "justMyCode": false
+    },
+    {
+      "name": "Pytest: Current File",
+      "type": "debugpy",
+      "request": "launch",
+      "module": "pytest",
+      "args": [
+        "${file}",
+        "-v"
+      ],
+      "cwd": "${workspaceFolder}",
+      "env": {
+        "PYTHONPATH": "${workspaceFolder}/apps/core_backend:${workspaceFolder}/apps/network_worker/src"
+      },
+      "console": "integratedTerminal",
+      "justMyCode": false
+    },
+    {
+      "name": "Next.js: Debug Frontend",
+      "type": "node",
+      "request": "launch",
+      "cwd": "${workspaceFolder}/apps/web_frontend",
+      "runtimeExecutable": "npm",
+      "runtimeArgs": ["run", "dev"],
+      "serverReadyAction": {
+        "pattern": "- Local:.+(http://localhost:[0-9]+)",
+        "uriFormat": "%s",
+        "action": "openExternally"
+      }
+    },
+    {
+      "name": "Python: Remote Attach (debugpy:5678)",
+      "type": "debugpy",
+      "request": "attach",
+      "connect": {
+        "host": "localhost",
+        "port": 5678
+      },
+      "pathMappings": [
+        {
+          "localRoot": "${workspaceFolder}",
+          "remoteRoot": "/workspace"
+        }
+      ]
+    }
+  ]
+}

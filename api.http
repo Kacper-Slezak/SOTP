@@ -1,0 +1,84 @@
+### ==============================================================================
+### SOTP API Documentation & REST Client Collection
+### ==============================================================================
+### Use with the VS Code "REST Client" extension (humao.rest-client)
+### Click "Send Request" above any request or press Ctrl+Alt+R (Cmd+Alt+R on Mac).
+### ==============================================================================
+
+### Environment Variables
+@baseUrl = http://localhost:8000/api/v1
+@contentType = application/json
+
+### ------------------------------------------------------------------------------
+### 1. Authentication
+### ------------------------------------------------------------------------------
+
+### 1.1 Login (Default Demo Admin)
+# @name login
+POST {{baseUrl}}/auth/login
+Content-Type: {{contentType}}
+
+{
+  "email": "admin@sotp.local",
+  "password": "admin123"
+}
+
+### Capture tokens from login response
+@authToken = {{login.response.body.access_token}}
+@refreshToken = {{login.response.body.refresh_token}}
+
+### 1.2 Refresh Access Token
+POST {{baseUrl}}/auth/refresh
+Content-Type: {{contentType}}
+
+{
+  "refresh_token": "{{refreshToken}}"
+}
+
+### 1.3 Register New User
+POST {{baseUrl}}/auth/register
+Content-Type: {{contentType}}
+
+{
+  "name": "DevOps Engineer",
+  "email": "devops@sotp.local",
+  "password": "StrongPassword123!"
+}
+
+### ------------------------------------------------------------------------------
+### 2. Device Management (Requires Authentication)
+### ------------------------------------------------------------------------------
+
+### 2.1 List Devices (Paginated & Sorted)
+GET {{baseUrl}}/devices/?limit=10&offset=0&sort_by=id&sort_order=asc
+Authorization: Bearer {{authToken}}
+
+### 2.2 Filter Devices by Type / Vendor / Status
+GET {{baseUrl}}/devices/?limit=10&offset=0&device_type=router&vendor=cisco&is_active=true
+Authorization: Bearer {{authToken}}
+
+### 2.3 Create Device (Admin only)
+# @name createDevice
+POST {{baseUrl}}/devices/
+Content-Type: {{contentType}}
+Authorization: Bearer {{authToken}}
+
+{
+  "name": "core-router-01",
+  "ip_address": "192.168.10.1",
+  "device_type": "router",
+  "vendor": "cisco",
+  "model": "ISR-4331",
+  "os_version": "IOS-XE 17.6",
+  "location": "Warsaw-DC1-Rack4",
+  "is_active": true,
+  "credentials": {
+    "snmp_community": "sotp_community",
+    "ssh_username": "admin",
+    "ssh_password": "DeviceSecretPassword123"
+  }
+}
+
+### 2.4 Get Device by ID
+GET {{baseUrl}}/devices/1
+Authorization: Bearer {{authToken}}

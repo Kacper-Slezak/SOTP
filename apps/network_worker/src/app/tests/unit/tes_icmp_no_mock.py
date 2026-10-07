@@ -43,9 +43,9 @@ class TestFaultIsolation:
 
         assert results[0]["status"] == "UP", "Device 1 powinien być UP"
         assert results[1]["status"] == "DOWN", "Device 2 powinien być DOWN"
-        assert (
-            results[2]["status"] == "UP"
-        ), "Device 3 powinien być UP - nie zaraził się błędem device 2"
+        assert results[2]["status"] == "UP", (
+            "Device 3 powinien być UP - nie zaraził się błędem device 2"
+        )
 
     @patch("app.tasks.monitoring_tasks.PING_TIMEOUT", 1)
     @patch("app.tasks.monitoring_tasks.PING_COUNT", 1)
@@ -60,9 +60,9 @@ class TestFaultIsolation:
 
         results = [device_icmp(device_address=d.ip_address) for d in devices]
 
-        assert all(
-            r["status"] == "DOWN" for r in results
-        ), f"Oczekiwano wszystkich DOWN, dostano: {[r['status'] for r in results]}"
+        assert all(r["status"] == "DOWN" for r in results), (
+            f"Oczekiwano wszystkich DOWN, dostano: {[r['status'] for r in results]}"
+        )
 
     @patch("app.tasks.monitoring_tasks.PING_TIMEOUT", 1)
     @patch("app.tasks.monitoring_tasks.PING_COUNT", 1)
@@ -82,9 +82,9 @@ class TestFaultIsolation:
 
         assert results[0]["status"] == "UP"
         assert results[1]["status"] == "DOWN"
-        assert (
-            results[2]["status"] == "ERROR"
-        ), "Błędny adres powinien dać ERROR, nie crash całego systemu"
+        assert results[2]["status"] == "ERROR", (
+            "Błędny adres powinien dać ERROR, nie crash całego systemu"
+        )
 
 
 # -----------------------------------------------------------------
@@ -93,7 +93,6 @@ class TestFaultIsolation:
 
 
 class TestDispatcherBehavior:
-
     @patch("app.tasks.monitoring_tasks.device_icmp.delay")
     @patch("app.tasks.monitoring_tasks.get_all_devices")
     def test_dispatcher_skips_inactive_by_default(self, mock_get_devices, mock_delay):
@@ -115,9 +114,9 @@ class TestDispatcherBehavior:
             call.kwargs["device_address"] for call in mock_delay.call_args_list
         ]
         assert "1.1.1.1" in called_with
-        assert (
-            "2.2.2.2" not in called_with
-        ), "Nieaktywne urządzenie nie powinno trafić do kolejki"
+        assert "2.2.2.2" not in called_with, (
+            "Nieaktywne urządzenie nie powinno trafić do kolejki"
+        )
         assert "3.3.3.3" in called_with
 
     @patch("app.tasks.monitoring_tasks.device_icmp.delay")
@@ -136,9 +135,9 @@ class TestDispatcherBehavior:
         called_ips = [
             call.kwargs["device_address"] for call in mock_delay.call_args_list
         ]
-        assert len(called_ips) == len(
-            set(called_ips)
-        ), f"Znaleziono duplikaty w kolejce: {called_ips}"
+        assert len(called_ips) == len(set(called_ips)), (
+            f"Znaleziono duplikaty w kolejce: {called_ips}"
+        )
 
 
 # -----------------------------------------------------------------
@@ -147,7 +146,6 @@ class TestDispatcherBehavior:
 
 
 class TestDataEdgeCases:
-
     @patch("app.tasks.monitoring_tasks.insert_ping_result")
     def test_empty_ip_address(self, mock_insert):
         """Co się stanie gdy w bazie jest urządzenie z pustym IP?"""

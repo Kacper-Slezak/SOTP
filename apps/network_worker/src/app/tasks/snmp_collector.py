@@ -60,7 +60,7 @@ def snmp_get_all(target):
 async def get_active_devices():
     # Zobacz, jak czysto to teraz wygląda!
     async with get_postgres_session() as session:
-        result = await session.execute(select(Device).where(Device.is_active == True))
+        result = await session.execute(select(Device).where(Device.is_active is True))
         return result.scalars().all()
 
 

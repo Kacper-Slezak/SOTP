@@ -1,4 +1,4 @@
-from app.api.dependencies import get_current_user, require_role
+from app.api.dependencies import require_role
 from app.db.deps import SessionPG
 from app.models.user import User, UserRole
 from app.schemas.devices import DeviceOut, DevicePut, PaginatedResponse

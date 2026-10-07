@@ -11,7 +11,6 @@ async def insert_ping_result(
     diagnostic_message: str | None = None,
 ):
     async with get_timescale_session() as db:
-
         new_result = PingResult(
             device_id=device_id,
             ip_address=ip_address,

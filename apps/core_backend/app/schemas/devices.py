@@ -1,4 +1,4 @@
-from typing import Any, Generic, Optional, TypeVar
+from typing import Any, Generic, TypeVar
 
 from pydantic import BaseModel
 
@@ -22,9 +22,9 @@ class DeviceCredentialsIn(BaseModel):
       ssh_password    →  secret/data/devices/{id}/ssh
     """
 
-    snmp_community: Optional[str] = None
-    ssh_username: Optional[str] = None
-    ssh_password: Optional[str] = None
+    snmp_community: str | None = None
+    ssh_username: str | None = None
+    ssh_password: str | None = None
 
 
 class DeviceOut(BaseModel):
@@ -35,7 +35,7 @@ class DeviceOut(BaseModel):
     vendor: str
     model: str
     os_version: str
-    location: Optional[str]
+    location: str | None
     is_active: bool
 
     model_config = {"from_attributes": True}
@@ -50,7 +50,7 @@ class DevicePut(BaseModel):
     os_version: str
     location: str
     is_active: bool
-    snmp_config: Optional[dict[str, Any]] = None
-    ssh_config: Optional[dict[str, Any]] = None
-    api_config: Optional[dict[str, Any]] = None
-    credentials: Optional[DeviceCredentialsIn] = None
+    snmp_config: dict[str, Any] | None = None
+    ssh_config: dict[str, Any] | None = None
+    api_config: dict[str, Any] | None = None
+    credentials: DeviceCredentialsIn | None = None

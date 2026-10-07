@@ -11,8 +11,8 @@ This typically indicates an issue during the Docker image build process.
 **Solution:**
 1.**Check Context:** Ensure you are in the project root directory (`/sotp`).
 2.**Review Logs:** Run the build command explicitly to see the detailed error:
-    *For Backend: `docker build ./backend`
-    *For Frontend: `docker build ./frontend`
+    *For Backend: `docker build ./apps/core_backend`
+    *For Frontend: `docker build ./apps/web_frontend`
 3.**Dependency Caching:** If dependencies were recently added, run `make down` to stop containers, then clean up old volumes with `make clean` and try `make dev` again.
 
 ### Issue: Frontend fails to start inside Docker with module errors
@@ -20,8 +20,8 @@ This typically indicates an issue during the Docker image build process.
 This is often caused by volume mounting issues in Next.js/Node.js environments.
 
 **Solution:**
-The `docker-compose.dev.yml` file is configured with external volumes for `/workspace/frontend/node_modules` and `/.next`. If you encounter errors, try:
-1.**Clearing Cache:** Delete the local `frontend/node_modules` and `frontend/.next` folders.
+The `docker-compose.dev.yml` file is configured with external volumes for `/workspace/apps/web_frontend/node_modules` and `/.next`. If you encounter errors, try:
+1.**Clearing Cache:** Delete the local `apps/web_frontend/node_modules` and `apps/web_frontend/.next` folders.
 2.**Rebuilding:** Run `make down` followed by `make dev`.
 
 ## 2. Database and Backend Connectivity

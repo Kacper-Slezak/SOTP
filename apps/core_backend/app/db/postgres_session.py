@@ -1,5 +1,5 @@
+from collections.abc import AsyncGenerator
 from contextlib import asynccontextmanager
-from typing import AsyncGenerator
 
 from app.utils.databases import create_postgres
 from sqlalchemy.ext.asyncio import AsyncEngine, AsyncSession
@@ -17,7 +17,6 @@ AsyncPostgresSessionLocal = sessionmaker(
 
 @asynccontextmanager
 async def get_postgres_session() -> AsyncGenerator[AsyncSession, None]:
-
     async with AsyncPostgresSessionLocal() as session:
         try:
             yield session

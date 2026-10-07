@@ -9,10 +9,10 @@
     // Podłączamy się do usługi 'frontend'
     "service": "frontend",
 
-    // Folder z kodem wewnątrz kontenera frontendu
-    "workspaceFolder": "/workspace/frontend",
+    // Folder z kodem wewnątrz kontenera frontendu (monorepo apps/web_frontend)
+    "workspaceFolder": "/workspace/apps/web_frontend",
 
-    // NOWA SEKCJA: Automatycznie instaluje Gita wewnątrz kontenera
+    // Automatycznie instaluje Gita wewnątrz kontenera
     "features": {
         "ghcr.io/devcontainers/features/git:1": {}
     },
@@ -23,15 +23,40 @@
             // Ustawienia specyficzne dla frontendu
             "settings": {
                 "editor.formatOnSave": true,
-                "eslint.validate": ["javascript", "javascriptreact", "typescript", "typescriptreact"]
+                "editor.defaultFormatter": "esbenp.prettier-vscode",
+                "[javascript]": {
+                    "editor.defaultFormatter": "esbenp.prettier-vscode"
+                },
+                "[javascriptreact]": {
+                    "editor.defaultFormatter": "esbenp.prettier-vscode"
+                },
+                "[typescript]": {
+                    "editor.defaultFormatter": "esbenp.prettier-vscode"
+                },
+                "[typescriptreact]": {
+                    "editor.defaultFormatter": "esbenp.prettier-vscode"
+                },
+                "[json]": {
+                    "editor.defaultFormatter": "esbenp.prettier-vscode"
+                },
+                "[jsonc]": {
+                    "editor.defaultFormatter": "esbenp.prettier-vscode"
+                },
+                "eslint.validate": [
+                    "javascript",
+                    "javascriptreact",
+                    "typescript",
+                    "typescriptreact"
+                ]
             },
-            // Lista rozszerzeń idealnych do pracy z React/Next.js
+            // Lista rozszerzeń idealnych do pracy z React/Next.js i testami
             "extensions": [
                 "dbaeumer.vscode-eslint",
                 "esbenp.prettier-vscode",
-                "ms-azuretools.vscode-docker",
-                "dsznajder.es7-react-js-snippets",
-                "bradlc.vscode-tailwindcss"
+                "bradlc.vscode-tailwindcss",
+                "vitest.explorer",
+                "ms-playwright.playwright",
+                "ms-azuretools.vscode-docker"
             ]
         }
     },

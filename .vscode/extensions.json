@@ -1,0 +1,51 @@
+{
+  "recommendations": [
+    // Python (P1)
+    "ms-python.python",
+    "ms-python.vscode-pylance",
+    "ms-python.debugpy",
+    "charliermarsh.ruff",
+    "tamasfe.even-better-toml",
+
+    // Frontend
+    "dbaeumer.vscode-eslint",
+    "esbenp.prettier-vscode",
+    "bradlc.vscode-tailwindcss",
+    "vitest.explorer",
+    "ms-playwright.playwright",
+
+    // Containers and CI (P2)
+    "ms-azuretools.vscode-docker",
+    "exiasr.hadolint",
+    "github.vscode-github-actions",
+    "aquasecurityofficial.trivy-vulnerability-scanner",
+    "timonwong.shellcheck",
+
+    // Kubernetes (P3–P4)
+    "ms-kubernetes-tools.vscode-kubernetes-tools",
+    "redhat.vscode-yaml",
+
+    // Terraform (P6)
+    "hashicorp.terraform",
+
+    // Data and API
+    "mtxr.sqltools",
+    "mtxr.sqltools-driver-pg",
+    "humao.rest-client",
+
+    // Docs & Architecture
+    "davidanson.vscode-markdownlint",
+    "bierner.markdown-mermaid",
+
+    // Git & Productivity
+    "github.vscode-pull-request-github",
+    "eamodio.gitlens",
+    "usernamehw.errorlens"
+  ],
+  "unwantedRecommendations": [
+    "ms-python.black-formatter",
+    "ms-python.isort",
+    "ms-python.pylint",
+    "ms-python.flake8"
+  ]
+}

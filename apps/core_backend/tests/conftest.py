@@ -4,8 +4,6 @@ conftest.py — shared pytest configuration for core_backend tests.
 Place this file at:  apps/core_backend/tests/conftest.py
 """
 
-import pytest
-
 
 # ---------------------------------------------------------------------------
 # Make pytest-asyncio work in "auto" mode for the entire test suite so that
