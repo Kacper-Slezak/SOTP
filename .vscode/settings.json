@@ -76,8 +76,8 @@
       ".github/workflows/*.yaml"
     ],
     "kubernetes": [
-      "infrastructure/k8s/**/*.yml",
-      "infrastructure/k8s/**/*.yaml",
+      "infrastructure/helm/**/*.yml",
+      "infrastructure/helm/**/*.yaml",
       "k8s/**/*.yml",
       "k8s/**/*.yaml"
     ]
