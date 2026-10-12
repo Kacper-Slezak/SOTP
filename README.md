@@ -99,6 +99,16 @@ The project intentionally covers a wide surface area: async Python microservices
 └─────────────────────────────────────────────────────────────┘
 ```
 
+### Key Decisions
+
+The reasoning behind the architecture is recorded as ADRs in [`docs/adr/`](docs/adr/README.md):
+
+- [ADR-001](docs/adr/0001-monorepo.md) — Monorepo with an `apps/` layout
+- [ADR-002](docs/adr/0002-postgres-timescaledb-split.md) — Separate PostgreSQL and TimescaleDB instances
+- [ADR-003](docs/adr/0003-celery-for-collectors.md) — Celery + Redis for network collectors
+- [ADR-004](docs/adr/0004-k3d-local-aws-terraform-plan-only.md) — K3d locally, AWS Terraform plan-only
+- [ADR-005](docs/adr/0005-gitops-repo-layout.md) — GitOps repository layout
+
 <p align="right">(<a href="#readme-top">back to top</a>)</p>
 
 ---
@@ -178,6 +188,7 @@ SOTP/
 │   └── k8s/                   # Early Kubernetes manifests (in progress)
 │
 ├── docs/                      # Architecture, API, DB schema, deployment guides
+│   └── adr/                   # Architecture Decision Records
 └── .github/
     └── workflows/             # ci.yml, deploy-prod.yml, discord_notifier.yml
 ```
