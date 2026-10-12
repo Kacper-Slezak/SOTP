@@ -1,0 +1,14 @@
+# Store all text files with LF line endings, regardless of the committer's
+# core.autocrlf setting (Windows, WSL, macOS). Matches end_of_line in .editorconfig.
+* text=auto eol=lf
+
+# Binary files: never convert or diff as text.
+*.png  binary
+*.jpg  binary
+*.jpeg binary
+*.gif  binary
+*.ico  binary
+*.webp binary
+*.pdf  binary
+*.woff  binary
+*.woff2 binary
