@@ -37,7 +37,7 @@ The v4 roadmap is organized into 9 sequential phases corresponding to GitHub mil
 * **Prometheus Instrumentator:** FastAPI middleware exporting `/metrics` target ([#63](https://github.com/Kacper-Slezak/SOTP/issues/63)).
 
 **Active Focus:**
-* **Phase P0 (In Progress):** Cleaning up obsolete artifacts, stale branches, and establishing the ADR baseline.
+* **Phase P0 (In Progress):** Obsolete artifacts removed (#115) and ADR baseline merged (#116); remaining: README and ADR status sync (#152).
 
 ---
 
@@ -63,6 +63,13 @@ The v4 roadmap is organized into 9 sequential phases corresponding to GitHub mil
   * `ADR-003`: Celery with Redis for asynchronous collectors
   * `ADR-004`: Local K3d cluster + AWS Terraform (plan-only)
   * `ADR-005`: GitOps repository structure
+
+### Step 0.3 — README & ADR Status Sync
+* **Issue:** [#152](https://github.com/Kacper-Slezak/SOTP/issues/152) 🟠 *High*
+* **Branch:** `docs/152-readme-sync`
+* Replace the old README roadmap with the P0–P8 milestone table; remove references to deleted or non-existent paths (`errors.txt`, `infrastructure/k8s/`, `develop`).
+* Add an `Implementation:` line to every ADR that links the tracking issues (ADR-004 → #140–#142, ADR-005 → #76, #134, #135).
+* Set the repository About description and topics.
 
 ---
 
@@ -168,6 +175,21 @@ The v4 roadmap is organized into 9 sequential phases corresponding to GitHub mil
 * **Issue:** [#128](https://github.com/Kacper-Slezak/SOTP/issues/128) ⚪ *Low*
 * **Branch:** `sec/128-owasp-zap-dast`
 * Execute OWASP ZAP baseline scan against the ephemeral running API in CI.
+
+### Step 2.11 — GitHub Actions Hardening
+* **Issue:** [#153](https://github.com/Kacper-Slezak/SOTP/issues/153) 🟡 *Medium*
+* **Branch:** `ci/153-actions-hardening`
+* Least-privilege `permissions:` per workflow, third-party actions pinned by commit SHA, `concurrency` and `timeout-minutes` on every job, actionlint/zizmor.
+
+### Step 2.12 — Compose Secrets Baseline
+* **Issue:** [#154](https://github.com/Kacper-Slezak/SOTP/issues/154) 🟡 *Medium*
+* **Branch:** `sec/154-compose-secrets-baseline`
+* Redis broker authentication, Vault AppRole per service instead of the dev root token, Grafana admin password from `.env`.
+
+### Step 2.13 — Threat Model (STRIDE)
+* **Issue:** [#155](https://github.com/Kacper-Slezak/SOTP/issues/155) 🟡 *Medium*
+* **Branch:** `docs/155-threat-model`
+* `docs/SECURITY_MODEL.md`: trust-boundary data-flow diagram (Mermaid) and a STRIDE table where every open risk links to an issue.
 
 ---
 
