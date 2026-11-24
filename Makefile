@@ -2,8 +2,8 @@
 # Run `make` or `make help` to display available commands.
 
 # Variables
-DOCKER_COMPOSE_DEV = docker-compose --env-file .env -f infrastructure/docker/docker-compose.dev.yml
-DOCKER_COMPOSE_PROD = docker-compose --env-file .env -f infrastructure/docker/docker-compose.prod.yml
+DOCKER_COMPOSE_DEV = docker compose --env-file .env -f infrastructure/docker/docker-compose.dev.yml
+DOCKER_COMPOSE_PROD = docker compose --env-file .env -f infrastructure/docker/docker-compose.prod.yml
 
 .PHONY: help dev up down logs shell-backend shell-frontend test setup build push deploy clean seed
 
