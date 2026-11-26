@@ -401,6 +401,7 @@ The v4 roadmap is organized into 9 sequential phases corresponding to GitHub mil
 ## PHASE P8 — Advanced / Stretch Goals
 > **Milestone:** [P8 · Advanced / Stretch](https://github.com/Kacper-Slezak/SOTP/milestone/9)
 > **Goal:** Flagship portfolio differentiators (select 1–2 based on capacity).
+> **Parallel tracks:** contributor tracks (network automation, Internet observability, security, data, ML/MLOps, support, product) are planned separately in [`FUTURE_WORK.md`](FUTURE_WORK.md) and do not block any phase.
 
 ### Step 8.1 — Istio Ambient Service Mesh (mTLS)
 * **Issue:** [#144](https://github.com/Kacper-Slezak/SOTP/issues/144) 🟡 *Medium*

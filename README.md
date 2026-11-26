@@ -389,6 +389,8 @@ See [`docs/SOTP_ROADMAP.md`](docs/SOTP_ROADMAP.md) for full per-step detail incl
 
 See [`docs/CONTRIBUTING.md`](docs/CONTRIBUTING.md) for the full workflow.
 
+**Want to join without learning the whole platform first?** Parallel contributor tracks with self-contained work packages cover network automation, Internet and edge observability, platform and SRE, security, data analytics, ML and MLOps, support and operations, and product and community. See [`docs/FUTURE_WORK.md`](docs/FUTURE_WORK.md).
+
 <p align="right">(<a href="#readme-top">back to top</a>)</p>
 
 ---
